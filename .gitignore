@@ -1,0 +1,22 @@
+# Local IDE / workspace (not shared)
+.ide/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs and temp
+*.log
+*.tmp
+*.temp
+*.swp
+*~
+
+# Local env / secrets (if placed at repo root)
+.env
+.env.*
+!.env.example
+
+# Docker local overrides
+docker-compose.override.yml
