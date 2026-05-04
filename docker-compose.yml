@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: logistic
+      POSTGRES_USER: logistic
+      POSTGRES_PASSWORD: logistic
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/logistic
+      SPRING_DATASOURCE_USERNAME: logistic
+      SPRING_DATASOURCE_PASSWORD: logistic
+      LOGISTIC_STORAGE_ROOT: /data/docs
+      JWT_SECRET: docker-dev-change-this-secret-min-32-chars-long!!!
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    volumes:
+      - docs:/data/docs
+
+  frontend:
+    build:
+      context: ./frontend/logistic
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  pgdata:
+  docs:
