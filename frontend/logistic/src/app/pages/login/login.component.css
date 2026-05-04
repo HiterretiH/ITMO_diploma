@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  max-width: 360px;
+  margin: 3rem auto;
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+input {
+  padding: 0.5rem 0.6rem;
+}
+button {
+  padding: 0.55rem 0.9rem;
+  align-self: flex-start;
+}
+.err {
+  color: #b00020;
+  margin: 0;
+}

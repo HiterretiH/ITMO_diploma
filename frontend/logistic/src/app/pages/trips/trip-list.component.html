@@ -1,0 +1,40 @@
+<div class="head">
+  <h1>Рейсы</h1>
+  <a class="btn" routerLink="/trips/new">Новый рейс</a>
+</div>
+
+<label class="filter">
+  Статус
+  <select [(ngModel)]="filter" (ngModelChange)="reload()">
+    <option value="">Все</option>
+    <option value="DRAFT">Черновик</option>
+    <option value="PENDING_APPROVAL">На согласовании</option>
+    <option value="APPROVED">Утверждён</option>
+    <option value="ARCHIVED">Архив</option>
+  </select>
+</label>
+
+@if (error) {
+  <p class="err">{{ error }}</p>
+}
+
+<table>
+  <thead>
+    <tr>
+      <th>№</th>
+      <th>Статус</th>
+      <th>Владелец</th>
+      <th>Обновлён</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (t of trips; track t.id) {
+      <tr>
+        <td><a [routerLink]="['/trips', t.id]">{{ t.id }}</a></td>
+        <td>{{ statusLabel(t.status) }}</td>
+        <td>{{ t.ownerUsername }}</td>
+        <td>{{ t.updatedAt | date: 'short' }}</td>
+      </tr>
+    }
+  </tbody>
+</table>

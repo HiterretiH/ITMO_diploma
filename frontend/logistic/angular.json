@@ -62,7 +62,8 @@
               "buildTarget": "logistic:build:production"
             },
             "development": {
-              "buildTarget": "logistic:build:development"
+              "buildTarget": "logistic:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

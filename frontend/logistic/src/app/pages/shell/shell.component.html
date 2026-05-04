@@ -1,0 +1,15 @@
+<header class="bar">
+  <span class="brand">Logistic</span>
+  <nav>
+    <a routerLink="/trips" routerLinkActive="active">Рейсы</a>
+    <a routerLink="/catalogs" routerLinkActive="active">Справочники</a>
+  </nav>
+  <div class="spacer"></div>
+  @if (auth.username(); as u) {
+    <span class="user">{{ u }}</span>
+  }
+  <button type="button" (click)="auth.logout()">Выход</button>
+</header>
+<main>
+  <router-outlet />
+</main>

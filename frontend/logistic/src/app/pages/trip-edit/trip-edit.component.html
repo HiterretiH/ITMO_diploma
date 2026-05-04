@@ -1,0 +1,110 @@
+@if (!trip && busy) {
+  <p>Загрузка…</p>
+}
+
+@if (trip) {
+  <div class="top">
+    <h1>Рейс {{ trip.id }}</h1>
+    <span class="pill">{{ statusLabel() }}</span>
+  </div>
+
+  @if (error) {
+    <p class="err">{{ error }}</p>
+  }
+
+  <section class="grid">
+    <label>
+      Грузоотправитель
+      <select [(ngModel)]="shipperId" name="shipper" [disabled]="!draft()">
+        <option [ngValue]="null">—</option>
+        @for (c of counterparties; track c.id) {
+          <option [ngValue]="c.id">{{ c.name }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Грузополучатель
+      <select [(ngModel)]="consigneeId" name="consignee" [disabled]="!draft()">
+        <option [ngValue]="null">—</option>
+        @for (c of counterparties; track c.id) {
+          <option [ngValue]="c.id">{{ c.name }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Водитель
+      <select [(ngModel)]="driverId" name="driver" [disabled]="!draft()">
+        <option [ngValue]="null">—</option>
+        @for (d of drivers; track d.id) {
+          <option [ngValue]="d.id">{{ d.fullName }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Транспорт
+      <select [(ngModel)]="vehicleId" name="vehicle" [disabled]="!draft()">
+        <option [ngValue]="null">—</option>
+        @for (v of vehicles; track v.id) {
+          <option [ngValue]="v.id">{{ v.plateNumber }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="wide">
+      Описание груза
+      <textarea [(ngModel)]="cargoDescription" rows="3" [disabled]="!draft()"></textarea>
+    </label>
+
+    <label>
+      Масса, кг
+      <input type="number" step="0.001" [(ngModel)]="cargoWeightKg" [disabled]="!draft()" />
+    </label>
+    <label>
+      Валюта
+      <input [(ngModel)]="currency" [disabled]="!draft()" />
+    </label>
+
+    <label>
+      Откуда
+      <input [(ngModel)]="routeFrom" [disabled]="!draft()" />
+    </label>
+    <label>
+      Куда
+      <input [(ngModel)]="routeTo" [disabled]="!draft()" />
+    </label>
+    <label>
+      Погрузка
+      <input type="date" [(ngModel)]="loadDate" [disabled]="!draft()" />
+    </label>
+    <label>
+      Разгрузка
+      <input type="date" [(ngModel)]="unloadDate" [disabled]="!draft()" />
+    </label>
+    <label>
+      Стоимость
+      <input type="number" step="0.01" [(ngModel)]="priceAmount" [disabled]="!draft()" />
+    </label>
+  </section>
+
+  <div class="actions">
+    <button type="button" (click)="save()" [disabled]="busy || !draft()">Сохранить</button>
+    <button type="button" (click)="submit()" [disabled]="busy || !draft()">Отправить на согласование</button>
+    @if (auth.hasRole('MANAGER') || auth.hasRole('ADMIN')) {
+      <button type="button" (click)="approve()" [disabled]="busy || !pending()">Утвердить</button>
+      <button type="button" (click)="archive()" [disabled]="busy || !approved()">В архив</button>
+    }
+  </div>
+
+  @if (docs.length > 0) {
+    <h2>Документы</h2>
+    <ul class="docs">
+      @for (d of docs; track d.id) {
+        <li>
+          <button type="button" class="link" (click)="download(d)">
+            {{ d.documentType }} ({{ d.fileFormat }})
+          </button>
+        </li>
+      }
+    </ul>
+  }
+}

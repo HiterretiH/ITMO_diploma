@@ -1,0 +1,15 @@
+<section class="panel">
+  <h1>Вход</h1>
+  <label>
+    Логин
+    <input [(ngModel)]="username" name="user" autocomplete="username" />
+  </label>
+  <label>
+    Пароль
+    <input [(ngModel)]="password" name="pass" type="password" autocomplete="current-password" />
+  </label>
+  @if (error) {
+    <p class="err">{{ error }}</p>
+  }
+  <button type="button" (click)="submit()" [disabled]="busy">Войти</button>
+</section>

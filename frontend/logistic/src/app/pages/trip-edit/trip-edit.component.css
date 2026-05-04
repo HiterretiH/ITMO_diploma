@@ -1,0 +1,56 @@
+.top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.pill {
+  font-size: 0.85rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #eee;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+.wide {
+  grid-column: 1 / -1;
+}
+textarea,
+input,
+select {
+  padding: 0.45rem 0.55rem;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+button {
+  padding: 0.45rem 0.75rem;
+}
+.err {
+  color: #b00020;
+}
+.docs {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #1565c0;
+  cursor: pointer;
+  text-decoration: underline;
+}
