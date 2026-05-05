@@ -1,0 +1,191 @@
+### Logistic API collection
+### Variables
+@baseUrl = http://localhost:8080
+@adminUser = admin
+@adminPass = admin123
+
+### 1) Login as admin (default seed user)
+# @name loginAdmin
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{adminUser}}",
+  "password": "{{adminPass}}"
+}
+
+###
+@adminToken = {{loginAdmin.response.body.token}}
+
+### 2) Create employee user
+# @name createEmployee
+POST {{baseUrl}}/api/v1/admin/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "username": "employee_demo",
+  "password": "employee_demo_pass",
+  "roles": ["EMPLOYEE"]
+}
+
+### 3) Login as employee
+# @name loginEmployee
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "employee_demo",
+  "password": "employee_demo_pass"
+}
+
+###
+@employeeToken = {{loginEmployee.response.body.token}}
+
+### 4) Create manager user
+# @name createManager
+POST {{baseUrl}}/api/v1/admin/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "username": "manager_demo",
+  "password": "manager_demo_pass",
+  "roles": ["MANAGER"]
+}
+
+### 5) Login as manager
+# @name loginManager
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager_demo",
+  "password": "manager_demo_pass"
+}
+
+###
+@managerToken = {{loginManager.response.body.token}}
+
+### 6) Create shipper
+# @name createShipper
+POST {{baseUrl}}/api/v1/counterparties
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "name": "ООО Ромашка",
+  "inn": "7701234567",
+  "legalAddress": "г. Москва, ул. Ленина, 1",
+  "phone": "+7 495 111-11-11"
+}
+
+###
+@shipperId = {{createShipper.response.body.id}}
+
+### 7) Create consignee
+# @name createConsignee
+POST {{baseUrl}}/api/v1/counterparties
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "name": "ООО Василек",
+  "inn": "7810123456",
+  "legalAddress": "г. Санкт-Петербург, Невский пр., 10",
+  "phone": "+7 812 222-22-22"
+}
+
+###
+@consigneeId = {{createConsignee.response.body.id}}
+
+### 8) Create driver
+# @name createDriver
+POST {{baseUrl}}/api/v1/drivers
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Иванов Иван Иванович",
+  "licenseNumber": "77 01 123456",
+  "licenseCategory": "B, C"
+}
+
+###
+@driverId = {{createDriver.response.body.id}}
+
+### 9) Create vehicle
+# @name createVehicle
+POST {{baseUrl}}/api/v1/vehicles
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "plateNumber": "А123ВС178",
+  "model": "Volvo FH",
+  "loadCapacityKg": 20000
+}
+
+###
+@vehicleId = {{createVehicle.response.body.id}}
+
+### 10) Create trip
+# @name createTrip
+POST {{baseUrl}}/api/v1/trips
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{}
+
+###
+@tripId = {{createTrip.response.body.id}}
+
+### 11) Update draft trip
+PUT {{baseUrl}}/api/v1/trips/{{tripId}}
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "shipperId": {{shipperId}},
+  "consigneeId": {{consigneeId}},
+  "driverId": {{driverId}},
+  "vehicleId": {{vehicleId}},
+  "cargoDescription": "Строительные смеси, 24 паллеты",
+  "cargoWeightKg": 12000.500,
+  "routeFrom": "Москва",
+  "routeTo": "Санкт-Петербург",
+  "loadDate": "2026-05-15",
+  "unloadDate": "2026-05-16",
+  "priceAmount": 98500.00,
+  "currency": "RUB"
+}
+
+### 12) Submit trip for approval
+POST {{baseUrl}}/api/v1/trips/{{tripId}}/submit
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{}
+
+### 13) Approve trip (manager)
+POST {{baseUrl}}/api/v1/trips/{{tripId}}/approve
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{}
+
+### 14) List generated documents
+# @name listDocuments
+GET {{baseUrl}}/api/v1/trips/{{tripId}}/documents
+Authorization: Bearer {{employeeToken}}
+
+### 15) View audit log for trip
+GET {{baseUrl}}/api/v1/trips/{{tripId}}/audit-events
+Authorization: Bearer {{employeeToken}}
+
+### 16) Archive trip (manager)
+POST {{baseUrl}}/api/v1/trips/{{tripId}}/archive
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{}
