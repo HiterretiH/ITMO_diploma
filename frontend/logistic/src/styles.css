@@ -13,5 +13,13 @@ body {
     Roboto,
     Arial,
     sans-serif;
-  color: #222;
+  background: var(--p-content-background);
+  color: var(--p-text-color);
+}
+
+h1.page-title {
+  margin: 0 0 1rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--p-text-color);
 }
