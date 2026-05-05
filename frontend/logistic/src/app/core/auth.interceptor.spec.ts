@@ -46,4 +46,12 @@ describe('authInterceptor', () => {
     expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush({});
   });
+
+  it('does not add Authorization for register', () => {
+    sessionStorage.setItem('access_token', 'abc');
+    http.post('/api/v1/auth/register', {}).subscribe();
+    const req = httpMock.expectOne('/api/v1/auth/register');
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    req.flush({});
+  });
 });

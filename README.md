@@ -36,23 +36,24 @@ npm start
 
 Откройте в браузере URL из вывода CLI (обычно `http://localhost:4200`), затем:
 
-1. Страница **«Вход»** — укажите учётные данные пользователя с ролью `EMPLOYEE`, `MANAGER` или `ADMIN` (например, после первого старта backend: `admin` / `admin123`).
+1. Страница **«Вход»** или **«Регистрация»** — самостоятельная регистрация создаёт пользователя с ролью `EMPLOYEE` и сразу выдаёт JWT; либо войдите под существующей учётной записью (`EMPLOYEE`, `MANAGER`, `ADMIN`; после первого старта backend: `admin` / `admin123`).
 2. **Рейсы** — список, фильтр по статусу, «Создать» ведёт на `POST /trips` и открывает карточку рейса.
 3. **Справочники** — контрагенты, водители, ТС (CRUD в диалогах).
 4. **Карточка рейса** — шаги PrimeNG Stepper, сохранение только в статусе `DRAFT`; для ролей MANAGER/ADMIN — утверждение и архив; при `APPROVED`/`ARCHIVED` — скачивание PDF/DOCX; вкладка **«Аудит»**.
 5. Роль **ADMIN** — пункт «Пользователи», кнопка «+ Пользователь» (создание через API).
 
-Юнит-тесты (Karma):
+Юнит-тесты (Vitest через `@analogjs/vitest-angular`, без браузера):
 
 ```powershell
 cd frontend\logistic
 npm test
 ```
 
-Для headless CI (пример):
+Покрытие (HTML-отчёт в `frontend/logistic/coverage/`, папка в `.gitignore`):
 
 ```powershell
-npx ng test --no-watch --browsers=ChromeHeadless
+cd frontend\logistic
+npm run test:coverage
 ```
 
 Сборка production:

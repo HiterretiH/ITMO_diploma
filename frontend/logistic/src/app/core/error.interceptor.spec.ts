@@ -10,6 +10,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { vi } from 'vitest';
 import { AuthService } from './auth.service';
 import { errorInterceptor } from './error.interceptor';
 import { authInterceptor } from './auth.interceptor';
@@ -18,11 +19,11 @@ describe('errorInterceptor', () => {
   let http: HttpClient;
   let httpMock: HttpTestingController;
   let messages: MessageService;
-  let authLogoutSpy: jasmine.Spy;
+  let authLogoutSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     const router = {
-      navigateByUrl: jasmine.createSpy('navigateByUrl'),
+      navigateByUrl: vi.fn(),
     };
     TestBed.configureTestingModule({
       providers: [
@@ -35,11 +36,13 @@ describe('errorInterceptor', () => {
         provideHttpClientTesting(),
       ],
     });
-    authLogoutSpy = spyOn(TestBed.inject(AuthService), 'logout');
+    authLogoutSpy = vi
+      .spyOn(TestBed.inject(AuthService), 'logout')
+      .mockImplementation(() => {});
     http = TestBed.inject(HttpClient);
     httpMock = TestBed.inject(HttpTestingController);
     messages = TestBed.inject(MessageService);
-    spyOn(messages, 'add');
+    vi.spyOn(messages, 'add').mockImplementation(() => {});
     sessionStorage.clear();
   });
 

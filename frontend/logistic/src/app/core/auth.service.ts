@@ -24,6 +24,15 @@ export class AuthService {
       .pipe(tap((r) => sessionStorage.setItem(STORAGE_KEY, r.token)));
   }
 
+  register(username: string, password: string): Observable<JwtLoginResponse> {
+    return this.http
+      .post<JwtLoginResponse>(`${environment.apiBase}/api/v1/auth/register`, {
+        username,
+        password,
+      })
+      .pipe(tap((r) => sessionStorage.setItem(STORAGE_KEY, r.token)));
+  }
+
   logout(): void {
     sessionStorage.removeItem(STORAGE_KEY);
     void this.router.navigateByUrl('/login');

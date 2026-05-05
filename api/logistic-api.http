@@ -14,6 +14,15 @@ Content-Type: application/json
   "password": "{{adminPass}}"
 }
 
+### 1b) Public registration (role EMPLOYEE, returns 201 + JWT)
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "self_reg_demo",
+  "password": "secret12"
+}
+
 ###
 @adminToken = {{loginAdmin.response.body.token}}
 

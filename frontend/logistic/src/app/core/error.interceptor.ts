@@ -41,20 +41,26 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
       if (err.status === 401) {
         const loginUrl = '/api/v1/auth/login';
-        if (req.url.includes(loginUrl)) {
+        const registerUrl = '/api/v1/auth/register';
+        if (req.url.includes(loginUrl) || req.url.includes(registerUrl)) {
+          const defaultDetail = req.url.includes(registerUrl)
+            ? 'Не удалось зарегистрироваться'
+            : 'Неверный логин или пароль';
           if (isProblem && err.error && typeof err.error === 'object') {
             const { summary, detail } = parseProblem(err);
             messages.add({
               severity: 'error',
               summary,
-              detail: detail ?? 'Неверный логин или пароль',
+              detail: detail ?? defaultDetail,
               life: 6000,
             });
           } else {
             messages.add({
               severity: 'error',
-              summary: 'Ошибка входа',
-              detail: 'Неверный логин или пароль',
+              summary: req.url.includes(registerUrl)
+                ? 'Ошибка регистрации'
+                : 'Ошибка входа',
+              detail: defaultDetail,
               life: 6000,
             });
           }
