@@ -1,110 +1,352 @@
-@if (!trip && busy) {
+@if (busy && !trip) {
   <p>Загрузка…</p>
 }
 
 @if (trip) {
   <div class="top">
     <h1>Рейс {{ trip.id }}</h1>
-    <span class="pill">{{ statusLabel() }}</span>
+    <app-trip-status-badge [status]="trip.status" />
   </div>
 
-  @if (error) {
-    <p class="err">{{ error }}</p>
+  @if (conflictDetail) {
+    <p-message
+      severity="error"
+      [text]="conflictDetail"
+      [closable]="true"
+      (onClose)="conflictDetail = null"
+      styleClass="mb-3"
+    />
   }
 
-  <section class="grid">
-    <label>
-      Грузоотправитель
-      <select [(ngModel)]="shipperId" name="shipper" [disabled]="!draft()">
-        <option [ngValue]="null">—</option>
-        @for (c of counterparties; track c.id) {
-          <option [ngValue]="c.id">{{ c.name }}</option>
+  <form [formGroup]="form">
+    <p-stepper [value]="stepperValue" (valueChange)="stepperValue = $event">
+      <p-step-list>
+        <p-step [value]="1">Стороны</p-step>
+        <p-step [value]="2">Груз и маршрут</p-step>
+        <p-step [value]="3">Транспорт и водитель</p-step>
+        <p-step [value]="4">Итого и действия</p-step>
+      </p-step-list>
+      <p-step-panels>
+        <p-step-panel [value]="1">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-body">
+              <div class="field">
+                <label for="shipper">Грузоотправитель</label>
+                <p-dropdown
+                  inputId="shipper"
+                  formControlName="shipperId"
+                  [options]="cpOptions()"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="—"
+                  [showClear]="true"
+                  appendTo="body"
+                  styleClass="w-full"
+                />
+                <p-button
+                  type="button"
+                  label="+ Добавить контрагента"
+                  [text]="true"
+                  styleClass="p-0"
+                  (onClick)="openCpDialog('shipper')"
+                />
+              </div>
+              <div class="field">
+                <label for="consignee">Грузополучатель</label>
+                <p-dropdown
+                  inputId="consignee"
+                  formControlName="consigneeId"
+                  [options]="cpOptions()"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="—"
+                  [showClear]="true"
+                  appendTo="body"
+                  styleClass="w-full"
+                />
+                <p-button
+                  type="button"
+                  label="+ Добавить контрагента"
+                  [text]="true"
+                  styleClass="p-0"
+                  (onClick)="openCpDialog('consignee')"
+                />
+              </div>
+              <div class="step-nav">
+                <p-button
+                  type="button"
+                  label="Далее"
+                  icon="pi pi-arrow-right"
+                  iconPos="right"
+                  (onClick)="activateCallback(2)"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="2">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-body">
+              <div class="field">
+                <label for="cargo">Описание груза</label>
+                <textarea
+                  pInputTextarea
+                  id="cargo"
+                  formControlName="cargoDescription"
+                  rows="3"
+                  class="w-full"
+                ></textarea>
+              </div>
+              <div class="field">
+                <label for="weight">Масса, кг</label>
+                <p-inputNumber
+                  inputId="weight"
+                  formControlName="cargoWeightKg"
+                  [min]="0"
+                  [useGrouping]="false"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="two-cols">
+                <div class="field">
+                  <label for="from">Откуда</label>
+                  <input pInputText id="from" formControlName="routeFrom" class="w-full" />
+                </div>
+                <div class="field">
+                  <label for="to">Куда</label>
+                  <input pInputText id="to" formControlName="routeTo" class="w-full" />
+                </div>
+              </div>
+              <div class="two-cols">
+                <div class="field">
+                  <label for="load">Погрузка</label>
+                  <p-datepicker
+                    inputId="load"
+                    formControlName="loadDate"
+                    dateFormat="yy-mm-dd"
+                    [showIcon]="true"
+                    appendTo="body"
+                    styleClass="w-full"
+                  />
+                </div>
+                <div class="field">
+                  <label for="unload">Разгрузка</label>
+                  <p-datepicker
+                    inputId="unload"
+                    formControlName="unloadDate"
+                    dateFormat="yy-mm-dd"
+                    [showIcon]="true"
+                    appendTo="body"
+                    styleClass="w-full"
+                  />
+                </div>
+              </div>
+              <div class="step-nav">
+                <p-button
+                  type="button"
+                  label="Назад"
+                  severity="secondary"
+                  icon="pi pi-arrow-left"
+                  (onClick)="activateCallback(1)"
+                />
+                <p-button
+                  type="button"
+                  label="Далее"
+                  icon="pi pi-arrow-right"
+                  iconPos="right"
+                  (onClick)="activateCallback(3)"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="3">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-body">
+              <div class="field">
+                <label for="driver">Водитель</label>
+                <p-dropdown
+                  inputId="driver"
+                  formControlName="driverId"
+                  [options]="driverOptions()"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="—"
+                  [showClear]="true"
+                  appendTo="body"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="field">
+                <label for="vehicle">Транспорт</label>
+                <p-dropdown
+                  inputId="vehicle"
+                  formControlName="vehicleId"
+                  [options]="vehicleOptions()"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="—"
+                  [showClear]="true"
+                  appendTo="body"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="step-nav">
+                <p-button
+                  type="button"
+                  label="Назад"
+                  severity="secondary"
+                  icon="pi pi-arrow-left"
+                  (onClick)="activateCallback(2)"
+                />
+                <p-button
+                  type="button"
+                  label="Далее"
+                  icon="pi pi-arrow-right"
+                  iconPos="right"
+                  (onClick)="activateCallback(4)"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="4">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-body">
+              <div class="two-cols">
+                <div class="field">
+                  <label for="price">Стоимость</label>
+                  <p-inputNumber
+                    inputId="price"
+                    formControlName="priceAmount"
+                    [min]="0"
+                    mode="decimal"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="2"
+                    styleClass="w-full"
+                  />
+                </div>
+                <div class="field">
+                  <label for="cur">Валюта</label>
+                  <input pInputText id="cur" formControlName="currency" class="w-full" />
+                </div>
+              </div>
+
+              <div class="actions">
+                <p-button
+                  type="button"
+                  label="Сохранить"
+                  icon="pi pi-save"
+                  [disabled]="busy || !draft() || form.invalid"
+                  [loading]="busy"
+                  (onClick)="save()"
+                />
+                <p-button
+                  type="button"
+                  label="Отправить на согласование"
+                  icon="pi pi-send"
+                  severity="help"
+                  [disabled]="busy || !draft()"
+                  [loading]="busy"
+                  (onClick)="submit()"
+                />
+                @if (auth.hasRole('MANAGER') || auth.hasRole('ADMIN')) {
+                  <p-button
+                    type="button"
+                    label="Утвердить"
+                    icon="pi pi-check"
+                    severity="success"
+                    [disabled]="busy || !pending()"
+                    (onClick)="approve()"
+                  />
+                  <p-button
+                    type="button"
+                    label="В архив"
+                    icon="pi pi-inbox"
+                    severity="danger"
+                    [disabled]="busy || !approved()"
+                    (onClick)="archive()"
+                  />
+                }
+              </div>
+
+              @if (showDocuments() && docs.length > 0) {
+                <h3 class="docs-title">Документы</h3>
+                <p-table [value]="docs" styleClass="p-datatable-sm">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>Тип</th>
+                      <th>Формат</th>
+                      <th>Создан</th>
+                      <th></th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-d>
+                    <tr>
+                      <td>{{ d.documentType }}</td>
+                      <td>{{ d.fileFormat }}</td>
+                      <td>{{ d.createdAt | date: 'short' }}</td>
+                      <td>
+                        <p-button
+                          type="button"
+                          label="Скачать"
+                          icon="pi pi-download"
+                          [text]="true"
+                          (onClick)="download(d)"
+                        />
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              }
+
+              <div class="step-nav">
+                <p-button
+                  type="button"
+                  label="Назад"
+                  severity="secondary"
+                  icon="pi pi-arrow-left"
+                  (onClick)="activateCallback(3)"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+      </p-step-panels>
+    </p-stepper>
+  </form>
+
+  <p-dialog
+    header="Новый контрагент"
+    [(visible)]="cpDialogVisible"
+    [modal]="true"
+    [style]="{ width: '22rem' }"
+    [draggable]="false"
+  >
+    <form [formGroup]="quickCpForm">
+      <div class="field">
+        <label for="q-name">Название *</label>
+        <input pInputText id="q-name" formControlName="name" class="w-full" />
+      </div>
+      <div class="field">
+        <label for="q-inn">ИНН</label>
+        <input pInputText id="q-inn" formControlName="inn" class="w-full" />
+        @if (quickCpForm.controls.inn.touched && quickCpForm.controls.inn.hasError('inn')) {
+          <small class="p-error">10 или 12 цифр</small>
         }
-      </select>
-    </label>
-    <label>
-      Грузополучатель
-      <select [(ngModel)]="consigneeId" name="consignee" [disabled]="!draft()">
-        <option [ngValue]="null">—</option>
-        @for (c of counterparties; track c.id) {
-          <option [ngValue]="c.id">{{ c.name }}</option>
-        }
-      </select>
-    </label>
-    <label>
-      Водитель
-      <select [(ngModel)]="driverId" name="driver" [disabled]="!draft()">
-        <option [ngValue]="null">—</option>
-        @for (d of drivers; track d.id) {
-          <option [ngValue]="d.id">{{ d.fullName }}</option>
-        }
-      </select>
-    </label>
-    <label>
-      Транспорт
-      <select [(ngModel)]="vehicleId" name="vehicle" [disabled]="!draft()">
-        <option [ngValue]="null">—</option>
-        @for (v of vehicles; track v.id) {
-          <option [ngValue]="v.id">{{ v.plateNumber }}</option>
-        }
-      </select>
-    </label>
-
-    <label class="wide">
-      Описание груза
-      <textarea [(ngModel)]="cargoDescription" rows="3" [disabled]="!draft()"></textarea>
-    </label>
-
-    <label>
-      Масса, кг
-      <input type="number" step="0.001" [(ngModel)]="cargoWeightKg" [disabled]="!draft()" />
-    </label>
-    <label>
-      Валюта
-      <input [(ngModel)]="currency" [disabled]="!draft()" />
-    </label>
-
-    <label>
-      Откуда
-      <input [(ngModel)]="routeFrom" [disabled]="!draft()" />
-    </label>
-    <label>
-      Куда
-      <input [(ngModel)]="routeTo" [disabled]="!draft()" />
-    </label>
-    <label>
-      Погрузка
-      <input type="date" [(ngModel)]="loadDate" [disabled]="!draft()" />
-    </label>
-    <label>
-      Разгрузка
-      <input type="date" [(ngModel)]="unloadDate" [disabled]="!draft()" />
-    </label>
-    <label>
-      Стоимость
-      <input type="number" step="0.01" [(ngModel)]="priceAmount" [disabled]="!draft()" />
-    </label>
-  </section>
-
-  <div class="actions">
-    <button type="button" (click)="save()" [disabled]="busy || !draft()">Сохранить</button>
-    <button type="button" (click)="submit()" [disabled]="busy || !draft()">Отправить на согласование</button>
-    @if (auth.hasRole('MANAGER') || auth.hasRole('ADMIN')) {
-      <button type="button" (click)="approve()" [disabled]="busy || !pending()">Утвердить</button>
-      <button type="button" (click)="archive()" [disabled]="busy || !approved()">В архив</button>
-    }
-  </div>
-
-  @if (docs.length > 0) {
-    <h2>Документы</h2>
-    <ul class="docs">
-      @for (d of docs; track d.id) {
-        <li>
-          <button type="button" class="link" (click)="download(d)">
-            {{ d.documentType }} ({{ d.fileFormat }})
-          </button>
-        </li>
-      }
-    </ul>
-  }
+      </div>
+    </form>
+    <ng-template pTemplate="footer">
+      <p-button label="Отмена" [text]="true" (onClick)="cpDialogVisible = false" />
+      <p-button
+        label="Создать"
+        [loading]="cpSaving"
+        [disabled]="quickCpForm.invalid || cpSaving"
+        (onClick)="saveQuickCounterparty()"
+      />
+    </ng-template>
+  </p-dialog>
 }
