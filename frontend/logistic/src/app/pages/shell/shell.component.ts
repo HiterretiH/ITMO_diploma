@@ -43,5 +43,9 @@ export class ShellComponent {
       label: 'Транспорт',
       routerLink: ['/catalogs/vehicles'],
     },
+    {
+      label: 'Места',
+      routerLink: ['/catalogs/places'],
+    },
   ];
 }

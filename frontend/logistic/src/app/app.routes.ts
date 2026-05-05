@@ -80,6 +80,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'catalogs/places',
+        loadComponent: () =>
+          import('./pages/catalogs/places/places.component').then(
+            (m) => m.PlacesComponent,
+          ),
+      },
+      {
         path: 'admin/users',
         canActivate: [roleGuard('ADMIN')],
         loadComponent: () =>
