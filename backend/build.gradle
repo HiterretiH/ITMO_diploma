@@ -52,11 +52,25 @@ dependencies {
     testImplementation platform('org.testcontainers:testcontainers-bom:1.20.6')
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'io.swagger.parser.v3:swagger-parser:2.1.22'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+tasks.register('openApiValidate', JavaExec) {
+    dependsOn tasks.named('compileTestJava')
+    group = 'verification'
+    description = 'Parse and validate ../api/openapi.yaml'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.logistic.backend.OpenApiValidateCli'
+    args "$projectDir/../api/openapi.yaml"
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('openApiValidate')
 }
 
 tasks.register('generateDocumentFixtures', JavaExec) {
