@@ -88,7 +88,7 @@ public class DocumentGenerationService {
         String count = "1";
         String price = money(s.priceAmount());
         String totalPrice = money(s.priceAmount());
-        String wordPrice = totalPrice + " рублей";
+        String wordPrice = capitalize(totalPrice + " рублей");
         String performerInfoWs =
                 String.join(
                                 ", ",
@@ -112,6 +112,8 @@ public class DocumentGenerationService {
         ctx.put("word_date", wordDate);
         ctx.put("loading_place", loadingPlace);
         ctx.put("unloading_place", unloadingPlace);
+        ctx.put("contact_loading", loadingPlace);
+        ctx.put("contact_unloading", unloadingPlace);
         ctx.put("count", count);
         ctx.put("price", price);
         ctx.put("total_price", totalPrice);
@@ -197,6 +199,13 @@ public class DocumentGenerationService {
 
     private static String asString(Object value) {
         return value == null ? "" : value.toString();
+    }
+
+    private static String capitalize(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 
     private static String sha256Hex(byte[] data) {

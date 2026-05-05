@@ -82,10 +82,12 @@ public final class DocumentFixtureGenerator {
         ctx.put("word_date", "15 мая 2026г.");
         ctx.put("loading_place", asString(s.routeFrom()));
         ctx.put("unloading_place", asString(s.routeTo()));
+        ctx.put("contact_loading", "Контакт Погрузки +7 900 123 45 67");
+        ctx.put("contact_unloading", "Контакт Разгрузки +7 900 765 43 21");
         ctx.put("count", "1");
         ctx.put("price", "98500.00");
         ctx.put("total_price", "98500.00");
-        ctx.put("word_price", "девяносто восемь тысяч пятьсот");
+        ctx.put("word_price", "Девяносто восемь тысяч пятьсот рублей");
         ctx.put(
                 "performer_info_ws",
                 "ИП Петров П.П., ИНН 000000000000, г. Москва, ул. Ленина, 1");
