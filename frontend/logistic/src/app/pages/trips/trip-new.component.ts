@@ -32,10 +32,10 @@ import { buildRouteLine } from '../../shared/forms/route-line.util';
 
 /**
  * Создание рейса: данные как в `.ide/main.py` (стороны, маршрут+контакты, груз,
- * дата, ставка × количество → сумма), затем POST → PUT → submit.
+ * дата, ставка × количество → итог с возможностью ручной правки), затем POST → PUT → submit.
  *
  * Связность полей (аналог десктопа):
- * — ставка за рейс и число рейсов задают итог (пересчёт в шаблоне);
+ * — ставка за рейс и число рейсов пересчитывают итог; итог можно править вручную;
  * — при смене даты погрузки дата разгрузки не остаётся «раньше» погрузки;
  * — водитель и ТС в десктопе задавались одной строкой «исполнителя»; в API они
  *   разделены — пользователь выбирает оба поля (порядок любой).
@@ -88,6 +88,11 @@ export class TripNewComponent implements OnInit {
     unloadDate: this.fb.control<Date | null>(null, Validators.required),
     legCount: this.fb.control<number>(1, [Validators.required, Validators.min(1)]),
     ratePerLeg: this.fb.control<number | null>(0, [Validators.min(0)]),
+    /** Как `total_price` в `.ide/main.py`: редактируется вручную; rate×count пересчитывает до следующей ручной правки. */
+    priceAmount: this.fb.control<number | null>(0, [
+      Validators.required,
+      Validators.min(0),
+    ]),
   });
 
   constructor() {
@@ -104,6 +109,21 @@ export class TripNewComponent implements OnInit {
           this.form.patchValue({ unloadDate: synced }, { emitEvent: false });
         }
       });
+
+    this.form.controls.ratePerLeg.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.applyTotalFromRateAndLegs());
+    this.form.controls.legCount.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.applyTotalFromRateAndLegs());
+  }
+
+  /** Авто-заполнение итога (симметрично rate×count; в main.py пересчёт только на FocusOut цены). */
+  private applyTotalFromRateAndLegs(): void {
+    const v = this.form.getRawValue();
+    const rate = Number(v.ratePerLeg ?? 0);
+    const n = Number(v.legCount ?? 1);
+    this.form.patchValue({ priceAmount: rate * n }, { emitEvent: false });
   }
 
   ngOnInit(): void {
@@ -172,14 +192,6 @@ export class TripNewComponent implements OnInit {
     return `${y}-${m}-${day}`;
   }
 
-  /** Итог как total_price = price * count в main.py (FocusOut на цене). */
-  contractTotal(): number {
-    const v = this.form.getRawValue();
-    const rate = Number(v.ratePerLeg ?? 0);
-    const n = Number(v.legCount ?? 1);
-    return rate * n;
-  }
-
   private buildUpdateRequest(): TripUpdateRequest {
     const v = this.form.getRawValue();
     return {
@@ -193,7 +205,7 @@ export class TripNewComponent implements OnInit {
       routeTo: buildRouteLine(v.destinationAddress, v.destinationContact),
       loadDate: this.toIsoDate(v.loadDate),
       unloadDate: this.toIsoDate(v.unloadDate),
-      priceAmount: this.contractTotal(),
+      priceAmount: v.priceAmount ?? 0,
       currency: 'RUB',
     };
   }
@@ -223,11 +235,8 @@ export class TripNewComponent implements OnInit {
     if (this.startOfDay(v.unloadDate) < this.startOfDay(v.loadDate)) {
       return 'Дата разгрузки не может быть раньше даты погрузки.';
     }
-    if (v.ratePerLeg == null) {
-      return 'Укажите ставку за одну перевозку.';
-    }
-    if (v.legCount == null || v.legCount < 1) {
-      return 'Число перевозок должно быть не меньше 1.';
+    if (v.priceAmount == null || Number(v.priceAmount) < 0) {
+      return 'Укажите итоговую сумму по заявке.';
     }
     return null;
   }
