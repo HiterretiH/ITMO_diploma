@@ -93,9 +93,10 @@ public class DocumentGenerationService {
                 String.join(
                                 ", ",
                                 asString(s.ownerUsername()),
-                                asString(s.vehiclePlate()),
-                                asString(s.driverName()),
-                                asString(s.driverLicense()))
+                                "ТС " + asString(s.vehicleModel()),
+                                "г/н " + asString(s.vehiclePlate()),
+                                "водитель " + asString(s.driverName()),
+                                "ВУ " + asString(s.driverLicense()))
                         .replaceAll("(,\\s*)+", ", ")
                         .replaceAll("^,\\s*|,\\s*$", "");
         String customerInfoWs =
@@ -103,7 +104,8 @@ public class DocumentGenerationService {
                                 ", ",
                                 asString(s.shipperName()),
                                 "ИНН " + asString(s.shipperInn()),
-                                asString(s.shipperAddress()))
+                                asString(s.shipperAddress()),
+                                "маршрут " + loadingPlace + " - " + unloadingPlace)
                         .replaceAll("(,\\s*)+", ", ")
                         .replaceAll("^,\\s*|,\\s*$", "");
 

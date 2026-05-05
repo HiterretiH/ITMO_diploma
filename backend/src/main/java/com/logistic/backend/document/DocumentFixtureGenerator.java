@@ -90,14 +90,14 @@ public final class DocumentFixtureGenerator {
         ctx.put("word_price", "Девяносто восемь тысяч пятьсот рублей");
         ctx.put(
                 "performer_info_ws",
-                "ИП Петров П.П., ИНН 000000000000, г. Москва, ул. Ленина, 1");
+                "ИП Петров П.П., ИНН 000000000000, БИК 044525225, р/с 40702810000000000001, к/с 30101810400000000225, г. Москва, ул. Ленина, 1");
         ctx.put(
                 "customer_info_ws",
-                "ООО Ромашка, ИНН 7701234567, г. Москва, ул. Ленина, 1");
+                "ООО Ромашка, ИНН 7701234567, Банк клиента, +7 812 000 00 00, г. Москва, ул. Ленина, 1");
 
         ctx.put("performer_name", "ИП Петров П.П.");
         ctx.put("performer_full_name", "ИП Петров Петр Петрович");
-        ctx.put("performer_info", "ИП Петров Петр Петрович");
+        ctx.put("performer_info", "ИП Петров Петр Петрович, ИНН 000000000000, БИК 044525225, р/с 40702810000000000001, к/с 30101810400000000225, г. Москва, ул. Ленина, 1");
         ctx.put("performer_phone", "+7 900 111 22 33");
         ctx.put("performer_bank", "АО Банк");
         ctx.put("performer_vehicle", asString(s.vehicleModel()));
@@ -113,7 +113,7 @@ public final class DocumentFixtureGenerator {
 
         ctx.put("customer_name", asString(s.shipperName()));
         ctx.put("customer_full_name", asString(s.shipperName()));
-        ctx.put("customer_info", asString(s.shipperAddress()));
+        ctx.put("customer_info", "ООО Ромашка, ИНН 7701234567, +7 812 000 00 00, Банк клиента, г. Москва, ул. Ленина, 1");
         ctx.put("customer_phone", "+7 812 000 00 00");
         ctx.put("customer_bank", "Банк клиента");
 
