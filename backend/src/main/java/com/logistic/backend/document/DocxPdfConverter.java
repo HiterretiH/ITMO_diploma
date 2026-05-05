@@ -42,7 +42,11 @@ public class DocxPdfConverter {
         "Serif",
         "Roboto",
         "Liberation Sans",
-        "DejaVu Sans"
+        "DejaVu Sans",
+        "Symbol",
+        "ZapfDingbats",
+        "Wingdings",
+        "Webdings"
     };
 
     private static final String REGULAR_FONT_RESOURCE = "fonts/LiberationSans-Regular.ttf";

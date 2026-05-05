@@ -75,7 +75,7 @@ public final class DocumentFixtureGenerator {
         }
     }
 
-    private static Map<String, String> snapshotToContext(TripPrintSnapshot s) {
+    public static Map<String, String> snapshotToContext(TripPrintSnapshot s) {
         Map<String, String> ctx = new LinkedHashMap<>();
         ctx.put("number", asString(s.tripId()));
         ctx.put("date", asString(s.loadDate()));
