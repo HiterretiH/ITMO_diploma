@@ -20,3 +20,6 @@ Desktop.ini
 
 # Docker local overrides
 docker-compose.override.yml
+
+# Manual document review artifacts
+backend/manual-review-docs/

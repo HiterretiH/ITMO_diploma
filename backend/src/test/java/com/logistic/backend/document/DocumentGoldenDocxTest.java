@@ -22,7 +22,7 @@ class DocumentGoldenDocxTest {
     void generatedDocxMatchesApprovedGoldenDocuments() throws Exception {
         DocumentFixtureGenerator.main(new String[] {tempDir.toString()});
         DocxTemplateRenderer renderer = new DocxTemplateRenderer();
-        Path goldenDir = Path.of("manual-review-docs");
+        Path goldenDir = Path.of("src", "test", "resources", "golden-docs");
 
         for (String file : DOCX_FILES) {
             Path generated = tempDir.resolve(file);
