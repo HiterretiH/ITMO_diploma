@@ -138,6 +138,23 @@ Content-Type: application/json
 ###
 @vehicleId = {{createVehicle.response.body.id}}
 
+### 9a) Create saved place (optional)
+# @name createPlace
+POST {{baseUrl}}/api/v1/places
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{
+  "address": "Склад, ул. Промышленная, 5",
+  "contact": "Петров +7 900 000-00-00",
+  "placeType": "BOTH"
+}
+
+###
+### 9b) List places for load dropdown
+GET {{baseUrl}}/api/v1/places?type=LOAD
+Authorization: Bearer {{employeeToken}}
+
 ### 10) Create trip
 # @name createTrip
 POST {{baseUrl}}/api/v1/trips
