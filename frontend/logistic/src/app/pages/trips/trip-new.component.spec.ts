@@ -34,7 +34,8 @@ describe('TripNewComponent', () => {
             drivers: () => of([]),
             vehicles: () => of([]),
             places: () => of([]),
-            createPlace: () => of({ id: 1, address: 'A', contact: null, placeType: 'LOAD' }),
+            createPlace: () =>
+              of({ id: 1, address: 'A', contact: null, placeType: 'LOAD' }),
           },
         },
       ],
@@ -43,13 +44,30 @@ describe('TripNewComponent', () => {
     fixture = TestBed.createComponent(TripNewComponent);
   });
 
-  it('contractTotal is rate times leg count', () => {
+  it('recalculates priceAmount when ratePerLeg changes', () => {
+    fixture.detectChanges();
     const cmp = fixture.componentInstance;
-    cmp.form.patchValue({
-      ratePerLeg: 100,
-      legCount: 3,
-    });
-    expect(cmp.contractTotal()).toBe(300);
+    cmp.form.patchValue({ legCount: 4, ratePerLeg: 25 });
+    expect(cmp.form.controls.priceAmount.value).toBe(100);
+  });
+
+  it('recalculates priceAmount when legCount changes', () => {
+    fixture.detectChanges();
+    const cmp = fixture.componentInstance;
+    cmp.form.patchValue({ ratePerLeg: 50, legCount: 1 });
+    cmp.form.controls.legCount.setValue(3);
+    expect(cmp.form.controls.priceAmount.value).toBe(150);
+  });
+
+  it('overwrites manual priceAmount when ratePerLeg changes again', () => {
+    fixture.detectChanges();
+    const cmp = fixture.componentInstance;
+    cmp.form.patchValue({ ratePerLeg: 10, legCount: 2 });
+    expect(cmp.form.controls.priceAmount.value).toBe(20);
+    cmp.form.controls.priceAmount.setValue(999);
+    expect(cmp.form.controls.priceAmount.value).toBe(999);
+    cmp.form.controls.ratePerLeg.setValue(5);
+    expect(cmp.form.controls.priceAmount.value).toBe(10);
   });
 
   it('moves unloadDate forward when earlier than loadDate', () => {
