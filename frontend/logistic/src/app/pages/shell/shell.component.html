@@ -1,6 +1,6 @@
-<p-toolbar>
+<p-toolbar styleClass="shell-toolbar surface-ground">
   <ng-template pTemplate="start">
-    <span class="brand">Logistic</span>
+    <a routerLink="/trips" class="brand" tabindex="0">Logistic</a>
     <a
       routerLink="/trips"
       routerLinkActive="active-link"
@@ -36,6 +36,16 @@
     }
   </ng-template>
   <ng-template pTemplate="end">
+    <p-button
+      type="button"
+      [icon]="themeIcon()"
+      [text]="true"
+      rounded="true"
+      severity="secondary"
+      aria-label="Тема оформления"
+      title="Тема: нажмите для переключения (авто / светлая / тёмная)"
+      (onClick)="cycleTheme()"
+    />
     @if (auth.username(); as u) {
       <span class="user-label">{{ u }}</span>
     }

@@ -6,6 +6,7 @@ import { Button, ButtonDirective } from 'primeng/button';
 import { Menu } from 'primeng/menu';
 import { Toolbar } from 'primeng/toolbar';
 import { AuthService } from '../../core/auth.service';
+import { ThemeService } from '../../core/theme.service';
 import { UserCreateDialogComponent } from '../admin/user-create-dialog.component';
 
 @Component({
@@ -27,6 +28,7 @@ import { UserCreateDialogComponent } from '../admin/user-create-dialog.component
 })
 export class ShellComponent {
   readonly auth = inject(AuthService);
+  readonly theme = inject(ThemeService);
 
   adminUserDialogVisible = false;
 
@@ -48,4 +50,12 @@ export class ShellComponent {
       routerLink: ['/catalogs/places'],
     },
   ];
+
+  cycleTheme(): void {
+    this.theme.cycle();
+  }
+
+  themeIcon(): string {
+    return this.theme.cycleIcon();
+  }
 }
