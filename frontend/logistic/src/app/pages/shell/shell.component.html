@@ -26,6 +26,13 @@
         [text]="true"
         label="Пользователи"
       ></a>
+      <p-button
+        type="button"
+        label="+ Пользователь"
+        icon="pi pi-user-plus"
+        [text]="true"
+        (onClick)="adminUserDialogVisible = true"
+      />
     }
   </ng-template>
   <ng-template pTemplate="end">
@@ -45,3 +52,5 @@
 <main class="shell-main">
   <router-outlet />
 </main>
+
+<app-user-create-dialog [(visible)]="adminUserDialogVisible" />

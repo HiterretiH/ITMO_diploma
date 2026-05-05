@@ -1,0 +1,61 @@
+<p-dialog
+  header="Новый пользователь"
+  [visible]="visible"
+  (visibleChange)="onVisibleChange($event)"
+  [modal]="true"
+  [style]="{ width: '24rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="nu-user">Логин *</label>
+      <input pInputText id="nu-user" formControlName="username" class="w-full" autocomplete="off" />
+      @if (form.controls.username.touched && form.controls.username.invalid) {
+        <small class="p-error">Укажите логин</small>
+      }
+    </div>
+    <div class="field">
+      <label for="nu-pass">Пароль *</label>
+      <p-password
+        inputId="nu-pass"
+        formControlName="password"
+        [feedback]="false"
+        [toggleMask]="true"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        [fluid]="true"
+        autocomplete="new-password"
+      />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <small class="p-error">Укажите пароль</small>
+      }
+    </div>
+    <div class="field">
+      <label for="nu-roles">Роли *</label>
+      <p-multiSelect
+        inputId="nu-roles"
+        formControlName="roles"
+        [options]="roleOptions"
+        optionLabel="label"
+        optionValue="value"
+        display="chip"
+        placeholder="Выберите роли"
+        appendTo="body"
+        styleClass="w-full"
+      />
+      @if (form.controls.roles.touched && form.controls.roles.hasError('roles')) {
+        <small class="p-error">Нужна хотя бы одна роль</small>
+      }
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Отмена" [text]="true" (onClick)="onVisibleChange(false)" />
+    <p-button
+      label="Создать"
+      icon="pi pi-user-plus"
+      [loading]="saving"
+      [disabled]="form.invalid || saving"
+      (onClick)="submit()"
+    />
+  </ng-template>
+</p-dialog>
