@@ -60,5 +60,7 @@ docker compose up
 Для ручного тестирования полного сценария (auth → справочники → рейс → генерация документов → архив):
 
 - файл коллекции: `api/logistic-api.http`
+- OpenAPI (ручная фиксированная спецификация): `api/openapi.yaml`
+- OpenAPI (живой runtime-контракт через springdoc): `http://localhost:8080/v3/api-docs`
 - запускать по шагам из IDE (HTTP Client / REST Client)
 - коллекция использует дефолтного `admin/admin123` и создаёт demo-пользователей и данные.

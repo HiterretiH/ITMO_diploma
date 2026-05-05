@@ -1,0 +1,764 @@
+openapi: 3.0.3
+info:
+  title: Logistic Document API
+  version: 1.0.0
+  description: >
+    REST API for managing catalogs, trips, lifecycle transitions, audit log,
+    and generated transport documents.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: Auth
+  - name: Admin
+  - name: Counterparties
+  - name: Drivers
+  - name: Vehicles
+  - name: Trips
+  - name: Documents
+  - name: Audit
+
+paths:
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '401':
+          description: Invalid credentials
+
+  /api/v1/admin/users:
+    post:
+      tags: [Admin]
+      summary: Create user (ADMIN only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '200':
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '403':
+          description: Forbidden
+
+  /api/v1/counterparties:
+    get:
+      tags: [Counterparties]
+      summary: List counterparties
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Counterparty list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CounterpartyResponse'
+    post:
+      tags: [Counterparties]
+      summary: Create counterparty
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CounterpartyRequest'
+      responses:
+        '200':
+          description: Created counterparty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterpartyResponse'
+
+  /api/v1/counterparties/{id}:
+    get:
+      tags: [Counterparties]
+      summary: Get counterparty by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Counterparty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterpartyResponse'
+    put:
+      tags: [Counterparties]
+      summary: Update counterparty
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CounterpartyRequest'
+      responses:
+        '200':
+          description: Updated counterparty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterpartyResponse'
+    delete:
+      tags: [Counterparties]
+      summary: Delete counterparty
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/drivers:
+    get:
+      tags: [Drivers]
+      summary: List drivers
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Driver list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DriverResponse'
+    post:
+      tags: [Drivers]
+      summary: Create driver
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverRequest'
+      responses:
+        '200':
+          description: Created driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverResponse'
+
+  /api/v1/drivers/{id}:
+    get:
+      tags: [Drivers]
+      summary: Get driver by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverResponse'
+    put:
+      tags: [Drivers]
+      summary: Update driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverRequest'
+      responses:
+        '200':
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverResponse'
+    delete:
+      tags: [Drivers]
+      summary: Delete driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/vehicles:
+    get:
+      tags: [Vehicles]
+      summary: List vehicles
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vehicle list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleResponse'
+    post:
+      tags: [Vehicles]
+      summary: Create vehicle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleRequest'
+      responses:
+        '200':
+          description: Created vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+
+  /api/v1/vehicles/{id}:
+    get:
+      tags: [Vehicles]
+      summary: Get vehicle by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+    put:
+      tags: [Vehicles]
+      summary: Update vehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleRequest'
+      responses:
+        '200':
+          description: Updated vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+    delete:
+      tags: [Vehicles]
+      summary: Delete vehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Deleted
+
+  /api/v1/trips:
+    get:
+      tags: [Trips]
+      summary: List trips
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/TripStatus'
+      responses:
+        '200':
+          description: Trip list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TripResponse'
+    post:
+      tags: [Trips]
+      summary: Create draft trip
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Created trip
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripResponse'
+
+  /api/v1/trips/{id}:
+    get:
+      tags: [Trips]
+      summary: Get trip by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Trip
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripResponse'
+    put:
+      tags: [Trips]
+      summary: Update draft trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripUpdateRequest'
+      responses:
+        '200':
+          description: Updated trip
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripResponse'
+        '409':
+          description: Trip is locked
+
+  /api/v1/trips/{id}/submit:
+    post:
+      tags: [Trips]
+      summary: Submit trip for approval
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Updated trip
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripResponse'
+
+  /api/v1/trips/{id}/approve:
+    post:
+      tags: [Trips]
+      summary: Approve trip and generate documents
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Updated trip
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripResponse'
+
+  /api/v1/trips/{id}/archive:
+    post:
+      tags: [Trips]
+      summary: Archive approved trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Updated trip
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripResponse'
+
+  /api/v1/trips/{id}/documents:
+    get:
+      tags: [Documents]
+      summary: List generated documents for trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Generated document list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GeneratedDocumentResponse'
+
+  /api/v1/generated-documents/{id}/file:
+    get:
+      tags: [Documents]
+      summary: Download generated document file
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Binary file stream
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+
+  /api/v1/trips/{tripId}/audit-events:
+    get:
+      tags: [Audit]
+      summary: List audit events by trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Audit events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditEventResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  schemas:
+    Role:
+      type: string
+      enum: [EMPLOYEE, MANAGER, ADMIN]
+
+    TripStatus:
+      type: string
+      enum: [DRAFT, PENDING_APPROVAL, APPROVED, ARCHIVED]
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    JwtResponse:
+      type: object
+      properties:
+        token:
+          type: string
+
+    UserCreateRequest:
+      type: object
+      required: [username, password, roles]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+
+    CounterpartyRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        inn:
+          type: string
+        legalAddress:
+          type: string
+        phone:
+          type: string
+
+    CounterpartyResponse:
+      allOf:
+        - $ref: '#/components/schemas/CounterpartyRequest'
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+
+    DriverRequest:
+      type: object
+      required: [fullName, licenseNumber]
+      properties:
+        fullName:
+          type: string
+        licenseNumber:
+          type: string
+        licenseCategory:
+          type: string
+
+    DriverResponse:
+      allOf:
+        - $ref: '#/components/schemas/DriverRequest'
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+
+    VehicleRequest:
+      type: object
+      required: [plateNumber]
+      properties:
+        plateNumber:
+          type: string
+        model:
+          type: string
+        loadCapacityKg:
+          type: integer
+          format: int32
+
+    VehicleResponse:
+      allOf:
+        - $ref: '#/components/schemas/VehicleRequest'
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+
+    TripUpdateRequest:
+      type: object
+      properties:
+        shipperId:
+          type: integer
+          format: int64
+        consigneeId:
+          type: integer
+          format: int64
+        driverId:
+          type: integer
+          format: int64
+        vehicleId:
+          type: integer
+          format: int64
+        cargoDescription:
+          type: string
+        cargoWeightKg:
+          type: number
+          format: decimal
+        routeFrom:
+          type: string
+        routeTo:
+          type: string
+        loadDate:
+          type: string
+          format: date
+        unloadDate:
+          type: string
+          format: date
+        priceAmount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+
+    TripResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        ownerId:
+          type: integer
+          format: int64
+        ownerUsername:
+          type: string
+        status:
+          $ref: '#/components/schemas/TripStatus'
+        shipperId:
+          type: integer
+          format: int64
+          nullable: true
+        consigneeId:
+          type: integer
+          format: int64
+          nullable: true
+        driverId:
+          type: integer
+          format: int64
+          nullable: true
+        vehicleId:
+          type: integer
+          format: int64
+          nullable: true
+        cargoDescription:
+          type: string
+          nullable: true
+        cargoWeightKg:
+          type: number
+          format: decimal
+          nullable: true
+        routeFrom:
+          type: string
+          nullable: true
+        routeTo:
+          type: string
+          nullable: true
+        loadDate:
+          type: string
+          format: date
+          nullable: true
+        unloadDate:
+          type: string
+          format: date
+          nullable: true
+        priceAmount:
+          type: number
+          format: decimal
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    GeneratedDocumentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        documentType:
+          type: string
+          enum: [CONTRACT_APPLICATION, WAYBILL, ACT_OF_WORK]
+        fileFormat:
+          type: string
+          enum: [PDF, DOCX]
+        sha256:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    AuditEventResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+          enum: [TRIP_CREATED, TRIP_UPDATED, TRIP_SUBMITTED, TRIP_APPROVED, TRIP_ARCHIVED, DOCUMENTS_GENERATED, LOGIN]
+        payload:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        userId:
+          type: integer
+          format: int64
+          nullable: true
