@@ -112,6 +112,6 @@ export class DriversComponent implements OnInit {
   }
 
   dialogHeader(): string {
-    return this.editingId != null ? 'Водитель' : 'Новый водитель';
+    return this.editingId != null ? 'Изменить водителя' : 'Новый водитель';
   }
 }

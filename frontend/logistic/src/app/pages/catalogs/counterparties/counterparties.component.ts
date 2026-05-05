@@ -119,6 +119,6 @@ export class CounterpartiesComponent implements OnInit {
   }
 
   dialogHeader(): string {
-    return this.editingId != null ? 'Контрагент' : 'Новый контрагент';
+    return this.editingId != null ? 'Изменить контрагента' : 'Новый контрагент';
   }
 }

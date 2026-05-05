@@ -87,6 +87,7 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.addAllowedOriginPattern("http://localhost:*");
+        cfg.addAllowedOriginPattern("http://127.0.0.1:*");
         cfg.addAllowedHeader(CorsConfiguration.ALL);
         cfg.addAllowedMethod(CorsConfiguration.ALL);
         cfg.setAllowCredentials(true);

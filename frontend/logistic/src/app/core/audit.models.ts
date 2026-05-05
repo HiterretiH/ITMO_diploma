@@ -5,7 +5,8 @@ export type AuditEventType =
   | 'TRIP_APPROVED'
   | 'TRIP_ARCHIVED'
   | 'DOCUMENTS_GENERATED'
-  | 'LOGIN';
+  | 'LOGIN'
+  | 'REGISTER';
 
 export interface AuditEventResponse {
   id: number;

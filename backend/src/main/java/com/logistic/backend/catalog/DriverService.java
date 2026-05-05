@@ -30,6 +30,7 @@ public class DriverService {
         Driver d = driverRepository.findById(id).orElseThrow(this::notFound);
         assertOwner(owner, d);
         apply(d, req);
+        driverRepository.save(d);
         return toDto(d);
     }
 

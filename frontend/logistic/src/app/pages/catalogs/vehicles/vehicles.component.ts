@@ -124,6 +124,6 @@ export class VehiclesComponent implements OnInit {
   }
 
   dialogHeader(): string {
-    return this.editingId != null ? 'Транспортное средство' : 'Новое ТС';
+    return this.editingId != null ? 'Изменить ТС' : 'Новое ТС';
   }
 }

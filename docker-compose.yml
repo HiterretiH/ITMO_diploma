@@ -34,14 +34,14 @@ services:
     volumes:
       - docs:/data/docs
 
-  frontend:
-    build:
-      context: ./frontend/logistic
-      dockerfile: Dockerfile
-    depends_on:
-      - backend
-    ports:
-      - "4200:80"
+  # frontend:
+  #   build:
+  #     context: ./frontend/logistic
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - backend
+  #   ports:
+  #     - "4200:80"
 
 volumes:
   pgdata:

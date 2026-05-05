@@ -7,17 +7,26 @@ import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import {
+  localizeHttpClientMessage,
+  localizeProblemToast,
+} from './error-messages';
 import { ProblemDetail } from '../models/problem.models';
 
 function parseProblem(err: HttpErrorResponse): { summary: string; detail?: string } {
   const body = err.error;
   if (body && typeof body === 'object' && !Array.isArray(body)) {
     const p = body as ProblemDetail;
-    const summary = p.title?.trim() || `Ошибка ${err.status}`;
-    const detail = (p.detail ?? '').trim() || undefined;
-    return { summary, detail };
+    const toast = localizeProblemToast(p.title, p.detail, err.status);
+    return {
+      summary: toast.summary,
+      detail: toast.detail,
+    };
   }
-  return { summary: `Ошибка ${err.status}`, detail: err.message };
+  return {
+    summary: localizeProblemToast(null, null, err.status).summary,
+    detail: localizeHttpClientMessage(err.message, err.status),
+  };
 }
 
 function isTripPatch(req: { method: string; url: string }): boolean {
@@ -85,10 +94,13 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       if (err.status >= 500) {
+        const parsed = parseProblem(err);
         messages.add({
           severity: 'error',
-          summary: 'Ошибка сервера',
-          detail: isProblem ? parseProblem(err).detail : err.message,
+          summary: parsed.summary || 'Ошибка сервера',
+          detail:
+            parsed.detail ??
+            localizeHttpClientMessage(err.message, err.status),
           life: 6000,
         });
         return throwError(() => err);

@@ -30,6 +30,7 @@ public class VehicleService {
         Vehicle v = vehicleRepository.findById(id).orElseThrow(this::notFound);
         assertOwner(owner, v);
         apply(v, req);
+        vehicleRepository.save(v);
         return toDto(v);
     }
 
