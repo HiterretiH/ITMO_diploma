@@ -1,5 +1,5 @@
 <p-toolbar styleClass="shell-toolbar">
-  <ng-template pTemplate="start">
+  <ng-template #start>
     <a routerLink="/trips" class="brand" tabindex="0">Logistic</a>
     <a
       routerLink="/trips"
@@ -35,7 +35,7 @@
       />
     }
   </ng-template>
-  <ng-template pTemplate="end">
+  <ng-template #end>
     <p-button
       type="button"
       [icon]="themeIcon()"
