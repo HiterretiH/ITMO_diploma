@@ -52,3 +52,11 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.register('generateDocumentFixtures', JavaExec) {
+    group = 'verification'
+    description = 'Generate document fixtures for manual visual review'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.logistic.backend.document.DocumentFixtureGenerator'
+    args "$projectDir/manual-review-docs"
+}
