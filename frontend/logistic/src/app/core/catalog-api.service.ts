@@ -1,10 +1,12 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   CounterpartyResponse,
   DriverResponse,
+  PlaceResponse,
+  PlaceType,
   VehicleResponse,
 } from './catalog.models';
 
@@ -100,5 +102,39 @@ export class CatalogApiService {
 
   deleteVehicle(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/vehicles/${id}`);
+  }
+
+  places(type?: PlaceType, q?: string): Observable<PlaceResponse[]> {
+    let params = new HttpParams();
+    if (type) {
+      params = params.set('type', type);
+    }
+    if (q) {
+      params = params.set('q', q);
+    }
+    return this.http.get<PlaceResponse[]>(`${this.base}/places`, { params });
+  }
+
+  createPlace(body: {
+    address: string;
+    contact?: string | null;
+    placeType: PlaceType;
+  }): Observable<PlaceResponse> {
+    return this.http.post<PlaceResponse>(`${this.base}/places`, body);
+  }
+
+  updatePlace(
+    id: number,
+    body: {
+      address: string;
+      contact?: string | null;
+      placeType: PlaceType;
+    },
+  ): Observable<PlaceResponse> {
+    return this.http.put<PlaceResponse>(`${this.base}/places/${id}`, body);
+  }
+
+  deletePlace(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/places/${id}`);
   }
 }

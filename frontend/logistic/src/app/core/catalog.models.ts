@@ -19,3 +19,12 @@ export interface VehicleResponse {
   model: string | null;
   loadCapacityKg: number | null;
 }
+
+export type PlaceType = 'LOAD' | 'UNLOAD' | 'BOTH';
+
+export interface PlaceResponse {
+  id: number;
+  address: string;
+  contact: string | null;
+  placeType: PlaceType;
+}
