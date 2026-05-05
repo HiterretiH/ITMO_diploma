@@ -1,10 +1,17 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [
+        MessageService,
+        ConfirmationService,
+        provideRouter([]),
+      ],
     }).compileComponents();
   });
 
@@ -20,10 +27,11 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('logistic');
   });
 
-  it('should render title', () => {
+  it('should render toast and confirm dialog hosts', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, logistic');
+    expect(compiled.querySelector('p-toast')).toBeTruthy();
+    expect(compiled.querySelector('p-confirmdialog, p-confirmDialog')).toBeTruthy();
   });
 });

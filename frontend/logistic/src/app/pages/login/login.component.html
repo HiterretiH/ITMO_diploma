@@ -1,15 +1,43 @@
-<section class="panel">
-  <h1>Вход</h1>
-  <label>
-    Логин
-    <input [(ngModel)]="username" name="user" autocomplete="username" />
-  </label>
-  <label>
-    Пароль
-    <input [(ngModel)]="password" name="pass" type="password" autocomplete="current-password" />
-  </label>
-  @if (error) {
-    <p class="err">{{ error }}</p>
-  }
-  <button type="button" (click)="submit()" [disabled]="busy">Войти</button>
-</section>
+<div class="login-wrap">
+  <p-card header="Вход">
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        <label for="login-user">Логин</label>
+        <input
+          pInputText
+          id="login-user"
+          type="text"
+          formControlName="username"
+          autocomplete="username"
+          class="w-full"
+        />
+        @if (form.controls.username.touched && form.controls.username.invalid) {
+          <small class="p-error">Укажите логин</small>
+        }
+      </div>
+      <div class="field">
+        <label for="login-pass">Пароль</label>
+        <p-password
+          inputId="login-pass"
+          formControlName="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [fluid]="true"
+          autocomplete="current-password"
+        />
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <small class="p-error">Укажите пароль</small>
+        }
+      </div>
+      <p-button
+        type="submit"
+        label="Войти"
+        [disabled]="busy || form.invalid"
+        [loading]="busy"
+        styleClass="w-full"
+      />
+    </form>
+  </p-card>
+</div>

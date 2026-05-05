@@ -1,0 +1,115 @@
+import {
+  HttpErrorResponse,
+  HttpInterceptorFn,
+} from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { catchError, throwError } from 'rxjs';
+import { AuthService } from './auth.service';
+import { ProblemDetail } from '../models/problem.models';
+
+function parseProblem(err: HttpErrorResponse): { summary: string; detail?: string } {
+  const body = err.error;
+  if (body && typeof body === 'object' && !Array.isArray(body)) {
+    const p = body as ProblemDetail;
+    const summary = p.title?.trim() || `Ошибка ${err.status}`;
+    const detail = (p.detail ?? '').trim() || undefined;
+    return { summary, detail };
+  }
+  return { summary: `Ошибка ${err.status}`, detail: err.message };
+}
+
+function isTripPatch(req: { method: string; url: string }): boolean {
+  return (
+    req.method === 'PATCH' &&
+    /\/api\/v1\/trips\/[^/]+\/?$/.test(req.url.split('?')[0] ?? '')
+  );
+}
+
+export const errorInterceptor: HttpInterceptorFn = (req, next) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const messages = inject(MessageService);
+
+  return next(req).pipe(
+    catchError((err: HttpErrorResponse) => {
+      const ct = err.headers?.get('content-type') ?? '';
+      const isProblem =
+        ct.includes('application/problem+json') ||
+        ct.includes('application/json');
+
+      if (err.status === 401) {
+        const loginUrl = '/api/v1/auth/login';
+        if (req.url.includes(loginUrl)) {
+          if (isProblem && err.error && typeof err.error === 'object') {
+            const { summary, detail } = parseProblem(err);
+            messages.add({
+              severity: 'error',
+              summary,
+              detail: detail ?? 'Неверный логин или пароль',
+              life: 6000,
+            });
+          } else {
+            messages.add({
+              severity: 'error',
+              summary: 'Ошибка входа',
+              detail: 'Неверный логин или пароль',
+              life: 6000,
+            });
+          }
+        } else {
+          auth.logout();
+        }
+        return throwError(() => err);
+      }
+
+      if (err.status === 403) {
+        void router.navigateByUrl('/forbidden');
+        if (isProblem && err.error && typeof err.error === 'object') {
+          const { summary, detail } = parseProblem(err);
+          messages.add({
+            severity: 'warn',
+            summary,
+            detail,
+            life: 5000,
+          });
+        }
+        return throwError(() => err);
+      }
+
+      if (err.status >= 500) {
+        messages.add({
+          severity: 'error',
+          summary: 'Ошибка сервера',
+          detail: isProblem ? parseProblem(err).detail : err.message,
+          life: 6000,
+        });
+        return throwError(() => err);
+      }
+
+      if (err.status === 409 && isTripPatch(req)) {
+        return throwError(() => err);
+      }
+
+      if (isProblem && err.error && typeof err.error === 'object') {
+        const { summary, detail } = parseProblem(err);
+        messages.add({
+          severity: 'error',
+          summary,
+          detail,
+          life: 6000,
+        });
+      } else if (err.status >= 400) {
+        messages.add({
+          severity: 'error',
+          summary: 'Запрос не выполнен',
+          detail: err.message || `Код ${err.status}`,
+          life: 5000,
+        });
+      }
+
+      return throwError(() => err);
+    }),
+  );
+};
