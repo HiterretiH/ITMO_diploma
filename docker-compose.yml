@@ -6,9 +6,15 @@ services:
       POSTGRES_USER: logistic
       POSTGRES_PASSWORD: logistic
     ports:
-      - "5432:5432"
+      - "7727:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U logistic -d logistic"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   backend:
     build:
@@ -21,9 +27,10 @@ services:
       LOGISTIC_STORAGE_ROOT: /data/docs
       JWT_SECRET: docker-dev-change-this-secret-min-32-chars-long!!!
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "7272:8080"
     volumes:
       - docs:/data/docs
 

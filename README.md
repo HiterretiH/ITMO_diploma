@@ -74,8 +74,8 @@ docker compose up
 ```
 
 - UI: http://localhost:4200  
-- API: http://localhost:8080  
-- PostgreSQL: localhost:5432  
+- API (с хоста): http://localhost:7272  
+- PostgreSQL (с хоста): `localhost:7727` (внутри сети Compose сервис `db` по-прежнему слушает `5432`)  
 
 В Compose для JWT задан `JWT_SECRET`; для продакшена используйте надёжный секрет и внешнее хранилище конфигурации.
 
@@ -85,6 +85,6 @@ docker compose up
 
 - файл коллекции: `api/logistic-api.http`
 - OpenAPI (ручная фиксированная спецификация): `api/openapi.yaml`
-- OpenAPI (живой runtime-контракт через springdoc): `http://localhost:8080/v3/api-docs`
+- OpenAPI (живой runtime-контракт через springdoc): локально — `http://localhost:8080/v3/api-docs`; в Docker Compose — `http://localhost:7272/v3/api-docs`
 - запускать по шагам из IDE (HTTP Client / REST Client)
 - коллекция использует дефолтного `admin/admin123` и создаёт demo-пользователей и данные.
