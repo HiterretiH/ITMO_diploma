@@ -24,7 +24,9 @@ cd backend
 
 Пользователь по умолчанию после первого старта (профиль не `test`): `admin` / `admin123`.
 
-## Frontend
+## Frontend (Angular 19 + PrimeNG)
+
+Работает поверх REST API (`/api/v1/...`). В режиме разработки запросы с фронта идут на тот же origin (`localhost:4200`), а `proxy.conf.json` перенаправляет `/api` и `/v3` на backend `http://localhost:8080`.
 
 ```powershell
 cd frontend\logistic
@@ -32,13 +34,34 @@ npm ci
 npm start
 ```
 
-`ng serve` проксирует `/api` и `/v3` на `http://localhost:8080` (`proxy.conf.json`). Откройте приложение по адресу, который выводит Angular CLI (обычно `http://localhost:4200`).
+Откройте в браузере URL из вывода CLI (обычно `http://localhost:4200`), затем:
 
-Сборка:
+1. Страница **«Вход»** — укажите учётные данные пользователя с ролью `EMPLOYEE`, `MANAGER` или `ADMIN` (например, после первого старта backend: `admin` / `admin123`).
+2. **Рейсы** — список, фильтр по статусу, «Создать» ведёт на `POST /trips` и открывает карточку рейса.
+3. **Справочники** — контрагенты, водители, ТС (CRUD в диалогах).
+4. **Карточка рейса** — шаги PrimeNG Stepper, сохранение только в статусе `DRAFT`; для ролей MANAGER/ADMIN — утверждение и архив; при `APPROVED`/`ARCHIVED` — скачивание PDF/DOCX; вкладка **«Аудит»**.
+5. Роль **ADMIN** — пункт «Пользователи», кнопка «+ Пользователь» (создание через API).
+
+Юнит-тесты (Karma):
+
+```powershell
+cd frontend\logistic
+npm test
+```
+
+Для headless CI (пример):
+
+```powershell
+npx ng test --no-watch --browsers=ChromeHeadless
+```
+
+Сборка production:
 
 ```powershell
 npm run build
 ```
+
+Статические файлы — `frontend/logistic/dist/logistic`. При раздаче UI и API с одного хоста `environment.production.ts` использует `apiBase: ''`; для отдельного домена API задайте базовый URL в окружении и пересоберите приложение.
 
 ## Docker Compose
 
