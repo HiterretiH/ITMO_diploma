@@ -12,12 +12,6 @@
   border-radius: 2px;
 }
 
-:host ::ng-deep .shell-toolbar.p-toolbar {
-  background: var(--p-content-background);
-  color: var(--p-text-color);
-  border-color: var(--p-content-border-color);
-}
-
 .nav-link {
   text-decoration: none;
 }
@@ -36,6 +30,5 @@
   padding: 1rem 1.25rem;
   max-width: 1200px;
   margin: 0 auto;
-  background: var(--p-content-background);
   min-height: calc(100% - 3.5rem);
 }

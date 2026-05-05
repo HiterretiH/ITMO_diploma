@@ -13,7 +13,7 @@ body {
     Roboto,
     Arial,
     sans-serif;
-  background: var(--p-content-background);
+  background: var(--p-surface-50);
   color: var(--p-text-color);
 }
 
