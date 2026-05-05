@@ -66,7 +66,7 @@ npm run build
 
 ## Docker Compose
 
-Сборка jar backend выполняется образом; для ускорения локальной разработки можно предварительно собрать jar (`.\gradlew.bat bootJar`). Нужен доступ к Docker Hub для базовых образов (`eclipse-temurin`, `node`, `nginx`, `postgres`).
+Сборка jar backend в Docker идёт через образ `gradle` (не требуется скачивание Gradle-дистрибутива wrapper’ом внутри контейнера); в `backend/settings.gradle` задан `pluginManagement` (Maven Central + Plugin Portal), чтобы плагины Spring Boot находились надёжнее. Для ускорения локальной разработки можно предварительно собрать jar (`.\gradlew.bat bootJar`). Нужен доступ к Docker Hub для базовых образов (`gradle`, `eclipse-temurin`, `node`, `nginx`, `postgres`) и к Maven Central при сборке backend.
 
 Backend стартует только после готовности Postgres (`healthcheck` + `depends_on`).
 
