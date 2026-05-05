@@ -9,6 +9,8 @@ public interface GeneratedDocumentRepository extends JpaRepository<GeneratedDocu
 
     List<GeneratedDocument> findByTrip(Trip trip);
 
+    void deleteByTrip(Trip trip);
+
     Optional<GeneratedDocument> findByTripAndDocumentTypeAndFileFormat(
             Trip trip, DocumentType documentType, FileFormat fileFormat);
 }

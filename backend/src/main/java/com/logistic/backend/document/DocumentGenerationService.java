@@ -9,16 +9,16 @@ import com.lowagie.text.Paragraph;
 import com.lowagie.text.pdf.PdfWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +29,7 @@ public class DocumentGenerationService {
     private final ObjectMapper objectMapper;
     private final StorageProperties storageProperties;
     private final GeneratedDocumentRepository generatedDocumentRepository;
+    private final DocxTemplateRenderer templateRenderer;
 
     @Transactional
     public void generateAndPersist(Trip trip) throws IOException, DocumentException {
@@ -39,10 +40,12 @@ public class DocumentGenerationService {
                         .resolve("trips")
                         .resolve(trip.getId().toString());
         Files.createDirectories(base);
+        generatedDocumentRepository.deleteByTrip(trip);
 
         for (DocumentType dt : DocumentType.values()) {
+            byte[] renderedDocx = renderDocxFromTemplate(dt, snap);
             for (FileFormat ff : FileFormat.values()) {
-                byte[] body = render(dt, ff, snap);
+                byte[] body = ff == FileFormat.DOCX ? renderedDocx : renderPdf(renderedDocx);
                 String ext = ff == FileFormat.PDF ? "pdf" : "docx";
                 String fileName = dt.name().toLowerCase() + "_" + ff.name().toLowerCase() + "." + ext;
                 Path path = base.resolve(fileName);
@@ -59,107 +62,66 @@ public class DocumentGenerationService {
         }
     }
 
-    private byte[] render(DocumentType type, FileFormat format, TripPrintSnapshot s)
-            throws IOException, DocumentException {
-        List<String> lines =
-                switch (type) {
-                    case CONTRACT_APPLICATION -> contractLines(s);
-                    case WAYBILL -> waybillLines(s);
-                    case ACT_OF_WORK -> actLines(s);
-                };
-        if (format == FileFormat.PDF) {
-            return renderPdf(lines);
+    private byte[] renderDocxFromTemplate(DocumentType type, TripPrintSnapshot snapshot)
+            throws IOException {
+        String resourcePath = "templates/documents/" + templateName(type);
+        try (InputStream in = new ClassPathResource(resourcePath).getInputStream()) {
+            return templateRenderer.render(in.readAllBytes(), snapshotToContext(snapshot));
         }
-        return renderDocx(titleFor(type), lines);
     }
 
-    private static String titleFor(DocumentType type) {
+    private static String templateName(DocumentType type) {
         return switch (type) {
-            case CONTRACT_APPLICATION -> "Договор-заявка на перевозку груза";
-            case WAYBILL -> "Транспортная накладная (упрощённая форма)";
-            case ACT_OF_WORK -> "Акт выполненных работ";
+            case CONTRACT_APPLICATION -> "contract_application.docx";
+            case WAYBILL -> "waybill.docx";
+            case ACT_OF_WORK -> "act_of_work.docx";
         };
     }
 
-    private static List<String> contractLines(TripPrintSnapshot s) {
-        return List.of(
-                "Договор-заявка на организацию перевозки груза автомобильным транспортом",
-                "Исполнитель (перевозчик): " + nullToEmpty(s.ownerUsername()),
-                "Заказчик (грузоотправитель): " + nullToEmpty(s.shipperName()) + ", ИНН: " + nullToEmpty(s.shipperInn()),
-                "Адрес: " + nullToEmpty(s.shipperAddress()),
-                "Грузополучатель: " + nullToEmpty(s.consigneeName()) + ", ИНН: " + nullToEmpty(s.consigneeInn()),
-                "Адрес: " + nullToEmpty(s.consigneeAddress()),
-                "Описание груза: " + nullToEmpty(s.cargoDescription()),
-                "Масса груза, кг: " + (s.cargoWeightKg() != null ? s.cargoWeightKg().toPlainString() : ""),
-                "Маршрут: " + nullToEmpty(s.routeFrom()) + " — " + nullToEmpty(s.routeTo()),
-                "Погрузка: " + (s.loadDate() != null ? s.loadDate().toString() : "") + ", разгрузка: "
-                        + (s.unloadDate() != null ? s.unloadDate().toString() : ""),
-                "Транспорт: " + nullToEmpty(s.vehiclePlate()) + ", " + nullToEmpty(s.vehicleModel()),
-                "Водитель: " + nullToEmpty(s.driverName()) + ", удостоверение: " + nullToEmpty(s.driverLicense()),
-                "Стоимость услуг: " + (s.priceAmount() != null ? s.priceAmount().toPlainString() : "") + " "
-                        + nullToEmpty(s.currency()));
-    }
-
-    private static List<String> waybillLines(TripPrintSnapshot s) {
-        return List.of(
-                "Транспортная накладная",
-                "Рейс № " + s.tripId(),
-                "Грузоотправитель: " + nullToEmpty(s.shipperName()),
-                "Грузополучатель: " + nullToEmpty(s.consigneeName()),
-                "Наименование груза: " + nullToEmpty(s.cargoDescription()),
-                "Масса: " + (s.cargoWeightKg() != null ? s.cargoWeightKg().toPlainString() : ""),
-                "Пункт отправления: " + nullToEmpty(s.routeFrom()),
-                "Пункт назначения: " + nullToEmpty(s.routeTo()),
-                "Дата отправления: " + (s.loadDate() != null ? s.loadDate().toString() : ""),
-                "Дата прибытия: " + (s.unloadDate() != null ? s.unloadDate().toString() : ""),
-                "Автомобиль: " + nullToEmpty(s.vehiclePlate()),
-                "Водитель: " + nullToEmpty(s.driverName()));
-    }
-
-    private static List<String> actLines(TripPrintSnapshot s) {
-        return List.of(
-                "Акт выполненных работ (оказанных услуг)",
-                "Рейс № " + s.tripId(),
-                "Заказчик: " + nullToEmpty(s.shipperName()),
-                "Исполнитель: " + nullToEmpty(s.ownerUsername()),
-                "Услуга: перевозка груза по маршруту " + nullToEmpty(s.routeFrom()) + " — " + nullToEmpty(s.routeTo()),
-                "Стоимость: " + (s.priceAmount() != null ? s.priceAmount().toPlainString() : "") + " "
-                        + nullToEmpty(s.currency()),
-                "Груз сдал представитель грузоотправителя _________________",
-                "Груз принял водитель " + nullToEmpty(s.driverName()) + " _________________");
-    }
-
-    private static String nullToEmpty(String v) {
-        return v == null ? "" : v;
-    }
-
-    private static byte[] renderPdf(List<String> lines) throws DocumentException {
+    private byte[] renderPdf(byte[] renderedDocx) throws DocumentException, IOException {
+        String text = templateRenderer.extractText(renderedDocx);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document doc = new Document();
         PdfWriter.getInstance(doc, baos);
         doc.open();
-        for (String line : lines) {
+        for (String line : text.split("\\R")) {
+            if (line.isBlank()) {
+                continue;
+            }
             doc.add(new Paragraph(line));
         }
         doc.close();
         return baos.toByteArray();
     }
 
-    private static byte[] renderDocx(String title, List<String> lines) throws IOException {
-        try (XWPFDocument doc = new XWPFDocument()) {
-            XWPFParagraph t = doc.createParagraph();
-            XWPFRun tr = t.createRun();
-            tr.setBold(true);
-            tr.setText(title);
-            for (String line : lines) {
-                XWPFParagraph p = doc.createParagraph();
-                XWPFRun r = p.createRun();
-                r.setText(line);
-            }
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            doc.write(baos);
-            return baos.toByteArray();
-        }
+    private static Map<String, String> snapshotToContext(TripPrintSnapshot s) {
+        Map<String, String> ctx = new LinkedHashMap<>();
+        ctx.put("tripId", asString(s.tripId()));
+        ctx.put("ownerUsername", asString(s.ownerUsername()));
+        ctx.put("shipperName", asString(s.shipperName()));
+        ctx.put("shipperInn", asString(s.shipperInn()));
+        ctx.put("shipperAddress", asString(s.shipperAddress()));
+        ctx.put("consigneeName", asString(s.consigneeName()));
+        ctx.put("consigneeInn", asString(s.consigneeInn()));
+        ctx.put("consigneeAddress", asString(s.consigneeAddress()));
+        ctx.put("cargoDescription", asString(s.cargoDescription()));
+        ctx.put("cargoWeightKg", asString(s.cargoWeightKg()));
+        ctx.put("routeFrom", asString(s.routeFrom()));
+        ctx.put("routeTo", asString(s.routeTo()));
+        ctx.put("loadDate", asString(s.loadDate()));
+        ctx.put("unloadDate", asString(s.unloadDate()));
+        ctx.put("driverName", asString(s.driverName()));
+        ctx.put("driverLicense", asString(s.driverLicense()));
+        ctx.put("vehiclePlate", asString(s.vehiclePlate()));
+        ctx.put("vehicleModel", asString(s.vehicleModel()));
+        ctx.put("vehicleCapacityKg", asString(s.vehicleCapacityKg()));
+        ctx.put("priceAmount", asString(s.priceAmount()));
+        ctx.put("currency", asString(s.currency()));
+        return ctx;
+    }
+
+    private static String asString(Object value) {
+        return value == null ? "" : value.toString();
     }
 
     private static String sha256Hex(byte[] data) {
