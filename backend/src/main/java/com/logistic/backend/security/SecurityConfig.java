@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -12,7 +13,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -25,13 +28,43 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final SecurityProblemResponseSupport problemResponseSupport;
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    AuthenticationEntryPoint problemAuthenticationEntryPoint() {
+        return (request, response, authException) -> {
+            String detail =
+                    authException != null && authException.getMessage() != null
+                            ? authException.getMessage()
+                            : "Authentication required";
+            problemResponseSupport.write(response, HttpStatus.UNAUTHORIZED, detail);
+        };
+    }
+
+    @Bean
+    AccessDeniedHandler problemAccessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            String detail =
+                    accessDeniedException != null && accessDeniedException.getMessage() != null
+                            ? accessDeniedException.getMessage()
+                            : "Forbidden";
+            problemResponseSupport.write(response, HttpStatus.FORBIDDEN, detail);
+        };
+    }
+
+    @Bean
+    SecurityFilterChain filterChain(
+            HttpSecurity http,
+            AuthenticationEntryPoint authenticationEntryPoint,
+            AccessDeniedHandler accessDeniedHandler)
+            throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(
                         s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(
+                        ex -> ex.authenticationEntryPoint(authenticationEntryPoint)
+                                .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(
                         auth ->
                                 auth.requestMatchers(HttpMethod.POST, "/api/v1/auth/login")

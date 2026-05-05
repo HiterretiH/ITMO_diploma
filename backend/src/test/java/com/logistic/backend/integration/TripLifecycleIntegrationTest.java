@@ -3,7 +3,6 @@ package com.logistic.backend.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logistic.backend.api.dto.CounterpartyRequest;
 import com.logistic.backend.api.dto.DriverRequest;
 import com.logistic.backend.api.dto.LoginRequest;
@@ -19,7 +18,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
@@ -30,16 +28,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
 @ActiveProfiles("test")
-@Testcontainers
 class TripLifecycleIntegrationTest extends AbstractPostgresIntegrationTest {
 
-    @Autowired private TestRestTemplate restTemplate;
-    @Autowired ObjectMapper objectMapper;
     @Autowired UserRepository userRepository;
     @Autowired PasswordEncoder passwordEncoder;
 
@@ -66,8 +60,8 @@ class TripLifecycleIntegrationTest extends AbstractPostgresIntegrationTest {
         mgr.setRoles(EnumSet.of(Role.MANAGER));
         userRepository.save(mgr);
 
-        employeeToken = loginToken(empName, "emp-pass");
-        managerToken = loginToken(mgrName, "mgr-pass");
+        employeeToken = loginTokenAssertOk(empName, "emp-pass");
+        managerToken = loginTokenAssertOk(mgrName, "mgr-pass");
     }
 
     @Test
@@ -160,19 +154,11 @@ class TripLifecycleIntegrationTest extends AbstractPostgresIntegrationTest {
         assertThat(audit.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
-    private HttpHeaders jsonHeaders() {
-        HttpHeaders h = new HttpHeaders();
-        h.setContentType(MediaType.APPLICATION_JSON);
-        return h;
-    }
-
     private HttpHeaders authorizedHeaders(String token) {
-        HttpHeaders h = jsonHeaders();
-        h.setBearerAuth(token);
-        return h;
+        return bearer(token);
     }
 
-    private String loginToken(String user, String pass) throws Exception {
+    private String loginTokenAssertOk(String user, String pass) throws Exception {
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
                         "/api/v1/auth/login",
