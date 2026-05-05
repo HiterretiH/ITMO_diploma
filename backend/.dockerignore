@@ -1,0 +1,8 @@
+.gradle
+build
+bin
+.idea
+*.iml
+.git
+.gitignore
+manual-review-docs

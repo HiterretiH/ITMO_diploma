@@ -66,7 +66,9 @@ npm run build
 
 ## Docker Compose
 
-Сборка jar backend выполняется образом; для ускорения локальной разработки можно предварительно собрать jar (`.\gradlew.bat bootJar`).
+Сборка jar backend выполняется образом; для ускорения локальной разработки можно предварительно собрать jar (`.\gradlew.bat bootJar`). Нужен доступ к Docker Hub для базовых образов (`eclipse-temurin`, `node`, `nginx`, `postgres`).
+
+Backend стартует только после готовности Postgres (`healthcheck` + `depends_on`).
 
 ```powershell
 docker compose build
