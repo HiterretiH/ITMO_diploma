@@ -53,22 +53,22 @@ export const routes: Routes = [
       {
         path: 'catalogs/counterparties',
         loadComponent: () =>
-          import('./pages/catalogs/counterparties/counterparties-page.component').then(
-            (m) => m.CounterpartiesPageComponent,
+          import('./pages/catalogs/counterparties/counterparties.component').then(
+            (m) => m.CounterpartiesComponent,
           ),
       },
       {
         path: 'catalogs/drivers',
         loadComponent: () =>
-          import('./pages/catalogs/drivers/drivers-page.component').then(
-            (m) => m.DriversPageComponent,
+          import('./pages/catalogs/drivers/drivers.component').then(
+            (m) => m.DriversComponent,
           ),
       },
       {
         path: 'catalogs/vehicles',
         loadComponent: () =>
-          import('./pages/catalogs/vehicles/vehicles-page.component').then(
-            (m) => m.VehiclesPageComponent,
+          import('./pages/catalogs/vehicles/vehicles.component').then(
+            (m) => m.VehiclesComponent,
           ),
       },
       {
