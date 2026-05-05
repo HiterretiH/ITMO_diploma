@@ -1,0 +1,159 @@
+.trip-new-wrap {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2.5rem;
+}
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.page-head .page-title {
+  margin-bottom: 0;
+}
+
+:host ::ng-deep .trip-new-wrap .p-card-body {
+  padding-top: 0.25rem;
+}
+
+.msg-banner {
+  margin-bottom: 1rem;
+}
+
+.trip-new-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.block {
+  padding: 0.35rem 0 1rem;
+}
+
+.block-heading {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-text-muted-color, #64748b);
+}
+
+.block-hint {
+  margin: -0.15rem 0 0.85rem;
+  font-size: 0.82rem;
+  color: var(--p-text-muted-color, #64748b);
+  line-height: 1.45;
+}
+
+.block-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1.25rem;
+}
+
+.grid-tight .field {
+  margin-bottom: 0;
+}
+
+.grid-2-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .grid-2,
+  .grid-2-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.route-point {
+  margin-bottom: 1.15rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--p-border-radius, 6px);
+  background: var(--p-content-background, #f8fafc);
+  border: 1px solid var(--p-content-border-color, #e2e8f0);
+}
+
+.route-point:last-of-type {
+  margin-bottom: 0;
+}
+
+.route-label {
+  display: block;
+  margin-bottom: 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--p-primary-color, #3b82f6);
+}
+
+.grid-money {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .grid-money {
+    grid-template-columns: 1fr;
+  }
+}
+
+.total-field {
+  grid-column: 1 / -1;
+}
+
+.total-value {
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--p-border-radius, 6px);
+  border: 1px solid var(--p-content-border-color, #e2e8f0);
+  background: var(--p-surface-50, #f8fafc);
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.form-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+}
+
+.w-full {
+  width: 100%;
+}

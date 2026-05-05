@@ -8,6 +8,20 @@
 .top h1 {
   margin: 0;
   font-size: 1.35rem;
+  color: var(--p-text-color);
+}
+
+.route-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.route-step-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--p-primary-color);
+  margin-bottom: 0.25rem;
 }
 
 .step-body {
@@ -64,6 +78,14 @@
 .p-0 {
   padding: 0 !important;
   align-self: flex-start;
+}
+
+.catalog-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+  margin-top: 0.35rem;
 }
 
 .payload-pre {

@@ -1,0 +1,220 @@
+<div class="trip-new-wrap">
+  <header class="page-head">
+    <h1 class="page-title">Новый рейс</h1>
+    <p-button
+      label="К списку"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      routerLink="/trips"
+    />
+  </header>
+
+  <p-card>
+    @if (errorMessage) {
+      <p-message
+        severity="error"
+        [text]="errorMessage"
+        [closable]="true"
+        (onClose)="errorMessage = null"
+        styleClass="msg-banner w-full"
+      />
+    }
+
+    <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveAndSubmit()">
+      <section class="block" aria-labelledby="sec-parties">
+        <h2 id="sec-parties" class="block-heading">Контрагенты</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="shipper">Отправитель</label>
+            <p-dropdown
+              inputId="shipper"
+              formControlName="shipperId"
+              [options]="cpOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [showClear]="true"
+              appendTo="body"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="field">
+            <label for="consignee">Получатель</label>
+            <p-dropdown
+              inputId="consignee"
+              formControlName="consigneeId"
+              [options]="cpOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [showClear]="true"
+              appendTo="body"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+      </section>
+
+      <p-divider />
+
+      <section class="block" aria-labelledby="sec-crew">
+        <h2 id="sec-crew" class="block-heading">Перевозка</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="driver">Водитель</label>
+            <p-dropdown
+              inputId="driver"
+              formControlName="driverId"
+              [options]="driverOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [showClear]="true"
+              appendTo="body"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="field">
+            <label for="vehicle">Транспорт</label>
+            <p-dropdown
+              inputId="vehicle"
+              formControlName="vehicleId"
+              [options]="vehicleOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [showClear]="true"
+              appendTo="body"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+      </section>
+
+      <p-divider />
+
+      <section class="block" aria-labelledby="sec-route">
+        <h2 id="sec-route" class="block-heading">Маршрут</h2>
+        <div class="route-point">
+          <span class="route-label">Погрузка</span>
+          <app-place-input
+            [form]="form"
+            addressKey="originAddress"
+            contactKey="originContact"
+            placeType="LOAD"
+            inputId="originAddr"
+            contactInputId="originCt"
+          />
+        </div>
+        <div class="route-point">
+          <span class="route-label">Разгрузка</span>
+          <app-place-input
+            [form]="form"
+            addressKey="destinationAddress"
+            contactKey="destinationContact"
+            placeType="UNLOAD"
+            inputId="destAddr"
+            contactInputId="destCt"
+          />
+        </div>
+      </section>
+
+      <p-divider />
+
+      <section class="block" aria-labelledby="sec-cargo">
+        <h2 id="sec-cargo" class="block-heading">Груз и сроки</h2>
+        <div class="grid-2 grid-tight">
+          <div class="field">
+            <label for="cargo">Груз</label>
+            <input pInputText id="cargo" formControlName="cargoDescription" class="w-full" />
+          </div>
+          <div class="field">
+            <label for="weight">Масса, кг</label>
+            <p-inputNumber
+              inputId="weight"
+              formControlName="cargoWeightKg"
+              [min]="0"
+              [useGrouping]="false"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+        <div class="grid-2-inner">
+          <div class="field">
+            <label for="loadD">Погрузка</label>
+            <p-datepicker
+              inputId="loadD"
+              formControlName="loadDate"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              appendTo="body"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="field">
+            <label for="unloadD">Разгрузка</label>
+            <p-datepicker
+              inputId="unloadD"
+              formControlName="unloadDate"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              appendTo="body"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+      </section>
+
+      <p-divider />
+
+      <section class="block" aria-labelledby="sec-money">
+        <h2 id="sec-money" class="block-heading">Оплата</h2>
+        <div class="grid-money">
+          <div class="field">
+            <label for="rate">Ставка за рейс</label>
+            <p-inputNumber
+              inputId="rate"
+              formControlName="ratePerLeg"
+              [min]="0"
+              mode="decimal"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="2"
+              suffix=" ₽"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="field">
+            <label for="legCount">Число перевозок</label>
+            <p-inputNumber
+              inputId="legCount"
+              formControlName="legCount"
+              [min]="1"
+              [useGrouping]="false"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="field total-field">
+            <label>Итого</label>
+            <div class="total-value" aria-live="polite">
+              {{ contractTotal() | number: '1.2-2' }} ₽ · RUB
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-footer">
+        <p-button
+          type="button"
+          label="Отмена"
+          severity="secondary"
+          [outlined]="true"
+          routerLink="/trips"
+        />
+        <p-button
+          type="submit"
+          label="Создать и отправить на согласование"
+          icon="pi pi-send"
+          [loading]="busy"
+          [disabled]="busy"
+        />
+      </div>
+    </form>
+  </p-card>
+</div>

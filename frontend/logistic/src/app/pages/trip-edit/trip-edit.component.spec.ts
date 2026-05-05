@@ -45,8 +45,8 @@ describe('TripEditComponent', () => {
                 vehicleId: null,
                 cargoDescription: null,
                 cargoWeightKg: null,
-                routeFrom: null,
-                routeTo: null,
+                routeFrom: 'Склад А\nКонтакт: +7999',
+                routeTo: 'Точка Б',
                 loadDate: null,
                 unloadDate: null,
                 priceAmount: null,
@@ -68,6 +68,9 @@ describe('TripEditComponent', () => {
             counterparties: () => of([]),
             drivers: () => of([]),
             vehicles: () => of([]),
+            places: () => of([]),
+            createPlace: () =>
+              of({ id: 1, address: 'A', contact: null, placeType: 'LOAD' }),
           },
         },
       ],
@@ -81,6 +84,15 @@ describe('TripEditComponent', () => {
     const cmp = fixture.componentInstance;
     expect(cmp.draft()).toBe(true);
     expect(cmp.form.disabled).toBe(false);
+  });
+
+  it('unpacks routeFrom/routeTo into address and contact fields', () => {
+    fixture.detectChanges();
+    const cmp = fixture.componentInstance;
+    expect(cmp.form.get('originAddress')?.value).toBe('Склад А');
+    expect(cmp.form.get('originContact')?.value).toBe('+7999');
+    expect(cmp.form.get('destinationAddress')?.value).toBe('Точка Б');
+    expect(cmp.form.get('destinationContact')?.value).toBe('');
   });
 
   it('disables save when not DRAFT', () => {

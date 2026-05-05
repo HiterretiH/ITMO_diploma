@@ -50,13 +50,25 @@
                   appendTo="body"
                   styleClass="w-full"
                 />
-                <p-button
-                  type="button"
-                  label="+ Добавить контрагента"
-                  [text]="true"
-                  styleClass="p-0"
-                  (onClick)="openCpDialog('shipper')"
-                />
+                @if (draft()) {
+                  <div class="catalog-row-actions">
+                    <p-button
+                      type="button"
+                      label="+ Добавить"
+                      [text]="true"
+                      styleClass="p-0"
+                      (onClick)="openCpDialog('shipper')"
+                    />
+                    <p-button
+                      type="button"
+                      label="Изменить"
+                      [text]="true"
+                      styleClass="p-0"
+                      [disabled]="!shipperSelected()"
+                      (onClick)="openCpEdit('shipper')"
+                    />
+                  </div>
+                }
               </div>
               <div class="field">
                 <label for="consignee">Грузополучатель</label>
@@ -71,13 +83,25 @@
                   appendTo="body"
                   styleClass="w-full"
                 />
-                <p-button
-                  type="button"
-                  label="+ Добавить контрагента"
-                  [text]="true"
-                  styleClass="p-0"
-                  (onClick)="openCpDialog('consignee')"
-                />
+                @if (draft()) {
+                  <div class="catalog-row-actions">
+                    <p-button
+                      type="button"
+                      label="+ Добавить"
+                      [text]="true"
+                      styleClass="p-0"
+                      (onClick)="openCpDialog('consignee')"
+                    />
+                    <p-button
+                      type="button"
+                      label="Изменить"
+                      [text]="true"
+                      styleClass="p-0"
+                      [disabled]="!consigneeSelected()"
+                      (onClick)="openCpEdit('consignee')"
+                    />
+                  </div>
+                }
               </div>
               <div class="step-nav">
                 <p-button
@@ -115,14 +139,28 @@
                   styleClass="w-full"
                 />
               </div>
-              <div class="two-cols">
+              <div class="route-stack">
                 <div class="field">
-                  <label for="from">Откуда</label>
-                  <input pInputText id="from" formControlName="routeFrom" class="w-full" />
+                  <span class="route-step-label">Погрузка</span>
+                  <app-place-input
+                    [form]="form"
+                    addressKey="originAddress"
+                    contactKey="originContact"
+                    placeType="LOAD"
+                    inputId="draftOriginAddr"
+                    contactInputId="draftOriginCt"
+                  />
                 </div>
                 <div class="field">
-                  <label for="to">Куда</label>
-                  <input pInputText id="to" formControlName="routeTo" class="w-full" />
+                  <span class="route-step-label">Разгрузка</span>
+                  <app-place-input
+                    [form]="form"
+                    addressKey="destinationAddress"
+                    contactKey="destinationContact"
+                    placeType="UNLOAD"
+                    inputId="draftDestAddr"
+                    contactInputId="draftDestCt"
+                  />
                 </div>
               </div>
               <div class="two-cols">
@@ -185,6 +223,25 @@
                   appendTo="body"
                   styleClass="w-full"
                 />
+                @if (draft()) {
+                  <div class="catalog-row-actions">
+                    <p-button
+                      type="button"
+                      label="+ Добавить водителя"
+                      [text]="true"
+                      styleClass="p-0"
+                      (onClick)="openDriverCreate()"
+                    />
+                    <p-button
+                      type="button"
+                      label="Изменить"
+                      [text]="true"
+                      styleClass="p-0"
+                      [disabled]="!driverSelected()"
+                      (onClick)="openDriverEdit()"
+                    />
+                  </div>
+                }
               </div>
               <div class="field">
                 <label for="vehicle">Транспорт</label>
@@ -199,6 +256,25 @@
                   appendTo="body"
                   styleClass="w-full"
                 />
+                @if (draft()) {
+                  <div class="catalog-row-actions">
+                    <p-button
+                      type="button"
+                      label="+ Добавить ТС"
+                      [text]="true"
+                      styleClass="p-0"
+                      (onClick)="openVehicleCreate()"
+                    />
+                    <p-button
+                      type="button"
+                      label="Изменить"
+                      [text]="true"
+                      styleClass="p-0"
+                      [disabled]="!vehicleSelected()"
+                      (onClick)="openVehicleEdit()"
+                    />
+                  </div>
+                }
               </div>
               <div class="step-nav">
                 <p-button
@@ -368,32 +444,147 @@
   </p-tabs>
 
   <p-dialog
-    header="Новый контрагент"
+    [header]="cpDialogTitle()"
     [(visible)]="cpDialogVisible"
     [modal]="true"
-    [style]="{ width: '22rem' }"
+    [style]="{ width: '26rem' }"
     [draggable]="false"
   >
-    <form [formGroup]="quickCpForm">
+    <form [formGroup]="cpForm">
       <div class="field">
         <label for="q-name">Название *</label>
         <input pInputText id="q-name" formControlName="name" class="w-full" />
+        @if (cpForm.controls.name.touched && cpForm.controls.name.invalid) {
+          <small class="p-error">Обязательное поле</small>
+        }
       </div>
       <div class="field">
         <label for="q-inn">ИНН</label>
         <input pInputText id="q-inn" formControlName="inn" class="w-full" />
-        @if (quickCpForm.controls.inn.touched && quickCpForm.controls.inn.hasError('inn')) {
+        @if (cpForm.controls.inn.touched && cpForm.controls.inn.hasError('inn')) {
           <small class="p-error">10 или 12 цифр</small>
         }
+      </div>
+      <div class="field">
+        <label for="q-addr">Юр. адрес</label>
+        <textarea
+          pInputTextarea
+          id="q-addr"
+          formControlName="legalAddress"
+          rows="2"
+          class="w-full"
+        ></textarea>
+      </div>
+      <div class="field">
+        <label for="q-phone">Телефон</label>
+        <input pInputText id="q-phone" formControlName="phone" class="w-full" />
       </div>
     </form>
     <ng-template pTemplate="footer">
       <p-button label="Отмена" [text]="true" (onClick)="cpDialogVisible = false" />
       <p-button
-        label="Создать"
+        [label]="cpSaveLabel()"
         [loading]="cpSaving"
-        [disabled]="quickCpForm.invalid || cpSaving"
-        (onClick)="saveQuickCounterparty()"
+        [disabled]="cpForm.invalid || cpSaving"
+        (onClick)="saveCpDialog()"
+      />
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog
+    [header]="driverDialogTitle()"
+    [(visible)]="driverDialogVisible"
+    [modal]="true"
+    [style]="{ width: '24rem' }"
+    [draggable]="false"
+  >
+    <form [formGroup]="driverForm">
+      <div class="field">
+        <label for="qd-name">ФИО *</label>
+        <input pInputText id="qd-name" formControlName="fullName" class="w-full" />
+        @if (driverForm.controls.fullName.touched && driverForm.controls.fullName.invalid) {
+          <small class="p-error">Обязательное поле</small>
+        }
+      </div>
+      <div class="field">
+        <label for="qd-lic">Номер ВУ *</label>
+        <input pInputText id="qd-lic" formControlName="licenseNumber" class="w-full" />
+        @if (
+          driverForm.controls.licenseNumber.touched &&
+          driverForm.controls.licenseNumber.invalid
+        ) {
+          <small class="p-error">Обязательное поле</small>
+        }
+      </div>
+      <div class="field">
+        <label for="qd-cat">Категория</label>
+        <input pInputText id="qd-cat" formControlName="licenseCategory" class="w-full" />
+      </div>
+    </form>
+    <ng-template pTemplate="footer">
+      <p-button label="Отмена" [text]="true" (onClick)="driverDialogVisible = false" />
+      <p-button
+        [label]="driverSaveLabel()"
+        [loading]="driverSaving"
+        [disabled]="driverForm.invalid || driverSaving"
+        (onClick)="saveDriverDialog()"
+      />
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog
+    [header]="vehicleDialogTitle()"
+    [(visible)]="vehicleDialogVisible"
+    [modal]="true"
+    [style]="{ width: '24rem' }"
+    [draggable]="false"
+  >
+    <form [formGroup]="vehicleForm">
+      <div class="field">
+        <label for="qv-plate">Госномер *</label>
+        <input pInputText id="qv-plate" formControlName="plateNumber" class="w-full" />
+        @if (
+          vehicleForm.controls.plateNumber.touched &&
+          vehicleForm.controls.plateNumber.hasError('required')
+        ) {
+          <small class="p-error">Обязательное поле</small>
+        }
+        @if (
+          vehicleForm.controls.plateNumber.touched &&
+          vehicleForm.controls.plateNumber.hasError('plate')
+        ) {
+          <small class="p-error">Некорректный номер</small>
+        }
+      </div>
+      <div class="field">
+        <label for="qv-model">Модель</label>
+        <input pInputText id="qv-model" formControlName="model" class="w-full" />
+      </div>
+      <div class="field">
+        <label for="qv-cap">Грузоподъёмность, кг</label>
+        <p-inputNumber
+          inputId="qv-cap"
+          formControlName="loadCapacityKg"
+          [min]="0"
+          [useGrouping]="false"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+        />
+        @if (
+          vehicleForm.controls.loadCapacityKg.touched &&
+          vehicleForm.controls.loadCapacityKg.hasError('min')
+        ) {
+          <small class="p-error">Не меньше 0</small>
+        }
+      </div>
+    </form>
+    <ng-template pTemplate="footer">
+      <p-button label="Отмена" [text]="true" (onClick)="vehicleDialogVisible = false" />
+      <p-button
+        [label]="vehicleSaveLabel()"
+        [loading]="vehicleSaving"
+        [disabled]="vehicleForm.invalid || vehicleSaving"
+        (onClick)="saveVehicleDialog()"
       />
     </ng-template>
   </p-dialog>

@@ -7,7 +7,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { concatMap, forkJoin } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -29,6 +29,7 @@ import {
 } from '../../core/catalog.models';
 import { AuditApiService } from '../../core/audit-api.service';
 import { AuditEventResponse } from '../../core/audit.models';
+import { localizeProblemToast } from '../../core/error-messages';
 import { TripApiService } from '../../core/trip-api.service';
 import {
   GeneratedDocumentResponse,
@@ -38,6 +39,9 @@ import {
 import { ProblemDetail } from '../../models/problem.models';
 import { TripStatusBadgeComponent } from '../../shared/layout/trip-status-badge.component';
 import { innValidator } from '../../shared/forms/inn.validator';
+import { PlaceInputComponent } from '../../shared/forms/place-input.component';
+import { buildRouteLine, parseRouteLine } from '../../shared/forms/route-line.util';
+import { plateValidator } from '../../shared/forms/plate.validator';
 
 @Component({
   selector: 'app-trip-edit',
@@ -57,6 +61,7 @@ import { innValidator } from '../../shared/forms/inn.validator';
     TableModule,
     TabsModule,
     TripStatusBadgeComponent,
+    PlaceInputComponent,
   ],
   templateUrl: './trip-edit.component.html',
   styleUrl: './trip-edit.component.css',
@@ -86,10 +91,35 @@ export class TripEditComponent implements OnInit {
 
   cpDialogVisible = false;
   cpTarget: 'shipper' | 'consignee' = 'shipper';
+  cpEditingId: number | null = null;
   cpSaving = false;
-  readonly quickCpForm = this.fb.nonNullable.group({
+  readonly cpForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(1)]],
     inn: ['', [innValidator]],
+    legalAddress: [''],
+    phone: [''],
+  });
+
+  driverDialogVisible = false;
+  driverEditingId: number | null = null;
+  driverSaving = false;
+  readonly driverForm = this.fb.nonNullable.group({
+    fullName: ['', [Validators.required, Validators.minLength(1)]],
+    licenseNumber: ['', [Validators.required, Validators.minLength(1)]],
+    licenseCategory: [''],
+  });
+
+  vehicleDialogVisible = false;
+  vehicleEditingId: number | null = null;
+  vehicleSaving = false;
+  readonly vehicleForm = this.fb.group({
+    plateNumber: this.fb.nonNullable.control('', {
+      validators: [Validators.required, plateValidator],
+    }),
+    model: [''],
+    loadCapacityKg: this.fb.control<number | null>(null, {
+      validators: [Validators.min(0)],
+    }),
   });
 
   readonly form = this.fb.group({
@@ -99,8 +129,10 @@ export class TripEditComponent implements OnInit {
     vehicleId: this.fb.control<number | null>(null),
     cargoDescription: [''],
     cargoWeightKg: this.fb.control<number | null>(null, [Validators.min(0)]),
-    routeFrom: [''],
-    routeTo: [''],
+    originAddress: [''],
+    originContact: [''],
+    destinationAddress: [''],
+    destinationContact: [''],
     loadDate: this.fb.control<Date | null>(null),
     unloadDate: this.fb.control<Date | null>(null),
     priceAmount: this.fb.control<number | null>(null, [Validators.min(0)]),
@@ -171,8 +203,16 @@ export class TripEditComponent implements OnInit {
         t.cargoWeightKg === null || t.cargoWeightKg === undefined
           ? null
           : Number(t.cargoWeightKg),
-      routeFrom: t.routeFrom ?? '',
-      routeTo: t.routeTo ?? '',
+      ...(() => {
+        const from = parseRouteLine(t.routeFrom);
+        const to = parseRouteLine(t.routeTo);
+        return {
+          originAddress: from.address,
+          originContact: from.contact,
+          destinationAddress: to.address,
+          destinationContact: to.contact,
+        };
+      })(),
       loadDate: toDate(t.loadDate),
       unloadDate: toDate(t.unloadDate),
       priceAmount:
@@ -257,13 +297,45 @@ export class TripEditComponent implements OnInit {
       vehicleId: v.vehicleId,
       cargoDescription: (v.cargoDescription ?? '').trim() || null,
       cargoWeightKg: v.cargoWeightKg,
-      routeFrom: (v.routeFrom ?? '').trim() || null,
-      routeTo: (v.routeTo ?? '').trim() || null,
+      routeFrom: buildRouteLine(v.originAddress, v.originContact),
+      routeTo: buildRouteLine(v.destinationAddress, v.destinationContact),
       loadDate: this.toIsoDate(v.loadDate),
       unloadDate: this.toIsoDate(v.unloadDate),
       priceAmount: v.priceAmount,
       currency: (v.currency ?? '').trim() || null,
     };
+  }
+
+  /** Совпадает с TripService.validateReadyForSubmit (сообщение для UI). */
+  private incompleteTripHint(): string | null {
+    const v = this.form.getRawValue();
+    if (
+      v.shipperId == null ||
+      v.consigneeId == null ||
+      v.driverId == null ||
+      v.vehicleId == null
+    ) {
+      return 'Выберите отправителя, получателя, водителя и транспорт.';
+    }
+    if (!(v.cargoDescription ?? '').trim()) {
+      return 'Укажите описание груза.';
+    }
+    if (v.cargoWeightKg == null) {
+      return 'Укажите вес груза.';
+    }
+    if (
+      !(v.originAddress ?? '').trim() ||
+      !(v.destinationAddress ?? '').trim()
+    ) {
+      return 'Заполните маршрут (откуда и куда).';
+    }
+    if (v.loadDate == null || v.unloadDate == null) {
+      return 'Укажите даты погрузки и разгрузки.';
+    }
+    if (v.priceAmount == null) {
+      return 'Укажите сумму.';
+    }
+    return null;
   }
 
   private applyTripResponse(t: TripResponse): void {
@@ -281,7 +353,13 @@ export class TripEditComponent implements OnInit {
       typeof err.error === 'object'
     ) {
       const p = err.error as ProblemDetail;
-      this.conflictDetail = p.detail || p.title || 'Конфликт при сохранении';
+      const { summary, detail } = localizeProblemToast(
+        p.title,
+        p.detail,
+        err.status,
+      );
+      this.conflictDetail =
+        detail || summary || 'Конфликт при сохранении';
       const errors = p.errors;
       if (Array.isArray(errors)) {
         for (const e of errors) {
@@ -321,16 +399,30 @@ export class TripEditComponent implements OnInit {
     if (!id || !this.draft()) {
       return;
     }
+    this.form.markAllAsTouched();
+    if (this.form.invalid) {
+      return;
+    }
+    const hint = this.incompleteTripHint();
+    if (hint) {
+      this.conflictDetail = hint;
+      return;
+    }
     this.busy = true;
-    this.trips.submit(id).subscribe({
-      next: (t) => {
-        this.applyTripResponse(t);
-        this.busy = false;
-      },
-      error: () => {
-        this.busy = false;
-      },
-    });
+    this.conflictDetail = null;
+    this.trips
+      .update(id, this.buildBody())
+      .pipe(concatMap(() => this.trips.submit(id)))
+      .subscribe({
+        next: (t) => {
+          this.applyTripResponse(t);
+          this.busy = false;
+        },
+        error: (err: HttpErrorResponse) => {
+          this.handleSaveError(err);
+          this.busy = false;
+        },
+      });
   }
 
   approve(): void {
@@ -399,10 +491,233 @@ export class TripEditComponent implements OnInit {
     });
   }
 
+  cpDialogTitle(): string {
+    return this.cpEditingId != null ? 'Изменить контрагента' : 'Новый контрагент';
+  }
+
+  cpSaveLabel(): string {
+    return this.cpEditingId != null ? 'Сохранить' : 'Создать';
+  }
+
+  shipperSelected(): boolean {
+    return this.form.getRawValue().shipperId != null;
+  }
+
+  consigneeSelected(): boolean {
+    return this.form.getRawValue().consigneeId != null;
+  }
+
+  driverSelected(): boolean {
+    return this.form.getRawValue().driverId != null;
+  }
+
+  vehicleSelected(): boolean {
+    return this.form.getRawValue().vehicleId != null;
+  }
+
   openCpDialog(target: 'shipper' | 'consignee'): void {
+    if (!this.draft()) {
+      return;
+    }
     this.cpTarget = target;
-    this.quickCpForm.reset({ name: '', inn: '' });
+    this.cpEditingId = null;
+    this.cpForm.reset({
+      name: '',
+      inn: '',
+      legalAddress: '',
+      phone: '',
+    });
     this.cpDialogVisible = true;
+  }
+
+  openCpEdit(target: 'shipper' | 'consignee'): void {
+    if (!this.draft()) {
+      return;
+    }
+    this.cpTarget = target;
+    const id =
+      target === 'shipper'
+        ? this.form.getRawValue().shipperId
+        : this.form.getRawValue().consigneeId;
+    if (id == null) {
+      return;
+    }
+    const c = this.counterparties.find((x) => x.id === id);
+    if (!c) {
+      return;
+    }
+    this.cpEditingId = c.id;
+    this.cpForm.setValue({
+      name: c.name,
+      inn: c.inn ?? '',
+      legalAddress: c.legalAddress ?? '',
+      phone: c.phone ?? '',
+    });
+    this.cpDialogVisible = true;
+  }
+
+  openDriverCreate(): void {
+    if (!this.draft()) {
+      return;
+    }
+    this.driverEditingId = null;
+    this.driverForm.reset({
+      fullName: '',
+      licenseNumber: '',
+      licenseCategory: '',
+    });
+    this.driverDialogVisible = true;
+  }
+
+  openDriverEdit(): void {
+    if (!this.draft()) {
+      return;
+    }
+    const id = this.form.getRawValue().driverId;
+    if (id == null) {
+      return;
+    }
+    const d = this.drivers.find((x) => x.id === id);
+    if (!d) {
+      return;
+    }
+    this.driverEditingId = d.id;
+    this.driverForm.setValue({
+      fullName: d.fullName,
+      licenseNumber: d.licenseNumber,
+      licenseCategory: d.licenseCategory ?? '',
+    });
+    this.driverDialogVisible = true;
+  }
+
+  openVehicleCreate(): void {
+    if (!this.draft()) {
+      return;
+    }
+    this.vehicleEditingId = null;
+    this.vehicleForm.reset({
+      plateNumber: '',
+      model: '',
+      loadCapacityKg: null,
+    });
+    this.vehicleDialogVisible = true;
+  }
+
+  openVehicleEdit(): void {
+    if (!this.draft()) {
+      return;
+    }
+    const id = this.form.getRawValue().vehicleId;
+    if (id == null) {
+      return;
+    }
+    const v = this.vehicles.find((x) => x.id === id);
+    if (!v) {
+      return;
+    }
+    this.vehicleEditingId = v.id;
+    this.vehicleForm.setValue({
+      plateNumber: v.plateNumber,
+      model: v.model ?? '',
+      loadCapacityKg: v.loadCapacityKg,
+    });
+    this.vehicleDialogVisible = true;
+  }
+
+  driverDialogTitle(): string {
+    return this.driverEditingId != null ? 'Изменить водителя' : 'Новый водитель';
+  }
+
+  vehicleDialogTitle(): string {
+    return this.vehicleEditingId != null ? 'Изменить ТС' : 'Новое ТС';
+  }
+
+  driverSaveLabel(): string {
+    return this.driverEditingId != null ? 'Сохранить' : 'Создать';
+  }
+
+  vehicleSaveLabel(): string {
+    return this.vehicleEditingId != null ? 'Сохранить' : 'Создать';
+  }
+
+  saveDriverDialog(): void {
+    if (this.driverForm.invalid || this.driverSaving) {
+      this.driverForm.markAllAsTouched();
+      return;
+    }
+    const v = this.driverForm.getRawValue();
+    const body = {
+      fullName: v.fullName.trim(),
+      licenseNumber: v.licenseNumber.trim(),
+      licenseCategory:
+        v.licenseCategory.trim() === '' ? null : v.licenseCategory.trim(),
+    };
+    this.driverSaving = true;
+    const obs =
+      this.driverEditingId != null
+        ? this.catalog.updateDriver(this.driverEditingId, body)
+        : this.catalog.createDriver(body);
+    obs.subscribe({
+      next: (d) => {
+        if (this.driverEditingId != null) {
+          this.drivers = this.drivers
+            .map((x) => (x.id === d.id ? d : x))
+            .sort((a, b) => a.fullName.localeCompare(b.fullName));
+        } else {
+          this.drivers = [...this.drivers, d].sort((a, b) =>
+            a.fullName.localeCompare(b.fullName),
+          );
+          this.form.patchValue({ driverId: d.id });
+        }
+        this.driverSaving = false;
+        this.driverDialogVisible = false;
+      },
+      error: () => {
+        this.driverSaving = false;
+      },
+    });
+  }
+
+  saveVehicleDialog(): void {
+    if (this.vehicleForm.invalid || this.vehicleSaving) {
+      this.vehicleForm.markAllAsTouched();
+      return;
+    }
+    const v = this.vehicleForm.getRawValue();
+    const plate = v.plateNumber.replace(/\s+/g, '').toUpperCase();
+    const modelTrim = (v.model ?? '').trim();
+    const body = {
+      plateNumber: plate,
+      model: modelTrim === '' ? null : modelTrim,
+      loadCapacityKg:
+        v.loadCapacityKg === null || v.loadCapacityKg === undefined
+          ? null
+          : Math.floor(Number(v.loadCapacityKg)),
+    };
+    this.vehicleSaving = true;
+    const obs =
+      this.vehicleEditingId != null
+        ? this.catalog.updateVehicle(this.vehicleEditingId, body)
+        : this.catalog.createVehicle(body);
+    obs.subscribe({
+      next: (ve) => {
+        if (this.vehicleEditingId != null) {
+          this.vehicles = this.vehicles
+            .map((x) => (x.id === ve.id ? ve : x))
+            .sort((a, b) => a.plateNumber.localeCompare(b.plateNumber));
+        } else {
+          this.vehicles = [...this.vehicles, ve].sort((a, b) =>
+            a.plateNumber.localeCompare(b.plateNumber),
+          );
+          this.form.patchValue({ vehicleId: ve.id });
+        }
+        this.vehicleSaving = false;
+        this.vehicleDialogVisible = false;
+      },
+      error: () => {
+        this.vehicleSaving = false;
+      },
+    });
   }
 
   eventTypeLabel(t: AuditEventResponse['eventType']): string {
@@ -421,6 +736,8 @@ export class TripEditComponent implements OnInit {
         return 'Документы сформированы';
       case 'LOGIN':
         return 'Вход';
+      case 'REGISTER':
+        return 'Регистрация';
       default:
         return t;
     }
@@ -437,28 +754,39 @@ export class TripEditComponent implements OnInit {
     }
   }
 
-  saveQuickCounterparty(): void {
-    if (this.quickCpForm.invalid || this.cpSaving) {
-      this.quickCpForm.markAllAsTouched();
+  saveCpDialog(): void {
+    if (this.cpForm.invalid || this.cpSaving) {
+      this.cpForm.markAllAsTouched();
       return;
     }
-    const v = this.quickCpForm.getRawValue();
+    const v = this.cpForm.getRawValue();
     const body = {
       name: v.name.trim(),
       inn: v.inn.trim() === '' ? null : v.inn.trim(),
-      legalAddress: null,
-      phone: null,
+      legalAddress:
+        v.legalAddress.trim() === '' ? null : v.legalAddress.trim(),
+      phone: v.phone.trim() === '' ? null : v.phone.trim(),
     };
     this.cpSaving = true;
-    this.catalog.createCounterparty(body).subscribe({
+    const obs =
+      this.cpEditingId != null
+        ? this.catalog.updateCounterparty(this.cpEditingId, body)
+        : this.catalog.createCounterparty(body);
+    obs.subscribe({
       next: (c) => {
-        this.counterparties = [...this.counterparties, c].sort((a, b) =>
-          a.name.localeCompare(b.name),
-        );
-        if (this.cpTarget === 'shipper') {
-          this.form.patchValue({ shipperId: c.id });
+        if (this.cpEditingId != null) {
+          this.counterparties = this.counterparties
+            .map((x) => (x.id === c.id ? c : x))
+            .sort((a, b) => a.name.localeCompare(b.name));
         } else {
-          this.form.patchValue({ consigneeId: c.id });
+          this.counterparties = [...this.counterparties, c].sort((a, b) =>
+            a.name.localeCompare(b.name),
+          );
+          if (this.cpTarget === 'shipper') {
+            this.form.patchValue({ shipperId: c.id });
+          } else {
+            this.form.patchValue({ consigneeId: c.id });
+          }
         }
         this.cpSaving = false;
         this.cpDialogVisible = false;

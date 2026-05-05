@@ -6,11 +6,6 @@
   margin-bottom: 1rem;
 }
 
-.title {
-  margin: 0;
-  font-size: 1.35rem;
-}
-
 .toolbar {
   display: flex;
   align-items: center;
