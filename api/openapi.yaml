@@ -31,6 +31,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
+            examples:
+              sample:
+                summary: Employee login
+                value:
+                  username: emp_demo
+                  password: secret
       responses:
         '200':
           description: JWT token
@@ -38,8 +44,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JwtResponse'
+              examples:
+                sample:
+                  value:
+                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Invalid credentials
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/admin/users:
     post:
@@ -60,8 +74,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/counterparties:
     get:
@@ -83,6 +105,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CounterpartyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       tags: [Counterparties]
       summary: Create counterparty
@@ -101,6 +129,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CounterpartyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/counterparties/{id}:
     get:
@@ -117,6 +153,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CounterpartyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     put:
       tags: [Counterparties]
       summary: Update counterparty
@@ -137,6 +181,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CounterpartyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       tags: [Counterparties]
       summary: Delete counterparty
@@ -147,6 +201,14 @@ paths:
       responses:
         '200':
           description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/drivers:
     get:
@@ -168,6 +230,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/DriverResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       tags: [Drivers]
       summary: Create driver
@@ -186,6 +254,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DriverResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/drivers/{id}:
     get:
@@ -202,6 +278,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DriverResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     put:
       tags: [Drivers]
       summary: Update driver
@@ -222,6 +306,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DriverResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       tags: [Drivers]
       summary: Delete driver
@@ -232,6 +326,14 @@ paths:
       responses:
         '200':
           description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/vehicles:
     get:
@@ -253,6 +355,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/VehicleResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       tags: [Vehicles]
       summary: Create vehicle
@@ -271,6 +379,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VehicleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/vehicles/{id}:
     get:
@@ -287,6 +403,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VehicleResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     put:
       tags: [Vehicles]
       summary: Update vehicle
@@ -307,6 +431,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VehicleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       tags: [Vehicles]
       summary: Delete vehicle
@@ -317,6 +451,14 @@ paths:
       responses:
         '200':
           description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/trips:
     get:
@@ -338,6 +480,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TripResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       tags: [Trips]
       summary: Create draft trip
@@ -350,6 +498,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TripResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/trips/{id}:
     get:
@@ -366,6 +520,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TripResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     put:
       tags: [Trips]
       summary: Update draft trip
@@ -379,6 +541,22 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/TripUpdateRequest'
+            examples:
+              sample:
+                summary: Full trip update
+                value:
+                  shipperId: 1
+                  consigneeId: 2
+                  driverId: 3
+                  vehicleId: 4
+                  cargoDescription: Bricks
+                  cargoWeightKg: 1200.5
+                  routeFrom: Moscow
+                  routeTo: Tver
+                  loadDate: '2026-06-01'
+                  unloadDate: '2026-06-02'
+                  priceAmount: 45000
+                  currency: RUB
       responses:
         '200':
           description: Updated trip
@@ -386,8 +564,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TripResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
-          description: Trip is locked
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/trips/{id}/submit:
     post:
@@ -404,6 +592,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TripResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/trips/{id}/approve:
     post:
@@ -420,6 +620,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TripResponse'
+              examples:
+                approved:
+                  summary: After approval
+                  value:
+                    id: 10
+                    ownerId: 2
+                    ownerUsername: emp_demo
+                    status: APPROVED
+                    shipperId: 1
+                    consigneeId: 2
+                    driverId: 3
+                    vehicleId: 4
+                    cargoDescription: Bricks
+                    cargoWeightKg: 1200.5
+                    routeFrom: Moscow
+                    routeTo: Tver
+                    loadDate: '2026-06-01'
+                    unloadDate: '2026-06-02'
+                    priceAmount: 45000
+                    currency: RUB
+                    updatedAt: '2026-05-05T12:00:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/trips/{id}/archive:
     post:
@@ -436,6 +667,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TripResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/trips/{id}/documents:
     get:
@@ -454,6 +695,28 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/GeneratedDocumentResponse'
+              examples:
+                sixFiles:
+                  summary: Six files (PDF+DOCx per type)
+                  value:
+                    - id: 101
+                      documentType: CONTRACT_APPLICATION
+                      fileFormat: PDF
+                      sha256: abcd01
+                      createdAt: '2026-05-05T12:00:00Z'
+                    - id: 102
+                      documentType: CONTRACT_APPLICATION
+                      fileFormat: DOCX
+                      sha256: abcd02
+                      createdAt: '2026-05-05T12:00:01Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/generated-documents/{id}/file:
     get:
@@ -475,6 +738,14 @@ paths:
               schema:
                 type: string
                 format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/trips/{tripId}/audit-events:
     get:
@@ -498,8 +769,59 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AuditEventResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Unauthorized:
+      description: Not authenticated
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Forbidden:
+      description: Access denied
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Conflict:
+      description: Business rule conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
   securitySchemes:
     bearerAuth:
       type: http
@@ -516,6 +838,34 @@ components:
         format: int64
 
   schemas:
+    ProblemDetail:
+      type: object
+      description: RFC 7807 Problem Details (application/problem+json)
+      properties:
+        type:
+          type: string
+          nullable: true
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+          nullable: true
+        instance:
+          type: string
+          nullable: true
+        errors:
+          type: array
+          nullable: true
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
     Role:
       type: string
       enum: [EMPLOYEE, MANAGER, ADMIN]
@@ -530,8 +880,10 @@ components:
       properties:
         username:
           type: string
+          minLength: 1
         password:
           type: string
+          minLength: 1
 
     JwtResponse:
       type: object
@@ -545,10 +897,13 @@ components:
       properties:
         username:
           type: string
+          minLength: 1
         password:
           type: string
+          minLength: 1
         roles:
           type: array
+          minItems: 1
           items:
             $ref: '#/components/schemas/Role'
 
@@ -573,6 +928,7 @@ components:
           type: string
         inn:
           type: string
+          pattern: '^$|^([0-9]{10}|[0-9]{12})$'
         legalAddress:
           type: string
         phone:
@@ -648,6 +1004,7 @@ components:
         cargoWeightKg:
           type: number
           format: decimal
+          minimum: 0
         routeFrom:
           type: string
         routeTo:
@@ -661,6 +1018,7 @@ components:
         priceAmount:
           type: number
           format: decimal
+          minimum: 0
         currency:
           type: string
 
