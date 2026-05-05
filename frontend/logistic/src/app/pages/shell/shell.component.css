@@ -1,35 +1,24 @@
-.bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.65rem 1rem;
-  border-bottom: 1px solid #ddd;
-  background: #fafafa;
-}
 .brand {
-  font-weight: 600;
+  font-weight: 700;
+  margin-right: 0.75rem;
 }
-nav {
-  display: flex;
-  gap: 0.75rem;
-}
-nav a {
+
+.nav-link {
   text-decoration: none;
-  color: #1565c0;
 }
-nav a.active {
-  font-weight: 600;
+
+:host ::ng-deep a.nav-link.active-link .p-button {
+  font-weight: 700;
 }
-.spacer {
-  flex: 1;
-}
-.user {
+
+.user-label {
   font-size: 0.9rem;
-  color: #444;
+  margin-right: 0.75rem;
+  opacity: 0.85;
 }
-button {
-  padding: 0.35rem 0.65rem;
-}
-main {
-  padding: 1rem;
+
+.shell-main {
+  padding: 1rem 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }

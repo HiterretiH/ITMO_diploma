@@ -1,15 +1,47 @@
-<header class="bar">
-  <span class="brand">Logistic</span>
-  <nav>
-    <a routerLink="/trips" routerLinkActive="active">Рейсы</a>
-    <a routerLink="/catalogs" routerLinkActive="active">Справочники</a>
-  </nav>
-  <div class="spacer"></div>
-  @if (auth.username(); as u) {
-    <span class="user">{{ u }}</span>
-  }
-  <button type="button" (click)="auth.logout()">Выход</button>
-</header>
-<main>
+<p-toolbar>
+  <ng-template pTemplate="start">
+    <span class="brand">Logistic</span>
+    <a
+      routerLink="/trips"
+      routerLinkActive="active-link"
+      pButton
+      class="nav-link"
+      [text]="true"
+      label="Рейсы"
+    ></a>
+    <p-button
+      type="button"
+      label="Справочники"
+      icon="pi pi-angle-down"
+      [text]="true"
+      (onClick)="catalogMenu.toggle($event)"
+    />
+    <p-menu #catalogMenu [popup]="true" [model]="catalogItems" appendTo="body" />
+    @if (auth.hasRole('ADMIN')) {
+      <a
+        routerLink="/admin/users"
+        routerLinkActive="active-link"
+        pButton
+        class="nav-link"
+        [text]="true"
+        label="Пользователи"
+      ></a>
+    }
+  </ng-template>
+  <ng-template pTemplate="end">
+    @if (auth.username(); as u) {
+      <span class="user-label">{{ u }}</span>
+    }
+    <p-button
+      type="button"
+      label="Выход"
+      [text]="true"
+      severity="secondary"
+      (onClick)="auth.logout()"
+    />
+  </ng-template>
+</p-toolbar>
+
+<main class="shell-main">
   <router-outlet />
 </main>
