@@ -22,42 +22,27 @@
     }
 
     <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveAndSubmit()">
-      <section class="block" aria-labelledby="sec-parties">
-        <h2 id="sec-parties" class="block-heading">Контрагенты</h2>
-        <div class="grid-2">
-          <div class="field">
-            <label for="shipper">Отправитель</label>
-            <p-dropdown
-              inputId="shipper"
-              formControlName="shipperId"
-              [options]="cpOptions()"
-              optionLabel="label"
-              optionValue="value"
-              [showClear]="true"
-              appendTo="body"
-              styleClass="w-full"
-            />
-          </div>
-          <div class="field">
-            <label for="consignee">Получатель</label>
-            <p-dropdown
-              inputId="consignee"
-              formControlName="consigneeId"
-              [options]="cpOptions()"
-              optionLabel="label"
-              optionValue="value"
-              [showClear]="true"
-              appendTo="body"
-              styleClass="w-full"
-            />
-          </div>
+      <section class="block" aria-labelledby="sec-customer">
+        <h2 id="sec-customer" class="block-heading">Заказчик</h2>
+        <div class="field">
+          <label for="shipper">Организация</label>
+          <p-dropdown
+            inputId="shipper"
+            formControlName="shipperId"
+            [options]="cpOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            appendTo="body"
+            styleClass="w-full"
+          />
         </div>
       </section>
 
       <p-divider />
 
-      <section class="block" aria-labelledby="sec-crew">
-        <h2 id="sec-crew" class="block-heading">Перевозка</h2>
+      <section class="block" aria-labelledby="sec-performer">
+        <h2 id="sec-performer" class="block-heading">Исполнитель</h2>
         <div class="grid-2">
           <div class="field">
             <label for="driver">Водитель</label>
@@ -118,47 +103,18 @@
 
       <p-divider />
 
-      <section class="block" aria-labelledby="sec-cargo">
-        <h2 id="sec-cargo" class="block-heading">Груз и сроки</h2>
-        <div class="grid-2 grid-tight">
-          <div class="field">
-            <label for="cargo">Груз</label>
-            <input pInputText id="cargo" formControlName="cargoDescription" class="w-full" />
-          </div>
-          <div class="field">
-            <label for="weight">Масса, кг</label>
-            <p-inputNumber
-              inputId="weight"
-              formControlName="cargoWeightKg"
-              [min]="0"
-              [useGrouping]="false"
-              styleClass="w-full"
-            />
-          </div>
-        </div>
-        <div class="grid-2-inner">
-          <div class="field">
-            <label for="loadD">Погрузка</label>
-            <p-datepicker
-              inputId="loadD"
-              formControlName="loadDate"
-              dateFormat="yy-mm-dd"
-              [showIcon]="true"
-              appendTo="body"
-              styleClass="w-full"
-            />
-          </div>
-          <div class="field">
-            <label for="unloadD">Разгрузка</label>
-            <p-datepicker
-              inputId="unloadD"
-              formControlName="unloadDate"
-              dateFormat="yy-mm-dd"
-              [showIcon]="true"
-              appendTo="body"
-              styleClass="w-full"
-            />
-          </div>
+      <section class="block" aria-labelledby="sec-date">
+        <h2 id="sec-date" class="block-heading">Дата</h2>
+        <div class="field">
+          <label for="loadD">Дата</label>
+          <p-datepicker
+            inputId="loadD"
+            formControlName="loadDate"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            appendTo="body"
+            styleClass="w-full"
+          />
         </div>
       </section>
 

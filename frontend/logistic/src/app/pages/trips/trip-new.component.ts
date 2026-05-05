@@ -15,7 +15,6 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { Divider } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumber } from 'primeng/inputnumber';
-import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import {
@@ -31,12 +30,15 @@ import { PlaceInputComponent } from '../../shared/forms/place-input.component';
 import { buildRouteLine } from '../../shared/forms/route-line.util';
 
 /**
- * Создание рейса: данные как в `.ide/main.py` (стороны, маршрут+контакты, груз,
- * дата, ставка × количество → итог с возможностью ручной правки), затем POST → PUT → submit.
+ * Создание рейса: минимальный набор полей как в `.ide/main.py` (заказчик, исполнитель,
+ * маршрут+контакты, дата, ставка × количество → итог с возможностью ручной правки),
+ * затем POST → PUT → submit.
  *
- * Связность полей (аналог десктопа):
+ * Поля «получатель», груз/масса и дата разгрузки не показываются: бэкенд требует их
+ * при submit — подставляются в `buildUpdateRequest()` (см. `TripService.validateReadyForSubmit`).
+ *
+ * Связность полей:
  * — ставка за рейс и число рейсов пересчитывают итог; итог можно править вручную;
- * — при смене даты погрузки дата разгрузки не остаётся «раньше» погрузки;
  * — водитель и ТС в десктопе задавались одной строкой «исполнителя»; в API они
  *   разделены — пользователь выбирает оба поля (порядок любой).
  */
@@ -51,7 +53,6 @@ import { buildRouteLine } from '../../shared/forms/route-line.util';
     Divider,
     DropdownModule,
     DatePickerModule,
-    InputText,
     InputNumber,
     Button,
     Message,
@@ -75,17 +76,13 @@ export class TripNewComponent implements OnInit {
 
   readonly form = this.fb.group({
     shipperId: this.fb.control<number | null>(null),
-    consigneeId: this.fb.control<number | null>(null),
     driverId: this.fb.control<number | null>(null),
     vehicleId: this.fb.control<number | null>(null),
     originAddress: ['', [Validators.required]],
     originContact: [''],
     destinationAddress: ['', [Validators.required]],
     destinationContact: [''],
-    cargoDescription: ['', [Validators.required]],
-    cargoWeightKg: this.fb.control<number | null>(null, [Validators.min(0)]),
     loadDate: this.fb.control<Date | null>(null, Validators.required),
-    unloadDate: this.fb.control<Date | null>(null, Validators.required),
     legCount: this.fb.control<number>(1, [Validators.required, Validators.min(1)]),
     ratePerLeg: this.fb.control<number | null>(0, [Validators.min(0)]),
     /** Как `total_price` в `.ide/main.py`: редактируется вручную; rate×count пересчитывает до следующей ручной правки. */
@@ -96,20 +93,6 @@ export class TripNewComponent implements OnInit {
   });
 
   constructor() {
-    this.form.controls.loadDate.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((load) => {
-        const unload = this.form.controls.unloadDate.value;
-        if (!load || !unload) {
-          return;
-        }
-        if (this.startOfDay(unload) < this.startOfDay(load)) {
-          const synced = new Date(load.getTime());
-          synced.setHours(12, 0, 0, 0);
-          this.form.patchValue({ unloadDate: synced }, { emitEvent: false });
-        }
-      });
-
     this.form.controls.ratePerLeg.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.applyTotalFromRateAndLegs());
@@ -131,7 +114,6 @@ export class TripNewComponent implements OnInit {
     today.setHours(12, 0, 0, 0);
     this.form.patchValue({
       loadDate: today,
-      unloadDate: new Date(today.getTime()),
     });
 
     forkJoin({
@@ -178,10 +160,6 @@ export class TripNewComponent implements OnInit {
     ];
   }
 
-  private startOfDay(d: Date): number {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  }
-
   private toIsoDate(d: Date | null | undefined): string | null {
     if (!d) {
       return null;
@@ -194,17 +172,18 @@ export class TripNewComponent implements OnInit {
 
   private buildUpdateRequest(): TripUpdateRequest {
     const v = this.form.getRawValue();
+    const loadIso = this.toIsoDate(v.loadDate);
     return {
       shipperId: v.shipperId,
-      consigneeId: v.consigneeId,
+      consigneeId: v.shipperId,
       driverId: v.driverId,
       vehicleId: v.vehicleId,
-      cargoDescription: (v.cargoDescription ?? '').trim() || null,
-      cargoWeightKg: v.cargoWeightKg,
+      cargoDescription: '-',
+      cargoWeightKg: 0,
       routeFrom: buildRouteLine(v.originAddress, v.originContact),
       routeTo: buildRouteLine(v.destinationAddress, v.destinationContact),
-      loadDate: this.toIsoDate(v.loadDate),
-      unloadDate: this.toIsoDate(v.unloadDate),
+      loadDate: loadIso,
+      unloadDate: loadIso,
       priceAmount: v.priceAmount ?? 0,
       currency: 'RUB',
     };
@@ -212,28 +191,14 @@ export class TripNewComponent implements OnInit {
 
   private incompleteHint(): string | null {
     const v = this.form.getRawValue();
-    if (
-      v.shipperId == null ||
-      v.consigneeId == null ||
-      v.driverId == null ||
-      v.vehicleId == null
-    ) {
-      return 'Выберите отправителя и получателя груза, водителя и транспортное средство.';
-    }
-    if (!(v.cargoDescription ?? '').trim()) {
-      return 'Укажите наименование или описание груза.';
-    }
-    if (v.cargoWeightKg == null) {
-      return 'Укажите массу груза в килограммах.';
+    if (v.shipperId == null || v.driverId == null || v.vehicleId == null) {
+      return 'Выберите заказчика, водителя и транспортное средство.';
     }
     if (!(v.originAddress ?? '').trim() || !(v.destinationAddress ?? '').trim()) {
       return 'Заполните пункт отправления и пункт назначения.';
     }
-    if (v.loadDate == null || v.unloadDate == null) {
-      return 'Укажите плановые даты погрузки и разгрузки.';
-    }
-    if (this.startOfDay(v.unloadDate) < this.startOfDay(v.loadDate)) {
-      return 'Дата разгрузки не может быть раньше даты погрузки.';
+    if (v.loadDate == null) {
+      return 'Укажите дату.';
     }
     if (v.priceAmount == null || Number(v.priceAmount) < 0) {
       return 'Укажите итоговую сумму по заявке.';

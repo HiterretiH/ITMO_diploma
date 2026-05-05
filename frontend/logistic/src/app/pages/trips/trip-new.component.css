@@ -80,19 +80,8 @@ label {
   gap: 0 1.25rem;
 }
 
-.grid-tight .field {
-  margin-bottom: 0;
-}
-
-.grid-2-inner {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 0.75rem;
-}
-
 @media (max-width: 640px) {
-  .grid-2,
-  .grid-2-inner {
+  .grid-2 {
     grid-template-columns: 1fr;
   }
 }
