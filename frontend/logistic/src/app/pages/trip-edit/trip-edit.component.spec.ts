@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { of } from 'rxjs';
+import { AuditApiService } from '../../core/audit-api.service';
 import { TripApiService } from '../../core/trip-api.service';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import { TripEditComponent } from './trip-edit.component';
@@ -53,6 +54,12 @@ describe('TripEditComponent', () => {
                 updatedAt: '2026-01-01T00:00:00Z',
               }),
             documents: () => of([]),
+          },
+        },
+        {
+          provide: AuditApiService,
+          useValue: {
+            listByTrip: () => of([]),
           },
         },
         {

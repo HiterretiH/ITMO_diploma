@@ -65,3 +65,12 @@
   padding: 0 !important;
   align-self: flex-start;
 }
+
+.payload-pre {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  max-height: 14rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

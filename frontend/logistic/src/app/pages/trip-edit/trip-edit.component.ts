@@ -19,6 +19,7 @@ import { InputTextarea } from 'primeng/inputtextarea';
 import { Message } from 'primeng/message';
 import { StepperModule } from 'primeng/stepper';
 import { TableModule } from 'primeng/table';
+import { TabsModule } from 'primeng/tabs';
 import { AuthService } from '../../core/auth.service';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import {
@@ -26,6 +27,8 @@ import {
   DriverResponse,
   VehicleResponse,
 } from '../../core/catalog.models';
+import { AuditApiService } from '../../core/audit-api.service';
+import { AuditEventResponse } from '../../core/audit.models';
 import { TripApiService } from '../../core/trip-api.service';
 import {
   GeneratedDocumentResponse,
@@ -52,6 +55,7 @@ import { innValidator } from '../../shared/forms/inn.validator';
     Dialog,
     Message,
     TableModule,
+    TabsModule,
     TripStatusBadgeComponent,
   ],
   templateUrl: './trip-edit.component.html',
@@ -61,6 +65,7 @@ export class TripEditComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly trips = inject(TripApiService);
+  private readonly auditApi = inject(AuditApiService);
   private readonly catalog = inject(CatalogApiService);
   private readonly fb = inject(FormBuilder);
   private readonly confirm = inject(ConfirmationService);
@@ -68,6 +73,8 @@ export class TripEditComponent implements OnInit {
   readonly auth = inject(AuthService);
 
   trip: TripResponse | null = null;
+  auditEvents: AuditEventResponse[] = [];
+  mainTab: string | number = 'edit';
   docs: GeneratedDocumentResponse[] = [];
   counterparties: CounterpartyResponse[] = [];
   drivers: DriverResponse[] = [];
@@ -138,6 +145,10 @@ export class TripEditComponent implements OnInit {
         } else {
           this.docs = [];
         }
+        this.auditApi.listByTrip(id).subscribe({
+          next: (ev) => (this.auditEvents = ev),
+          error: () => (this.auditEvents = []),
+        });
         this.busy = false;
       },
       error: () => {
@@ -392,6 +403,38 @@ export class TripEditComponent implements OnInit {
     this.cpTarget = target;
     this.quickCpForm.reset({ name: '', inn: '' });
     this.cpDialogVisible = true;
+  }
+
+  eventTypeLabel(t: AuditEventResponse['eventType']): string {
+    switch (t) {
+      case 'TRIP_CREATED':
+        return 'Создание рейса';
+      case 'TRIP_UPDATED':
+        return 'Изменение';
+      case 'TRIP_SUBMITTED':
+        return 'Отправлен на согласование';
+      case 'TRIP_APPROVED':
+        return 'Утверждён';
+      case 'TRIP_ARCHIVED':
+        return 'Архивирован';
+      case 'DOCUMENTS_GENERATED':
+        return 'Документы сформированы';
+      case 'LOGIN':
+        return 'Вход';
+      default:
+        return t;
+    }
+  }
+
+  prettyPayload(raw: string | null): string {
+    if (!raw) {
+      return '';
+    }
+    try {
+      return JSON.stringify(JSON.parse(raw), null, 2);
+    } catch {
+      return raw;
+    }
   }
 
   saveQuickCounterparty(): void {
