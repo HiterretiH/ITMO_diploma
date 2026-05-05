@@ -38,6 +38,8 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     implementation 'org.apache.poi:poi-ooxml:5.4.0'
     implementation 'com.github.librepdf:openpdf:2.0.3'
+    implementation 'org.docx4j:docx4j-core:11.5.0'
+    implementation 'org.docx4j:docx4j-export-fo:11.5.0'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.projectlombok:lombok'

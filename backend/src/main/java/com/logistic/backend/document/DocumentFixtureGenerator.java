@@ -1,9 +1,5 @@
 package com.logistic.backend.document;
 
-import com.lowagie.text.Document;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.pdf.PdfWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -50,11 +46,12 @@ public final class DocumentFixtureGenerator {
                         "RUB");
 
         DocxTemplateRenderer renderer = new DocxTemplateRenderer();
+        DocxPdfConverter pdfConverter = new DocxPdfConverter();
         Map<String, String> context = snapshotToContext(snapshot);
 
         for (DocumentType type : DocumentType.values()) {
             byte[] docx = renderDocx(type, renderer, context);
-            byte[] pdf = renderPdf(renderer.extractText(docx));
+            byte[] pdf = pdfConverter.convert(docx);
             Files.write(outDir.resolve(type.name().toLowerCase() + "_sample.docx"), docx);
             Files.write(outDir.resolve(type.name().toLowerCase() + "_sample.pdf"), pdf);
         }
@@ -78,22 +75,46 @@ public final class DocumentFixtureGenerator {
         }
     }
 
-    private static byte[] renderPdf(String text) throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Document doc = new Document();
-        PdfWriter.getInstance(doc, baos);
-        doc.open();
-        for (String line : text.split("\\R")) {
-            if (!line.isBlank()) {
-                doc.add(new Paragraph(line));
-            }
-        }
-        doc.close();
-        return baos.toByteArray();
-    }
-
     private static Map<String, String> snapshotToContext(TripPrintSnapshot s) {
         Map<String, String> ctx = new LinkedHashMap<>();
+        ctx.put("number", asString(s.tripId()));
+        ctx.put("date", asString(s.loadDate()));
+        ctx.put("word_date", "15 мая 2026г.");
+        ctx.put("loading_place", asString(s.routeFrom()));
+        ctx.put("unloading_place", asString(s.routeTo()));
+        ctx.put("count", "1");
+        ctx.put("price", "98500.00");
+        ctx.put("total_price", "98500.00");
+        ctx.put("word_price", "девяносто восемь тысяч пятьсот");
+        ctx.put(
+                "performer_info_ws",
+                "ИП Петров П.П., ИНН 000000000000, г. Москва, ул. Ленина, 1");
+        ctx.put(
+                "customer_info_ws",
+                "ООО Ромашка, ИНН 7701234567, г. Москва, ул. Ленина, 1");
+
+        ctx.put("performer_name", "ИП Петров П.П.");
+        ctx.put("performer_full_name", "ИП Петров Петр Петрович");
+        ctx.put("performer_info", "ИП Петров Петр Петрович");
+        ctx.put("performer_phone", "+7 900 111 22 33");
+        ctx.put("performer_bank", "АО Банк");
+        ctx.put("performer_vehicle", asString(s.vehicleModel()));
+        ctx.put("performer_vehicle_number", asString(s.vehiclePlate()));
+        ctx.put("performer_driver", asString(s.driverName()));
+        ctx.put("performer_driver_phone", "+7 900 222 33 44");
+        ctx.put("performer_vehicle_type", "1 рейс");
+        ctx.put("performer_inn", "000000000000");
+        ctx.put("performer_bik", "044525225");
+        ctx.put("performer_kpp", "770101001");
+        ctx.put("performer_rsh", "40702810000000000001");
+        ctx.put("performer_ksh", "30101810400000000225");
+
+        ctx.put("customer_name", asString(s.shipperName()));
+        ctx.put("customer_full_name", asString(s.shipperName()));
+        ctx.put("customer_info", asString(s.shipperAddress()));
+        ctx.put("customer_phone", "+7 812 000 00 00");
+        ctx.put("customer_bank", "Банк клиента");
+
         ctx.put("tripId", asString(s.tripId()));
         ctx.put("ownerUsername", asString(s.ownerUsername()));
         ctx.put("shipperName", asString(s.shipperName()));
