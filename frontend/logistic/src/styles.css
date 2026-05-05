@@ -10,8 +10,12 @@ app-root {
   min-height: 100%;
 }
 html {
-  /* Fallback до инициализации темы PrimeNG (иначе var() невалиден → белый фон). */
-  background: var(--p-surface-50, #f1f5f9);
+  /*
+   * Не использовать --p-surface-50 для фона приложения: в Aura dark palette
+   * surface.50 остаётся светлым (zinc.50), из‑за этого «тёмная тема» не меняла фон.
+   * --p-content-background следует colorScheme (light: почти белый, dark: surface.900).
+   */
+  background: var(--p-content-background, #f8fafc);
 }
 body {
   margin: 0;
@@ -22,7 +26,7 @@ body {
     Roboto,
     Arial,
     sans-serif;
-  background: var(--p-surface-50, #f1f5f9);
+  background: var(--p-content-background, #f8fafc);
   color: var(--p-text-color, #0f172a);
 }
 
@@ -30,5 +34,5 @@ h1.page-title {
   margin: 0 0 1rem;
   font-size: 1.35rem;
   font-weight: 600;
-  color: var(--p-text-color);
+  color: var(--p-text-color, #0f172a);
 }
