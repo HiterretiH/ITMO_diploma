@@ -2,6 +2,22 @@
 
 Информационная система для формирования комплекта перевозочных документов (Spring Boot + Angular + PostgreSQL).
 
+## Регламент разработки
+
+- Каждая логическая задача: код → тесты → `.\gradlew.bat test` (backend) / `npm test` и `npm run build` (frontend) → отдельный коммит.
+- Следующий шаг начинается только после успешной проверки и коммита.
+
+## Сброс БД при изменении `V1__init.sql`
+
+Flyway хранит checksum начальной миграции. Если вы меняли [backend/src/main/resources/db/migration/V1__init.sql](backend/src/main/resources/db/migration/V1__init.sql), существующий volume Postgres может дать ошибку checksum. Для локальной разработки пересоздайте том:
+
+```powershell
+docker compose down -v
+docker compose up -d db
+```
+
+Затем снова поднимите сервисы или выполните `.\gradlew.bat bootRun` против чистой БД.
+
 ## Требования
 
 - JDK 17+, Node.js 20+, Docker (для интеграционных тестов и Compose).
@@ -26,19 +42,25 @@ cd backend
 
 ## Frontend (Angular 19 + PrimeNG)
 
-Работает поверх REST API (`/api/v1/...`). В режиме разработки запросы с фронта идут на тот же origin (`localhost:4200`), а `proxy.conf.json` перенаправляет `/api` и `/v3` на backend `http://localhost:8080`.
+Работает поверх REST API (`/api/v1/...`). В режиме разработки `environment.apiBase` пустой: браузер ходит на тот же origin (`http://localhost:4200`), а dev-server по [`proxy.conf.js`](frontend/logistic/proxy.conf.js) проксирует `/api` и `/v3` на backend.
+
+- **Локальный backend** (`.\gradlew.bat bootRun`, порт по умолчанию **8080**): `npm start`.
+- **Backend в Docker Compose** (на хосте API на порту **7272**, см. `docker-compose.yml`): `npm run start:docker-api`  
+  или задайте `LOGISTIC_API_PROXY_TARGET` (например `http://127.0.0.1:7272`), если порт другой.
 
 ```powershell
 cd frontend\logistic
 npm ci
 npm start
+# при API из Docker:
+npm run start:docker-api
 ```
 
 Откройте в браузере URL из вывода CLI (обычно `http://localhost:4200`), затем:
 
 1. Страница **«Вход»** или **«Регистрация»** — самостоятельная регистрация создаёт пользователя с ролью `EMPLOYEE` и сразу выдаёт JWT; либо войдите под существующей учётной записью (`EMPLOYEE`, `MANAGER`, `ADMIN`; после первого старта backend: `admin` / `admin123`).
 2. **Рейсы** — список, фильтр по статусу, «Создать» ведёт на `POST /trips` и открывает карточку рейса.
-3. **Справочники** — контрагенты, водители, ТС (CRUD в диалогах).
+3. **Справочники** — контрагенты, водители, ТС, **места погрузки/разгрузки** (CRUD в диалогах).
 4. **Карточка рейса** — шаги PrimeNG Stepper, сохранение только в статусе `DRAFT`; для ролей MANAGER/ADMIN — утверждение и архив; при `APPROVED`/`ARCHIVED` — скачивание PDF/DOCX; вкладка **«Аудит»**.
 5. Роль **ADMIN** — пункт «Пользователи», кнопка «+ Пользователь» (создание через API).
 

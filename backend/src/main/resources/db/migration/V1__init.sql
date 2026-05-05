@@ -48,6 +48,20 @@ CREATE TABLE vehicles (
 
 CREATE INDEX idx_vehicles_owner ON vehicles (owner_id);
 
+CREATE TABLE places (
+    id BIGSERIAL PRIMARY KEY,
+    owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    address VARCHAR(1024) NOT NULL,
+    contact VARCHAR(512),
+    place_type VARCHAR(16) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT places_type_check CHECK (place_type IN ('LOAD', 'UNLOAD', 'BOTH')),
+    UNIQUE (owner_id, address, place_type)
+);
+
+CREATE INDEX idx_places_owner_type ON places (owner_id, place_type);
+
 CREATE TABLE trips (
     id BIGSERIAL PRIMARY KEY,
     owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
