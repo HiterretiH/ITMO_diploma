@@ -34,7 +34,7 @@ describe('TripNewComponent', () => {
               lastUpdatePayload = body;
               return of({ id: 99 });
             },
-            submit: () => of({ id: 99 }),
+            complete: () => of({ id: 99 }),
           },
         },
         {
@@ -95,7 +95,7 @@ describe('TripNewComponent', () => {
       ratePerLeg: 100,
     });
     expect(cmp.form.controls.priceAmount.value).toBe(200);
-    cmp.saveAndSubmit();
+    cmp.saveAndComplete();
     expect(lastUpdatePayload).toBeDefined();
     expect(lastUpdatePayload!.consigneeId).toBe(7);
     expect(lastUpdatePayload!.shipperId).toBe(7);

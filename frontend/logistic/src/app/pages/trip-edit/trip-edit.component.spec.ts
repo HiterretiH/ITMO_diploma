@@ -9,10 +9,31 @@ import { of } from 'rxjs';
 import { AuditApiService } from '../../core/audit-api.service';
 import { TripApiService } from '../../core/trip-api.service';
 import { CatalogApiService } from '../../core/catalog-api.service';
+import { TripResponse } from '../../core/trip.models';
 import { TripEditComponent } from './trip-edit.component';
 
 describe('TripEditComponent', () => {
   let fixture: ComponentFixture<TripEditComponent>;
+
+  const tripInProgress: TripResponse = {
+    id: 1,
+    ownerId: 1,
+    ownerUsername: 'u',
+    status: 'IN_PROGRESS',
+    shipperId: null,
+    consigneeId: null,
+    driverId: null,
+    vehicleId: null,
+    cargoDescription: null,
+    cargoWeightKg: null,
+    routeFrom: 'Склад А\nКонтакт: +7999',
+    routeTo: 'Точка Б',
+    loadDate: null,
+    unloadDate: null,
+    priceAmount: null,
+    currency: 'RUB',
+    updatedAt: '2026-01-01T00:00:00Z',
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -33,27 +54,11 @@ describe('TripEditComponent', () => {
         {
           provide: TripApiService,
           useValue: {
-            get: () =>
-              of({
-                id: 1,
-                ownerId: 1,
-                ownerUsername: 'u',
-                status: 'DRAFT',
-                shipperId: null,
-                consigneeId: null,
-                driverId: null,
-                vehicleId: null,
-                cargoDescription: null,
-                cargoWeightKg: null,
-                routeFrom: 'Склад А\nКонтакт: +7999',
-                routeTo: 'Точка Б',
-                loadDate: null,
-                unloadDate: null,
-                priceAmount: null,
-                currency: 'RUB',
-                updatedAt: '2026-01-01T00:00:00Z',
-              }),
+            get: () => of(tripInProgress),
             documents: () => of([]),
+            update: () => of(tripInProgress),
+            complete: () => of({ ...tripInProgress, status: 'COMPLETED' }),
+            delete: () => of(void 0),
           },
         },
         {
@@ -79,10 +84,10 @@ describe('TripEditComponent', () => {
     fixture = TestBed.createComponent(TripEditComponent);
   });
 
-  it('enables form in DRAFT', () => {
+  it('enables form in IN_PROGRESS', () => {
     fixture.detectChanges();
     const cmp = fixture.componentInstance;
-    expect(cmp.draft()).toBe(true);
+    expect(cmp.inProgress()).toBe(true);
     expect(cmp.form.disabled).toBe(false);
   });
 
@@ -95,32 +100,18 @@ describe('TripEditComponent', () => {
     expect(cmp.form.get('destinationContact')?.value).toBe('');
   });
 
-  it('disables save when not DRAFT', () => {
+  it('keeps form enabled in COMPLETED', () => {
     fixture.detectChanges();
     const cmp = fixture.componentInstance;
     cmp.trip = {
-      id: 1,
-      ownerId: 1,
-      ownerUsername: 'u',
-      status: 'PENDING_APPROVAL',
-      shipperId: null,
-      consigneeId: null,
-      driverId: null,
-      vehicleId: null,
-      cargoDescription: null,
-      cargoWeightKg: null,
-      routeFrom: null,
-      routeTo: null,
-      loadDate: null,
-      unloadDate: null,
-      priceAmount: null,
-      currency: 'RUB',
-      updatedAt: '2026-01-01T00:00:00Z',
+      ...tripInProgress,
+      status: 'COMPLETED',
     };
-    (cmp as unknown as { patchForm: (t: typeof cmp.trip) => void }).patchForm(
+    (cmp as unknown as { patchForm: (t: TripResponse) => void }).patchForm(
       cmp.trip,
     );
     (cmp as unknown as { syncFormDisabled: () => void }).syncFormDisabled();
-    expect(cmp.form.disabled).toBe(true);
+    expect(cmp.completed()).toBe(true);
+    expect(cmp.form.disabled).toBe(false);
   });
 });
