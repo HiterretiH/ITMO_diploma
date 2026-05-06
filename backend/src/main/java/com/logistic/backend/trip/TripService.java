@@ -14,6 +14,7 @@ import com.logistic.backend.catalog.Driver;
 import com.logistic.backend.catalog.DriverRepository;
 import com.logistic.backend.catalog.Vehicle;
 import com.logistic.backend.catalog.VehicleRepository;
+import com.logistic.backend.config.StorageProperties;
 import com.logistic.backend.document.DocumentGenerationService;
 import com.logistic.backend.document.FileFormat;
 import com.logistic.backend.document.GeneratedDocument;
@@ -25,13 +26,15 @@ import com.logistic.backend.user.User;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -49,12 +52,13 @@ public class TripService {
     private final AuditService auditService;
     private final DocumentGenerationService documentGenerationService;
     private final GeneratedDocumentRepository generatedDocumentRepository;
+    private final StorageProperties storageProperties;
 
     @Transactional
     public TripResponse create(User owner) {
         Trip t = new Trip();
         t.setOwner(owner);
-        t.setStatus(TripStatus.DRAFT);
+        t.setStatus(TripStatus.IN_PROGRESS);
         tripRepository.save(t);
         auditService.record(
                 owner, t, AuditEventType.TRIP_CREATED, Map.of("tripId", t.getId().toString()));
@@ -65,37 +69,30 @@ public class TripService {
     public TripResponse update(Long id, TripUpdateRequest req, User current) {
         Trip t = loadForOwnerEdit(id, current);
         apply(t, req, current);
+        if (t.getStatus() == TripStatus.COMPLETED) {
+            validateReadyForComplete(t);
+        }
         tripRepository.save(t);
+        if (t.getStatus() == TripStatus.COMPLETED) {
+            refreshSnapshotAndRegenerateDocuments(t);
+        }
         auditService.record(
                 current, t, AuditEventType.TRIP_UPDATED, Map.of("tripId", t.getId().toString()));
         return toDto(t);
     }
 
     @Transactional
-    public TripResponse submit(Long id, User current) {
-        Trip t = tripRepository.findDetailedForOwner(id, current).orElseThrow(this::notFound);
-        if (t.getStatus() != TripStatus.DRAFT) {
-            throw conflict("Trip is not editable");
+    public TripResponse complete(Long id, User actor) {
+        Trip t = tripRepository.findDetailedForOwner(id, actor).orElseThrow(this::notFound);
+        if (t.getStatus() == TripStatus.COMPLETED) {
+            throw conflict("Trip already completed");
         }
-        validateReadyForSubmit(t);
+        validateReadyForComplete(t);
         TripPrintSnapshot snap = tripSnapshotMapper.fromTrip(t);
         try {
             t.setSnapshotJson(objectMapper.writeValueAsString(snap));
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "snapshot failed");
-        }
-        t.setStatus(TripStatus.PENDING_APPROVAL);
-        tripRepository.save(t);
-        auditService.record(
-                current, t, AuditEventType.TRIP_SUBMITTED, Map.of("tripId", t.getId().toString()));
-        return toDto(t);
-    }
-
-    @Transactional
-    public TripResponse approve(Long id, User actor) {
-        Trip t = tripRepository.findById(id).orElseThrow(this::notFound);
-        if (t.getStatus() != TripStatus.PENDING_APPROVAL) {
-            throw conflict("Trip must be pending approval");
         }
         try {
             documentGenerationService.generateAndPersist(t);
@@ -103,9 +100,9 @@ public class TripService {
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "Document generation failed", e);
         }
-        t.setStatus(TripStatus.APPROVED);
+        t.setStatus(TripStatus.COMPLETED);
         tripRepository.save(t);
-        auditService.record(actor, t, AuditEventType.TRIP_APPROVED, Map.of("tripId", id.toString()));
+        auditService.record(actor, t, AuditEventType.TRIP_COMPLETED, Map.of("tripId", id.toString()));
         auditService.record(
                 actor,
                 t,
@@ -115,15 +112,12 @@ public class TripService {
     }
 
     @Transactional
-    public TripResponse archive(Long id, User actor) {
-        Trip t = tripRepository.findById(id).orElseThrow(this::notFound);
-        if (t.getStatus() != TripStatus.APPROVED) {
-            throw conflict("Trip must be approved");
-        }
-        t.setStatus(TripStatus.ARCHIVED);
-        tripRepository.save(t);
-        auditService.record(actor, t, AuditEventType.TRIP_ARCHIVED, Map.of("tripId", id.toString()));
-        return toDto(t);
+    public void delete(Long id, User actor) {
+        Trip t = tripRepository.findDetailedForOwner(id, actor).orElseThrow(this::notFound);
+        Long tripId = t.getId();
+        auditService.record(actor, t, AuditEventType.TRIP_DELETED, Map.of("tripId", tripId.toString()));
+        deleteTripStorageBestEffort(storageProperties.getRoot(), tripId);
+        tripRepository.delete(t);
     }
 
     @Transactional(readOnly = true)
@@ -135,7 +129,7 @@ public class TripService {
     @Transactional(readOnly = true)
     public List<GeneratedDocumentResponse> listDocuments(Long tripId, User current) {
         Trip t = requireAccessibleTrip(tripId, current);
-        if (t.getStatus() != TripStatus.APPROVED && t.getStatus() != TripStatus.ARCHIVED) {
+        if (t.getStatus() != TripStatus.COMPLETED) {
             return List.of();
         }
         return generatedDocumentRepository.findByTrip(t).stream()
@@ -191,11 +185,7 @@ public class TripService {
     }
 
     private Trip loadForOwnerEdit(Long id, User current) {
-        Trip t = tripRepository.findDetailedForOwner(id, current).orElseThrow(this::notFound);
-        if (t.getStatus() != TripStatus.DRAFT) {
-            throw conflict("Trip is locked");
-        }
-        return t;
+        return tripRepository.findDetailedForOwner(id, current).orElseThrow(this::notFound);
     }
 
     private Trip loadForView(Long id, User current) {
@@ -207,6 +197,38 @@ public class TripService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return t;
+    }
+
+    private void refreshSnapshotAndRegenerateDocuments(Trip t) {
+        TripPrintSnapshot snap = tripSnapshotMapper.fromTrip(t);
+        try {
+            t.setSnapshotJson(objectMapper.writeValueAsString(snap));
+            tripRepository.save(t);
+            documentGenerationService.generateAndPersist(t);
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "snapshot failed", e);
+        } catch (IOException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Document generation failed", e);
+        }
+    }
+
+    private static void deleteTripStorageBestEffort(String root, long tripId) {
+        Path dir = Path.of(root).resolve("trips").resolve(Long.toString(tripId));
+        if (!Files.exists(dir)) {
+            return;
+        }
+        try (Stream<Path> walk = Files.walk(dir)) {
+            walk.sorted(Comparator.reverseOrder())
+                    .forEach(
+                            p -> {
+                                try {
+                                    Files.deleteIfExists(p);
+                                } catch (IOException ignored) {
+                                }
+                            });
+        } catch (IOException ignored) {
+        }
     }
 
     private void apply(Trip t, TripUpdateRequest req, User owner) {
@@ -256,7 +278,7 @@ public class TripService {
         }
     }
 
-    private static void validateReadyForSubmit(Trip t) {
+    private static void validateReadyForComplete(Trip t) {
         if (t.getShipper() == null
                 || t.getConsignee() == null
                 || t.getDriver() == null
