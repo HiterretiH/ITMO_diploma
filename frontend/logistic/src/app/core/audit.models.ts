@@ -1,9 +1,8 @@
 export type AuditEventType =
   | 'TRIP_CREATED'
   | 'TRIP_UPDATED'
-  | 'TRIP_SUBMITTED'
-  | 'TRIP_APPROVED'
-  | 'TRIP_ARCHIVED'
+  | 'TRIP_COMPLETED'
+  | 'TRIP_DELETED'
   | 'DOCUMENTS_GENERATED'
   | 'LOGIN'
   | 'REGISTER';

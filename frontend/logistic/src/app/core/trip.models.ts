@@ -1,8 +1,4 @@
-export type TripStatus =
-  | 'DRAFT'
-  | 'PENDING_APPROVAL'
-  | 'APPROVED'
-  | 'ARCHIVED';
+export type TripStatus = 'IN_PROGRESS' | 'COMPLETED';
 
 export interface TripResponse {
   id: number;

@@ -31,16 +31,12 @@ export class TripApiService {
     return this.http.put<TripResponse>(`${this.base}/trips/${id}`, body);
   }
 
-  submit(id: number): Observable<TripResponse> {
-    return this.http.post<TripResponse>(`${this.base}/trips/${id}/submit`, {});
+  complete(id: number): Observable<TripResponse> {
+    return this.http.post<TripResponse>(`${this.base}/trips/${id}/complete`, {});
   }
 
-  approve(id: number): Observable<TripResponse> {
-    return this.http.post<TripResponse>(`${this.base}/trips/${id}/approve`, {});
-  }
-
-  archive(id: number): Observable<TripResponse> {
-    return this.http.post<TripResponse>(`${this.base}/trips/${id}/archive`, {});
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/trips/${id}`);
   }
 
   documents(id: number): Observable<GeneratedDocumentResponse[]> {
