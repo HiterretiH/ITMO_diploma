@@ -83,7 +83,7 @@ public class TripService {
 
     @Transactional
     public TripResponse complete(Long id, User actor) {
-        Trip t = tripRepository.findDetailedForOwner(id, actor).orElseThrow(this::notFound);
+        Trip t = loadTripDetailedForCompleteOrDelete(id, actor);
         if (t.getStatus() == TripStatus.COMPLETED) {
             throw conflict("Trip already completed");
         }
@@ -113,11 +113,12 @@ public class TripService {
 
     @Transactional
     public void delete(Long id, User actor) {
-        Trip t = tripRepository.findDetailedForOwner(id, actor).orElseThrow(this::notFound);
+        Trip t = loadTripDetailedForCompleteOrDelete(id, actor);
         Long tripId = t.getId();
-        auditService.record(actor, t, AuditEventType.TRIP_DELETED, Map.of("tripId", tripId.toString()));
         deleteTripStorageBestEffort(storageProperties.getRoot(), tripId);
         tripRepository.delete(t);
+        // Log without Trip FK — avoids Hibernate flush ordering issues; DB still keeps row with trip_id NULL.
+        auditService.record(actor, AuditEventType.TRIP_DELETED, Map.of("tripId", tripId.toString()));
     }
 
     @Transactional(readOnly = true)
@@ -186,6 +187,18 @@ public class TripService {
 
     private Trip loadForOwnerEdit(Long id, User current) {
         return tripRepository.findDetailedForOwner(id, current).orElseThrow(this::notFound);
+    }
+
+    /** Owner or privileged user (manager/admin); otherwise 403 if trip exists. */
+    private Trip loadTripDetailedForCompleteOrDelete(Long id, User actor) {
+        Trip t = tripRepository.findDetailedById(id).orElseThrow(this::notFound);
+        if (isPrivileged(actor)) {
+            return t;
+        }
+        if (!t.getOwner().getId().equals(actor.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        return t;
     }
 
     private Trip loadForView(Long id, User current) {

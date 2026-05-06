@@ -642,7 +642,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     post:
       tags: [Trips]
-      summary: Create draft trip
+      summary: Create trip (IN_PROGRESS)
       security:
         - bearerAuth: []
       responses:
@@ -684,7 +684,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     put:
       tags: [Trips]
-      summary: Update draft trip
+      summary: Update trip (IN_PROGRESS or COMPLETED)
       security:
         - bearerAuth: []
       parameters:
@@ -730,58 +730,48 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
-  /api/v1/trips/{id}/submit:
-    post:
+    delete:
       tags: [Trips]
-      summary: Submit trip for approval
+      summary: Delete trip permanently
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
-        '200':
-          description: Updated trip
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TripResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+        '204':
+          description: Trip deleted
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/trips/{id}/approve:
+  /api/v1/trips/{id}/complete:
     post:
       tags: [Trips]
-      summary: Approve trip and generate documents
+      summary: Complete trip and generate documents
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '200':
-          description: Updated trip
+          description: Trip completed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TripResponse'
               examples:
-                approved:
-                  summary: After approval
+                completed:
+                  summary: After completion
                   value:
                     id: 10
                     ownerId: 2
                     ownerUsername: emp_demo
-                    status: APPROVED
+                    status: COMPLETED
                     shipperId: 1
                     consigneeId: 2
                     driverId: 3
@@ -795,32 +785,8 @@ paths:
                     priceAmount: 45000
                     currency: RUB
                     updatedAt: '2026-05-05T12:00:00Z'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/v1/trips/{id}/archive:
-    post:
-      tags: [Trips]
-      summary: Archive approved trip
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
-      responses:
-        '200':
-          description: Updated trip
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TripResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1026,7 +992,7 @@ components:
 
     TripStatus:
       type: string
-      enum: [DRAFT, PENDING_APPROVAL, APPROVED, ARCHIVED]
+      enum: [IN_PROGRESS, COMPLETED]
 
     LoginRequest:
       type: object
@@ -1308,7 +1274,7 @@ components:
           format: int64
         eventType:
           type: string
-          enum: [REGISTER, TRIP_CREATED, TRIP_UPDATED, TRIP_SUBMITTED, TRIP_APPROVED, TRIP_ARCHIVED, DOCUMENTS_GENERATED, LOGIN]
+          enum: [REGISTER, TRIP_CREATED, TRIP_UPDATED, TRIP_COMPLETED, TRIP_DELETED, DOCUMENTS_GENERATED, LOGIN]
         payload:
           type: string
           nullable: true

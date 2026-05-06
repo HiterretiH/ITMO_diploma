@@ -32,6 +32,18 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
             """)
     Optional<Trip> findDetailedForOwner(@Param("id") Long id, @Param("owner") User owner);
 
+    @Query(
+            """
+            select distinct t from Trip t
+            join fetch t.owner
+            left join fetch t.shipper
+            left join fetch t.consignee
+            left join fetch t.driver
+            left join fetch t.vehicle
+            where t.id = :id
+            """)
+    Optional<Trip> findDetailedById(@Param("id") Long id);
+
     @Query("select t from Trip t join fetch t.owner order by t.updatedAt desc")
     List<Trip> findAllByOrderByUpdatedAtDesc();
 
