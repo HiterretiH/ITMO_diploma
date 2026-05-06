@@ -41,14 +41,12 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
 
     private String tokenEmpA;
     private String tokenEmpB;
-    private String tokenMgr;
 
     @BeforeEach
     void seedUsers() throws Exception {
         String id = UUID.randomUUID().toString().substring(0, 8);
         tokenEmpA = saveUser("emp_a_" + id, "p1", EnumSet.of(Role.EMPLOYEE));
         tokenEmpB = saveUser("emp_b_" + id, "p2", EnumSet.of(Role.EMPLOYEE));
-        tokenMgr = saveUser("mgr_" + id, "p3", EnumSet.of(Role.MANAGER));
     }
 
     private String saveUser(String username, String password, Set<Role> roles) throws Exception {
@@ -70,24 +68,25 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void employeeCannotApproveEvenOwnPendingTrip() throws Exception {
-        long tripId = createSubmittedTrip(tokenEmpA);
+    void employeeCanCompleteOwnTrip() throws Exception {
+        long tripId = createTripReadyToComplete(tokenEmpA);
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
-                        "/api/v1/trips/" + tripId + "/approve",
+                        "/api/v1/trips/" + tripId + "/complete",
                         new HttpEntity<>(bearer(tokenEmpA)),
                         String.class);
-        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertProblemJson(r, HttpStatus.FORBIDDEN);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(objectMapper.readTree(r.getBody()).get("status").asText()).isEqualTo("COMPLETED");
     }
 
     @Test
-    void employeeCannotArchiveApprovedTrip() throws Exception {
-        long tripId = createApprovedTrip();
+    void peerCannotDeleteOthersTrip() throws Exception {
+        long tripId = createEmptyTrip(tokenEmpA);
         ResponseEntity<String> r =
-                restTemplate.postForEntity(
-                        "/api/v1/trips/" + tripId + "/archive",
-                        new HttpEntity<>(bearer(tokenEmpA)),
+                restTemplate.exchange(
+                        "/api/v1/trips/" + tripId,
+                        HttpMethod.DELETE,
+                        new HttpEntity<>(bearer(tokenEmpB)),
                         String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertProblemJson(r, HttpStatus.FORBIDDEN);
@@ -130,28 +129,29 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void updateTripAfterSubmitReturns409() throws Exception {
-        long tripId = createSubmittedTrip(tokenEmpA);
+    void updateCompletedTripWithIncompleteDataReturns400() throws Exception {
+        long tripId = createCompletedTrip(tokenEmpA);
+        String stripCargo = "{\"cargoDescription\":\"\"}";
         ResponseEntity<String> r =
                 restTemplate.exchange(
                         "/api/v1/trips/" + tripId,
                         HttpMethod.PUT,
-                        new HttpEntity<>("{}", bearer(tokenEmpA)),
+                        new HttpEntity<>(stripCargo, bearer(tokenEmpA)),
                         String.class);
-        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertProblemJson(r, HttpStatus.CONFLICT);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertProblemJson(r, HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void approveDraftTripReturns409() throws Exception {
+    void completeIncompleteTripReturns400() throws Exception {
         long tripId = createEmptyTrip(tokenEmpA);
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
-                        "/api/v1/trips/" + tripId + "/approve",
-                        new HttpEntity<>(bearer(tokenMgr)),
+                        "/api/v1/trips/" + tripId + "/complete",
+                        new HttpEntity<>(bearer(tokenEmpA)),
                         String.class);
-        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertProblemJson(r, HttpStatus.CONFLICT);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertProblemJson(r, HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -203,7 +203,7 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
         return objectMapper.readTree(r.getBody()).get("id").asLong();
     }
 
-    private long createSubmittedTrip(String token) throws Exception {
+    private long createTripReadyToComplete(String token) throws Exception {
         Long shipperId = postCounterparty(token, new CounterpartyRequest("S", "1234567890", "a", "1"));
         Long consigneeId = postCounterparty(token, new CounterpartyRequest("C", "0987654321", "b", "2"));
         Long driverId = postDriver(token, new DriverRequest("D", "7712345678", "B"));
@@ -231,23 +231,17 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
                                 bearer(token)),
                         String.class);
         assertThat(upd.getStatusCode()).isEqualTo(HttpStatus.OK);
-        ResponseEntity<String> sub =
-                restTemplate.postForEntity(
-                        "/api/v1/trips/" + tripId + "/submit",
-                        new HttpEntity<>(bearer(token)),
-                        String.class);
-        assertThat(sub.getStatusCode()).isEqualTo(HttpStatus.OK);
         return tripId;
     }
 
-    private long createApprovedTrip() throws Exception {
-        long tripId = createSubmittedTrip(tokenEmpA);
-        ResponseEntity<String> ap =
+    private long createCompletedTrip(String token) throws Exception {
+        long tripId = createTripReadyToComplete(token);
+        ResponseEntity<String> done =
                 restTemplate.postForEntity(
-                        "/api/v1/trips/" + tripId + "/approve",
-                        new HttpEntity<>(bearer(tokenMgr)),
+                        "/api/v1/trips/" + tripId + "/complete",
+                        new HttpEntity<>(bearer(token)),
                         String.class);
-        assertThat(ap.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(done.getStatusCode()).isEqualTo(HttpStatus.OK);
         return tripId;
     }
 
