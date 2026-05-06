@@ -34,10 +34,8 @@ export class TripListComponent implements OnInit {
 
   readonly statusOptions: { label: string; value: TripStatus | null }[] = [
     { label: 'Все', value: null },
-    { label: 'Черновик', value: 'DRAFT' },
-    { label: 'На согласовании', value: 'PENDING_APPROVAL' },
-    { label: 'Утверждён', value: 'APPROVED' },
-    { label: 'Архив', value: 'ARCHIVED' },
+    { label: 'В работе', value: 'IN_PROGRESS' },
+    { label: 'Завершён', value: 'COMPLETED' },
   ];
 
   ngOnInit(): void {

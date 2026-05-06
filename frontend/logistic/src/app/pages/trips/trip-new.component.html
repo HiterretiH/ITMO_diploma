@@ -21,7 +21,7 @@
       />
     }
 
-    <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveAndSubmit()">
+    <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveAndComplete()">
       <section class="block" aria-labelledby="sec-customer">
         <h2 id="sec-customer" class="block-heading">Заказчик</h2>
         <div class="field">
@@ -175,8 +175,8 @@
         />
         <p-button
           type="submit"
-          label="Создать и отправить на согласование"
-          icon="pi pi-send"
+          label="Создать и завершить рейс"
+          icon="pi pi-check"
           [loading]="busy"
           [disabled]="busy"
         />

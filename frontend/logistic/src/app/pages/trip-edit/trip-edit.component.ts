@@ -20,7 +20,6 @@ import { Message } from 'primeng/message';
 import { StepperModule } from 'primeng/stepper';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
-import { AuthService } from '../../core/auth.service';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import {
   CounterpartyResponse,
@@ -74,8 +73,6 @@ export class TripEditComponent implements OnInit {
   private readonly catalog = inject(CatalogApiService);
   private readonly fb = inject(FormBuilder);
   private readonly confirm = inject(ConfirmationService);
-
-  readonly auth = inject(AuthService);
 
   trip: TripResponse | null = null;
   auditEvents: AuditEventResponse[] = [];
@@ -169,7 +166,7 @@ export class TripEditComponent implements OnInit {
         this.vehicles = ve;
         this.patchForm(trip);
         this.syncFormDisabled();
-        if (trip.status === 'APPROVED' || trip.status === 'ARCHIVED') {
+        if (trip.status === 'COMPLETED') {
           this.trips.documents(id).subscribe({
             next: (d) => (this.docs = d),
             error: () => (this.docs = []),
@@ -224,27 +221,24 @@ export class TripEditComponent implements OnInit {
   }
 
   private syncFormDisabled(): void {
-    if (this.draft()) {
-      this.form.enable({ emitEvent: false });
-    } else {
-      this.form.disable({ emitEvent: false });
-    }
+    this.form.enable({ emitEvent: false });
   }
 
-  draft(): boolean {
-    return this.trip?.status === 'DRAFT';
+  inProgress(): boolean {
+    return this.trip?.status === 'IN_PROGRESS';
   }
 
-  pending(): boolean {
-    return this.trip?.status === 'PENDING_APPROVAL';
+  completed(): boolean {
+    return this.trip?.status === 'COMPLETED';
   }
 
-  approved(): boolean {
-    return this.trip?.status === 'APPROVED';
+  /** Правка справочников и полей — и в работе, и после завершения. */
+  canEditCatalog(): boolean {
+    return this.inProgress() || this.completed();
   }
 
   showDocuments(): boolean {
-    return this.approved() || this.trip?.status === 'ARCHIVED';
+    return this.completed();
   }
 
   get tripId(): number | null {
@@ -306,7 +300,7 @@ export class TripEditComponent implements OnInit {
     };
   }
 
-  /** Совпадает с TripService.validateReadyForSubmit (сообщение для UI). */
+  /** Совпадает с TripService.validateReadyForComplete (сообщение для UI). */
   private incompleteTripHint(): string | null {
     const v = this.form.getRawValue();
     if (
@@ -376,7 +370,7 @@ export class TripEditComponent implements OnInit {
 
   save(): void {
     const id = this.tripId;
-    if (!id || !this.draft() || this.form.invalid) {
+    if (!id || this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
@@ -385,6 +379,12 @@ export class TripEditComponent implements OnInit {
     this.trips.update(id, this.buildBody()).subscribe({
       next: (t) => {
         this.applyTripResponse(t);
+        if (t.status === 'COMPLETED' && id != null) {
+          this.trips.documents(id).subscribe({
+            next: (d) => (this.docs = d),
+            error: () => (this.docs = []),
+          });
+        }
         this.busy = false;
       },
       error: (err: HttpErrorResponse) => {
@@ -394,9 +394,9 @@ export class TripEditComponent implements OnInit {
     });
   }
 
-  submit(): void {
+  complete(): void {
     const id = this.tripId;
-    if (!id || !this.draft()) {
+    if (!id || !this.inProgress()) {
       return;
     }
     this.form.markAllAsTouched();
@@ -408,65 +408,47 @@ export class TripEditComponent implements OnInit {
       this.conflictDetail = hint;
       return;
     }
-    this.busy = true;
-    this.conflictDetail = null;
-    this.trips
-      .update(id, this.buildBody())
-      .pipe(concatMap(() => this.trips.submit(id)))
-      .subscribe({
-        next: (t) => {
-          this.applyTripResponse(t);
-          this.busy = false;
-        },
-        error: (err: HttpErrorResponse) => {
-          this.handleSaveError(err);
-          this.busy = false;
-        },
-      });
-  }
-
-  approve(): void {
-    const id = this.tripId;
-    if (!id || !this.pending()) {
-      return;
-    }
     this.confirm.confirm({
-      message: 'Утвердить этот рейс?',
+      message: 'Завершить рейс? Будут сгенерированы документы.',
       header: 'Подтверждение',
       icon: 'pi pi-check-circle',
       accept: () => {
         this.busy = true;
-        this.trips.approve(id).subscribe({
-          next: (t) => {
-            this.applyTripResponse(t);
-            this.reload(id);
-            this.busy = false;
-          },
-          error: () => {
-            this.busy = false;
-          },
-        });
+        this.conflictDetail = null;
+        this.trips
+          .update(id, this.buildBody())
+          .pipe(concatMap(() => this.trips.complete(id)))
+          .subscribe({
+            next: (t) => {
+              this.applyTripResponse(t);
+              this.reload(id);
+              this.busy = false;
+            },
+            error: (err: HttpErrorResponse) => {
+              this.handleSaveError(err);
+              this.busy = false;
+            },
+          });
       },
     });
   }
 
-  archive(): void {
+  deleteTrip(): void {
     const id = this.tripId;
-    if (!id || !this.approved()) {
+    if (!id) {
       return;
     }
     this.confirm.confirm({
-      message: 'Перевести рейс в архив?',
+      message: 'Удалить рейс? Это действие необратимо.',
       header: 'Подтверждение',
-      icon: 'pi pi-inbox',
+      icon: 'pi pi-trash',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.busy = true;
-        this.trips.archive(id).subscribe({
-          next: (t) => {
-            this.applyTripResponse(t);
-            this.reload(id);
+        this.trips.delete(id).subscribe({
+          next: () => {
             this.busy = false;
+            void this.router.navigate(['/trips']);
           },
           error: () => {
             this.busy = false;
@@ -516,7 +498,7 @@ export class TripEditComponent implements OnInit {
   }
 
   openCpDialog(target: 'shipper' | 'consignee'): void {
-    if (!this.draft()) {
+    if (!this.canEditCatalog()) {
       return;
     }
     this.cpTarget = target;
@@ -531,7 +513,7 @@ export class TripEditComponent implements OnInit {
   }
 
   openCpEdit(target: 'shipper' | 'consignee'): void {
-    if (!this.draft()) {
+    if (!this.canEditCatalog()) {
       return;
     }
     this.cpTarget = target;
@@ -557,7 +539,7 @@ export class TripEditComponent implements OnInit {
   }
 
   openDriverCreate(): void {
-    if (!this.draft()) {
+    if (!this.canEditCatalog()) {
       return;
     }
     this.driverEditingId = null;
@@ -570,7 +552,7 @@ export class TripEditComponent implements OnInit {
   }
 
   openDriverEdit(): void {
-    if (!this.draft()) {
+    if (!this.canEditCatalog()) {
       return;
     }
     const id = this.form.getRawValue().driverId;
@@ -591,7 +573,7 @@ export class TripEditComponent implements OnInit {
   }
 
   openVehicleCreate(): void {
-    if (!this.draft()) {
+    if (!this.canEditCatalog()) {
       return;
     }
     this.vehicleEditingId = null;
@@ -604,7 +586,7 @@ export class TripEditComponent implements OnInit {
   }
 
   openVehicleEdit(): void {
-    if (!this.draft()) {
+    if (!this.canEditCatalog()) {
       return;
     }
     const id = this.form.getRawValue().vehicleId;
@@ -726,12 +708,10 @@ export class TripEditComponent implements OnInit {
         return 'Создание рейса';
       case 'TRIP_UPDATED':
         return 'Изменение';
-      case 'TRIP_SUBMITTED':
-        return 'Отправлен на согласование';
-      case 'TRIP_APPROVED':
-        return 'Утверждён';
-      case 'TRIP_ARCHIVED':
-        return 'Архивирован';
+      case 'TRIP_COMPLETED':
+        return 'Завершён';
+      case 'TRIP_DELETED':
+        return 'Удалён';
       case 'DOCUMENTS_GENERATED':
         return 'Документы сформированы';
       case 'LOGIN':

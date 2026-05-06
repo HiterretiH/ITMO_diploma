@@ -13,14 +13,10 @@ export class TripStatusBadgeComponent {
 
   get label(): string {
     switch (this.status) {
-      case 'DRAFT':
-        return 'Черновик';
-      case 'PENDING_APPROVAL':
-        return 'На согласовании';
-      case 'APPROVED':
-        return 'Утверждён';
-      case 'ARCHIVED':
-        return 'Архив';
+      case 'IN_PROGRESS':
+        return 'В работе';
+      case 'COMPLETED':
+        return 'Завершён';
       default:
         return this.status;
     }
@@ -28,14 +24,10 @@ export class TripStatusBadgeComponent {
 
   get severity(): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
     switch (this.status) {
-      case 'DRAFT':
-        return 'secondary';
-      case 'PENDING_APPROVAL':
-        return 'warn';
-      case 'APPROVED':
+      case 'IN_PROGRESS':
+        return 'info';
+      case 'COMPLETED':
         return 'success';
-      case 'ARCHIVED':
-        return 'contrast';
       default:
         return 'info';
     }

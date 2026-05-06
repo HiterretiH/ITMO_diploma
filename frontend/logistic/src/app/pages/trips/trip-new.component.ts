@@ -32,10 +32,10 @@ import { buildRouteLine } from '../../shared/forms/route-line.util';
 /**
  * Создание рейса: минимальный набор полей как в `.ide/main.py` (заказчик, исполнитель,
  * маршрут+контакты, дата, ставка × количество → итог с возможностью ручной правки),
- * затем POST → PUT → submit.
+ * затем POST → PUT → complete.
  *
  * Поля «получатель», груз/масса и дата разгрузки не показываются: бэкенд требует их
- * при submit — подставляются в `buildUpdateRequest()` (см. `TripService.validateReadyForSubmit`).
+ * при завершении — подставляются в `buildUpdateRequest()` (см. `TripService.validateReadyForComplete`).
  *
  * Связность полей:
  * — ставка за рейс и число рейсов пересчитывают итог; итог можно править вручную;
@@ -225,8 +225,8 @@ export class TripNewComponent implements OnInit {
     this.errorMessage = `Запрос не выполнен (код ${err.status}).`;
   }
 
-  /** Создать черновик, записать TripUpdateRequest, отправить на согласование. */
-  saveAndSubmit(): void {
+  /** Создать рейс (IN_PROGRESS), записать данные и завершить с генерацией документов. */
+  saveAndComplete(): void {
     this.errorMessage = null;
     this.form.markAllAsTouched();
     if (this.form.invalid) {
@@ -246,7 +246,7 @@ export class TripNewComponent implements OnInit {
       .pipe(
         concatMap((trip) =>
           this.trips.update(trip.id, body).pipe(
-            concatMap(() => this.trips.submit(trip.id)),
+            concatMap(() => this.trips.complete(trip.id)),
           ),
         ),
       )

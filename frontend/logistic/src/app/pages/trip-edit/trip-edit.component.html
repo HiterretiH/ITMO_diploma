@@ -50,7 +50,7 @@
                   appendTo="body"
                   styleClass="w-full"
                 />
-                @if (draft()) {
+                @if (canEditCatalog()) {
                   <div class="catalog-row-actions">
                     <p-button
                       type="button"
@@ -83,7 +83,7 @@
                   appendTo="body"
                   styleClass="w-full"
                 />
-                @if (draft()) {
+                @if (canEditCatalog()) {
                   <div class="catalog-row-actions">
                     <p-button
                       type="button"
@@ -223,7 +223,7 @@
                   appendTo="body"
                   styleClass="w-full"
                 />
-                @if (draft()) {
+                @if (canEditCatalog()) {
                   <div class="catalog-row-actions">
                     <p-button
                       type="button"
@@ -256,7 +256,7 @@
                   appendTo="body"
                   styleClass="w-full"
                 />
-                @if (draft()) {
+                @if (canEditCatalog()) {
                   <div class="catalog-row-actions">
                     <p-button
                       type="button"
@@ -323,37 +323,28 @@
                   type="button"
                   label="Сохранить"
                   icon="pi pi-save"
-                  [disabled]="busy || !draft() || form.invalid"
+                  [disabled]="busy || form.invalid"
                   [loading]="busy"
                   (onClick)="save()"
                 />
                 <p-button
                   type="button"
-                  label="Отправить на согласование"
-                  icon="pi pi-send"
-                  severity="help"
-                  [disabled]="busy || !draft()"
+                  label="Завершить рейс"
+                  icon="pi pi-check"
+                  severity="success"
+                  [disabled]="busy || !inProgress()"
                   [loading]="busy"
-                  (onClick)="submit()"
+                  (onClick)="complete()"
                 />
-                @if (auth.hasRole('MANAGER') || auth.hasRole('ADMIN')) {
-                  <p-button
-                    type="button"
-                    label="Утвердить"
-                    icon="pi pi-check"
-                    severity="success"
-                    [disabled]="busy || !pending()"
-                    (onClick)="approve()"
-                  />
-                  <p-button
-                    type="button"
-                    label="В архив"
-                    icon="pi pi-inbox"
-                    severity="danger"
-                    [disabled]="busy || !approved()"
-                    (onClick)="archive()"
-                  />
-                }
+                <p-button
+                  type="button"
+                  label="Удалить"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [disabled]="busy"
+                  [loading]="busy"
+                  (onClick)="deleteTrip()"
+                />
               </div>
 
               @if (showDocuments() && docs.length > 0) {
