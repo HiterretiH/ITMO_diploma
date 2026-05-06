@@ -39,7 +39,7 @@ public class Trip {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
-    private TripStatus status = TripStatus.DRAFT;
+    private TripStatus status = TripStatus.IN_PROGRESS;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipper_id")

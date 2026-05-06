@@ -65,7 +65,7 @@ CREATE INDEX idx_places_owner_type ON places (owner_id, place_type);
 CREATE TABLE trips (
     id BIGSERIAL PRIMARY KEY,
     owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    status VARCHAR(32) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'IN_PROGRESS',
     shipper_id BIGINT REFERENCES counterparties (id),
     consignee_id BIGINT REFERENCES counterparties (id),
     cargo_description VARCHAR(2048),
@@ -80,7 +80,8 @@ CREATE TABLE trips (
     currency VARCHAR(8) DEFAULT 'RUB',
     snapshot_json TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT trips_status_check CHECK (status IN ('IN_PROGRESS', 'COMPLETED'))
 );
 
 CREATE INDEX idx_trips_owner_status ON trips (owner_id, status);
@@ -101,7 +102,7 @@ CREATE INDEX idx_generated_documents_trip ON generated_documents (trip_id);
 CREATE TABLE audit_events (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT REFERENCES users (id),
-    trip_id BIGINT REFERENCES trips (id),
+    trip_id BIGINT REFERENCES trips (id) ON DELETE SET NULL,
     event_type VARCHAR(64) NOT NULL,
     payload TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
