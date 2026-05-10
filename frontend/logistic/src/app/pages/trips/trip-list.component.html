@@ -31,7 +31,6 @@
         <th>№ заявки</th>
         <th>Дата</th>
         <th>Заказчик</th>
-        <th>Статус</th>
         <th>Маршрут</th>
         @if (listTab === 'active') {
           <th class="col-actions"></th>
@@ -40,25 +39,17 @@
     </ng-template>
     <ng-template pTemplate="body" let-o>
       <tr class="click-row" (click)="openOrder(o.id)">
-        <td>
-          <a [routerLink]="['/orders', o.id]" (click)="$event.stopPropagation()">{{
-            o.orderNumber
-          }}</a>
-        </td>
+        <td class="order-num-cell">{{ o.orderNumber }}</td>
         <td>{{ o.orderDate }}</td>
         <td>{{ o.customerShortName || '—' }}</td>
-        <td>
-          <app-order-status-badge [order]="o" [completed]="o.completed" />
-        </td>
         <td class="route-cell">{{ routeSnippet(o) }}</td>
         @if (listTab === 'active') {
           <td class="col-actions" (click)="$event.stopPropagation()">
             @if (canCompleteRow(o)) {
               <p-button
-                label="Завершить"
+                label="Завершить рейс"
                 icon="pi pi-check"
                 severity="success"
-                [text]="true"
                 size="small"
                 [loading]="completingOrderId === o.id"
                 [disabled]="
@@ -73,7 +64,7 @@
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td [attr.colspan]="listTab === 'active' ? 6 : 5">
+        <td [attr.colspan]="listTab === 'active' ? 5 : 4">
           Нет рейсов
         </td>
       </tr>

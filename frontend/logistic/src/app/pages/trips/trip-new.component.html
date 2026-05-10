@@ -1,6 +1,6 @@
 <div class="trip-new-wrap">
   <header class="page-head">
-    <h1 class="page-title">Новый рейс</h1>
+    <h1 class="page-title">{{ isEditMode ? 'Редактирование рейса' : 'Новый рейс' }}</h1>
     <p-button
       label="К списку"
       icon="pi pi-arrow-left"
@@ -307,7 +307,7 @@
         />
         <p-button
           type="submit"
-          label="Создать рейс"
+          [label]="isEditMode ? 'Сохранить' : 'Создать рейс'"
           icon="pi pi-check"
           severity="success"
           [loading]="busy"

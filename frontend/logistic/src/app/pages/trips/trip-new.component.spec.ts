@@ -7,7 +7,7 @@ import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import { OrderApiService } from '../../core/order-api.service';
-import { OrderUpdateRequest } from '../../core/order.models';
+import { OrderCreateRequest } from '../../core/order.models';
 import { TripNewComponent } from './trip-new.component';
 
 @Component({ standalone: true, template: '' })
@@ -15,10 +15,10 @@ class OrderDetailRouteStub {}
 
 describe('TripNewComponent', () => {
   let fixture: ComponentFixture<TripNewComponent>;
-  let lastUpdatePayload: OrderUpdateRequest | undefined;
+  let lastCreatePayload: OrderCreateRequest | undefined;
 
   beforeEach(async () => {
-    lastUpdatePayload = undefined;
+    lastCreatePayload = undefined;
     await TestBed.configureTestingModule({
       imports: [TripNewComponent, OrderDetailRouteStub],
       providers: [
@@ -36,29 +36,8 @@ describe('TripNewComponent', () => {
                 lastDriverId: null,
                 lastVehicleId: null,
               }),
-            create: () =>
-              of({
-                id: 99,
-                customerId: 1,
-                performerId: 1,
-                vehicleId: 1,
-                driverId: 1,
-                orderNumber: 1,
-                orderDate: '2026-05-15',
-                loadingPlace: 'A',
-                loadingContact: null,
-                unloadingPlace: 'B',
-                unloadingContact: null,
-                tripCount: 2,
-                pricePerTrip: 100,
-                totalPrice: 200,
-                templateVersion: 1,
-                completed: false,
-                customerShortName: 'C',
-                performerShortName: 'P',
-              }),
-            update: (_id: number, body: OrderUpdateRequest) => {
-              lastUpdatePayload = body;
+            create: (body: OrderCreateRequest) => {
+              lastCreatePayload = body;
               return of({
                 id: 99,
                 customerId: 1,
@@ -123,7 +102,7 @@ describe('TripNewComponent', () => {
     expect(cmp.form.controls.priceAmount.value).toBe(10);
   });
 
-  it('sends OrderUpdateRequest with route and totals', () => {
+  it('sends OrderCreateRequest with route and totals', () => {
     fixture.detectChanges();
     const cmp = fixture.componentInstance;
     const d = new Date(2026, 4, 15, 12, 0, 0, 0);
@@ -140,14 +119,16 @@ describe('TripNewComponent', () => {
     });
     expect(cmp.form.controls.priceAmount.value).toBe(200);
     cmp.saveDraft();
-    expect(lastUpdatePayload).toBeDefined();
-    expect(lastUpdatePayload!.tripCount).toBe(2);
-    expect(lastUpdatePayload!.totalPrice).toBe(200);
-    expect(lastUpdatePayload!.loadingPlace).toBe('A');
-    expect(lastUpdatePayload!.orderDate).toBe('2026-05-15');
+    expect(lastCreatePayload).toBeDefined();
+    expect(lastCreatePayload!.tripCount).toBe(2);
+    expect(lastCreatePayload!.totalPrice).toBe(200);
+    expect(lastCreatePayload!.loadingPlace).toBe('A');
+    expect(lastCreatePayload!.orderDate).toBe('2026-05-15');
+    expect(lastCreatePayload!.customerId).toBe(1);
+    expect(lastCreatePayload!.performerId).toBe(2);
   });
 
-  it('includes orderNumber in update when set', () => {
+  it('includes orderNumber in create when set', () => {
     fixture.detectChanges();
     const cmp = fixture.componentInstance;
     const d = new Date(2026, 4, 15, 12, 0, 0, 0);
@@ -164,6 +145,6 @@ describe('TripNewComponent', () => {
       orderNumber: 42,
     });
     cmp.saveDraft();
-    expect(lastUpdatePayload?.orderNumber).toBe(42);
+    expect(lastCreatePayload?.orderNumber).toBe(42);
   });
 });

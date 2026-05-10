@@ -47,6 +47,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'orders/:orderId/edit',
+        loadComponent: () =>
+          import('./pages/trips/trip-new.component').then(
+            (m) => m.TripNewComponent,
+          ),
+      },
+      {
         path: 'orders/:orderId',
         loadComponent: () =>
           import('./pages/trip-edit/trip-edit.component').then(

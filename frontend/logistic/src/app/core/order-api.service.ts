@@ -79,6 +79,10 @@ export class OrderApiService {
     return this.http.post<OrderResponse>(`${this.base}/orders/${id}/complete`, {});
   }
 
+  reopen(id: number): Observable<OrderResponse> {
+    return this.http.post<OrderResponse>(`${this.base}/orders/${id}/reopen`, {});
+  }
+
   listDocuments(orderId: number): Observable<OrderDocumentDescriptor[]> {
     return this.http.get<OrderDocumentDescriptor[]>(
       `${this.base}/orders/${orderId}/documents`,

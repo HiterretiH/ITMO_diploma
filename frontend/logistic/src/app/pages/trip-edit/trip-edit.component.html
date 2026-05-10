@@ -8,173 +8,150 @@
     <app-order-status-badge [order]="order" [completed]="orderCompleted" />
   </div>
 
-  <p-tabs [value]="mainTab" (valueChange)="onMainTabChange($event)">
-    <p-tablist>
-      <p-tab value="overview">Обзор</p-tab>
-      <p-tab value="audit">Аудит</p-tab>
-    </p-tablist>
-    <p-tabpanels>
-      <p-tabpanel value="overview">
-        @if (conflictDetail) {
-          <p-message
-            severity="error"
-            [text]="conflictDetail"
-            [closable]="true"
-            (onClose)="conflictDetail = null"
-            styleClass="mb-3"
-          />
-        }
+  @if (conflictDetail) {
+    <p-message
+      severity="error"
+      [text]="conflictDetail"
+      [closable]="true"
+      (onClose)="conflictDetail = null"
+      styleClass="mb-3"
+    />
+  }
 
-        <section class="overview-card" aria-labelledby="ov-title">
-          <h2 id="ov-title" class="overview-title">Данные рейса</h2>
-          <dl class="overview-grid">
-            <div>
-              <dt>Дата заявки</dt>
-              <dd>{{ order.orderDate }}</dd>
-            </div>
-            <div>
-              <dt>Заказчик</dt>
-              <dd>{{ order.customerShortName || '—' }}</dd>
-            </div>
-            <div>
-              <dt>Исполнитель</dt>
-              <dd>{{ order.performerShortName || '—' }}</dd>
-            </div>
-            <div class="span-2">
-              <dt>Маршрут</dt>
-              <dd>{{ routeSnippet(order) }}</dd>
-            </div>
-            <div>
-              <dt>Число рейсов</dt>
-              <dd>{{ order.tripCount }}</dd>
-            </div>
-            <div>
-              <dt>Итого</dt>
-              <dd>{{ formatMoney(order.totalPrice) }}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <div class="actions">
-          @if (inProgress()) {
-            <p-button
-              type="button"
-              label="Завершить рейс"
-              icon="pi pi-check"
-              severity="success"
-              [disabled]="busy"
-              [loading]="busy"
-              (onClick)="complete()"
-            />
-          }
-          <p-button
-            type="button"
-            label="Удалить"
-            icon="pi pi-trash"
-            severity="danger"
-            [disabled]="busy"
-            [loading]="busy"
-            (onClick)="deleteOrder()"
-          />
+  <section class="overview-card" aria-labelledby="ov-title">
+    <h2 id="ov-title" class="overview-title">Данные рейса</h2>
+    <dl class="overview-grid">
+      <div>
+        <dt>Дата заявки</dt>
+        <dd>{{ order.orderDate }}</dd>
+      </div>
+      <div>
+        <dt>Заказчик</dt>
+        <dd>{{ order.customerShortName || '—' }}</dd>
+      </div>
+      <div>
+        <dt>Исполнитель</dt>
+        <dd>{{ order.performerShortName || '—' }}</dd>
+      </div>
+      <div class="span-2">
+        <dt>Маршрут</dt>
+        <dd>{{ routeSnippet(order) }}</dd>
+      </div>
+      <div>
+        <dt>Число рейсов</dt>
+        <dd>{{ order.tripCount }}</dd>
+      </div>
+      @if (order.pricePerTrip != null) {
+        <div>
+          <dt>Ставка за рейс</dt>
+          <dd>{{ formatMoney(order.pricePerTrip) }}</dd>
         </div>
+      }
+      <div>
+        <dt>Итого</dt>
+        <dd>{{ formatMoney(order.totalPrice) }}</dd>
+      </div>
+    </dl>
+  </section>
 
-        @if (showDocuments()) {
-          <h3 class="docs-title">Документы</h3>
-          <div class="bundle-actions">
-            <p-button
-              type="button"
-              label="Скачать все DOCX"
-              icon="pi pi-download"
-              severity="secondary"
-              [outlined]="true"
-              size="small"
-              [disabled]="busy || (downloadKey !== null && downloadKey !== 'all-DOCX')"
-              [loading]="downloadKey === 'all-DOCX'"
-              (onClick)="downloadAllDocuments('DOCX')"
-            />
-            <p-button
-              type="button"
-              label="Скачать все PDF"
-              icon="pi pi-download"
-              severity="secondary"
-              [outlined]="true"
-              size="small"
-              [disabled]="busy || (downloadKey !== null && downloadKey !== 'all-PDF')"
-              [loading]="downloadKey === 'all-PDF'"
-              (onClick)="downloadAllDocuments('PDF')"
-            />
-          </div>
-          @if (docs.length > 0) {
-            <p-table [value]="docs" styleClass="p-datatable-sm">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Тип</th>
-                  <th>Скачать</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-d>
-                <tr>
-                  <td>{{ docTypeLabel(d.documentType) }}</td>
-                  <td>
-                    @for (fmt of d.formats; track fmt) {
-                      <p-button
-                        type="button"
-                        [label]="'Скачать ' + fmt"
-                        icon="pi pi-download"
-                        [text]="true"
-                        class="mr-2"
-                        [disabled]="busy || (downloadKey !== null && downloadKey !== docDownloadKey(d.documentType, fmt))"
-                        [loading]="isDownloadBusy(docDownloadKey(d.documentType, fmt))"
-                        (onClick)="downloadDocument(d.documentType, fmt)"
-                      />
-                    }
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-          } @else {
-            <p class="muted">Список типов документов загружается…</p>
-          }
-        }
-      </p-tabpanel>
-      <p-tabpanel value="audit">
-        <p-table
-          [value]="auditEvents"
-          [tableStyle]="{ 'min-width': '40rem' }"
-          styleClass="p-datatable-sm"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Когда</th>
-              <th>User id</th>
-              <th>Событие</th>
-              <th>Payload</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-row>
-            <tr>
-              <td>{{ row.createdAt | date: 'short' }}</td>
-              <td>{{ row.userId ?? '—' }}</td>
-              <td>{{ eventTypeLabel(row.eventType) }}</td>
-              <td>
-                @if (row.payload) {
-                  <details>
-                    <summary>Показать</summary>
-                    <pre class="payload-pre">{{ prettyPayload(row.payload) }}</pre>
-                  </details>
-                } @else {
-                  —
-                }
-              </td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="4">Нет записей</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </p-tabpanel>
-    </p-tabpanels>
-  </p-tabs>
+  <div class="actions">
+    <p-button
+      type="button"
+      label="Редактировать"
+      icon="pi pi-pencil"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="goToEdit()"
+    />
+    @if (inProgress()) {
+      <p-button
+        type="button"
+        label="Завершить рейс"
+        icon="pi pi-check"
+        severity="success"
+        [disabled]="busy"
+        [loading]="busy"
+        (onClick)="complete()"
+      />
+    }
+    @if (orderCompleted) {
+      <p-button
+        type="button"
+        label="Вернуть в работу"
+        icon="pi pi-replay"
+        severity="secondary"
+        [disabled]="busy"
+        [loading]="busy"
+        (onClick)="reopenTrip()"
+      />
+    }
+    <p-button
+      type="button"
+      label="Удалить"
+      icon="pi pi-trash"
+      severity="danger"
+      [disabled]="busy"
+      [loading]="busy"
+      (onClick)="deleteOrder()"
+    />
+  </div>
+
+  @if (showDocuments()) {
+    <h3 class="docs-title">Документы</h3>
+    <div class="bundle-actions">
+      <p-button
+        type="button"
+        label="Скачать все DOCX"
+        icon="pi pi-download"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        [disabled]="busy || (downloadKey !== null && downloadKey !== 'all-DOCX')"
+        [loading]="downloadKey === 'all-DOCX'"
+        (onClick)="downloadAllDocuments('DOCX')"
+      />
+      <p-button
+        type="button"
+        label="Скачать все PDF"
+        icon="pi pi-download"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        [disabled]="busy || (downloadKey !== null && downloadKey !== 'all-PDF')"
+        [loading]="downloadKey === 'all-PDF'"
+        (onClick)="downloadAllDocuments('PDF')"
+      />
+    </div>
+    @if (docs.length > 0) {
+      <p-table [value]="docs" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Тип</th>
+            <th>Скачать</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-d>
+          <tr>
+            <td>{{ docTypeLabel(d.documentType) }}</td>
+            <td>
+              @for (fmt of d.formats; track fmt) {
+                <p-button
+                  type="button"
+                  [label]="'Скачать ' + fmt"
+                  icon="pi pi-download"
+                  [text]="true"
+                  class="mr-2"
+                  [disabled]="busy || (downloadKey !== null && downloadKey !== docDownloadKey(d.documentType, fmt))"
+                  [loading]="isDownloadBusy(docDownloadKey(d.documentType, fmt))"
+                  (onClick)="downloadDocument(d.documentType, fmt)"
+                />
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    } @else {
+      <p class="muted">Список типов документов загружается…</p>
+    }
+  }
 }

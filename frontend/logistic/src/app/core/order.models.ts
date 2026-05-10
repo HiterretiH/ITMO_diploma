@@ -5,6 +5,15 @@ export interface OrderCreateRequest {
   performerId: number;
   vehicleId?: number | null;
   driverId?: number | null;
+  orderDate?: string;
+  orderNumber?: number;
+  loadingPlace?: string;
+  loadingContact?: string;
+  unloadingPlace?: string;
+  unloadingContact?: string;
+  tripCount?: number;
+  pricePerTrip?: number;
+  totalPrice?: number | null;
 }
 
 export interface OrderUpdateRequest {

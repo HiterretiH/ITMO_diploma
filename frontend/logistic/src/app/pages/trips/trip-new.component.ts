@@ -7,8 +7,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { concatMap, distinctUntilChanged, forkJoin } from 'rxjs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { distinctUntilChanged, forkJoin, of } from 'rxjs';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -27,7 +27,12 @@ import {
 } from '../../core/catalog.models';
 import { localizeProblemToast } from '../../core/error-messages';
 import { OrderApiService } from '../../core/order-api.service';
-import { OrderUpdateRequest, TripFormDraftResponse } from '../../core/order.models';
+import {
+  OrderCreateRequest,
+  OrderResponse,
+  OrderUpdateRequest,
+  TripFormDraftResponse,
+} from '../../core/order.models';
 import { ProblemDetail } from '../../models/problem.models';
 import { OrderCatalogDialogsComponent } from '../../shared/order-catalog-dialogs/order-catalog-dialogs.component';
 
@@ -56,7 +61,11 @@ export class TripNewComponent implements OnInit {
   private readonly orders = inject(OrderApiService);
   private readonly catalog = inject(CatalogApiService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
+
+  /** When set, form edits an existing trip (PUT) instead of create (POST). */
+  editOrderId: number | null = null;
 
   customers: CustomerResponse[] = [];
   performers: PerformerResponse[] = [];
@@ -96,6 +105,9 @@ export class TripNewComponent implements OnInit {
     this.form.controls.customerId.valueChanges
       .pipe(distinctUntilChanged(), takeUntilDestroyed())
       .subscribe((customerId) => {
+        if (this.editOrderId != null) {
+          return;
+        }
         this.orders.getTripFormDraft(customerId ?? undefined).subscribe({
           next: (d) =>
             this.form.patchValue(
@@ -123,11 +135,10 @@ export class TripNewComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const today = new Date();
-    today.setHours(12, 0, 0, 0);
-    this.form.patchValue({
-      orderDate: today,
-    });
+    const idParam = this.route.snapshot.paramMap.get('orderId');
+    if (this.router.url.includes('/edit') && idParam) {
+      this.editOrderId = Number(idParam);
+    }
 
     forkJoin({
       customers: this.catalog.listCustomers(),
@@ -135,19 +146,58 @@ export class TripNewComponent implements OnInit {
       drivers: this.catalog.listDrivers(),
       vehicles: this.catalog.listVehicles(),
       draft: this.orders.getTripFormDraft(),
+      existing:
+        this.editOrderId != null
+          ? this.orders.get(this.editOrderId)
+          : of(null as OrderResponse | null),
     }).subscribe({
-      next: ({ customers, performers, drivers, vehicles, draft }) => {
+      next: ({ customers, performers, drivers, vehicles, draft, existing }) => {
         this.customers = customers;
         this.performers = performers;
         this.drivers = drivers;
         this.vehicles = vehicles;
-        this.applyTripDraft(draft);
+        if (existing) {
+          this.patchOrderIntoForm(existing);
+        } else {
+          const today = new Date();
+          today.setHours(12, 0, 0, 0);
+          this.form.patchValue({
+            orderDate: today,
+          });
+          this.applyTripDraft(draft);
+        }
       },
       error: () => {
         this.errorMessage =
           'Не удалось загрузить справочники. Проверьте доступ к серверу и обновите страницу.';
       },
     });
+  }
+
+  private patchOrderIntoForm(o: OrderResponse): void {
+    const datePart = (o.orderDate ?? '').slice(0, 10);
+    const orderDate =
+      datePart.length >= 10
+        ? new Date(`${datePart}T12:00:00`)
+        : null;
+    this.form.patchValue(
+      {
+        customerId: o.customerId,
+        performerId: o.performerId,
+        driverId: o.driverId,
+        vehicleId: o.vehicleId,
+        orderNumber: o.orderNumber,
+        loadingPlace: o.loadingPlace ?? '',
+        loadingContact: o.loadingContact ?? '',
+        unloadingPlace: o.unloadingPlace ?? '',
+        unloadingContact: o.unloadingContact ?? '',
+        orderDate,
+        legCount: o.tripCount,
+        ratePerLeg: o.pricePerTrip,
+        priceAmount: o.totalPrice,
+      },
+      { emitEvent: false },
+    );
   }
 
   private applyTripDraft(draft: TripFormDraftResponse): void {
@@ -318,6 +368,26 @@ export class TripNewComponent implements OnInit {
     return req;
   }
 
+  private buildFullCreateRequest(): OrderCreateRequest {
+    const v = this.form.getRawValue();
+    const u = this.buildUpdateRequest();
+    return {
+      customerId: v.customerId!,
+      performerId: v.performerId!,
+      vehicleId: v.vehicleId ?? undefined,
+      driverId: v.driverId ?? undefined,
+      orderDate: u.orderDate,
+      orderNumber: u.orderNumber,
+      loadingPlace: u.loadingPlace,
+      loadingContact: u.loadingContact,
+      unloadingPlace: u.unloadingPlace,
+      unloadingContact: u.unloadingContact,
+      tripCount: u.tripCount,
+      pricePerTrip: u.pricePerTrip,
+      totalPrice: u.totalPrice ?? undefined,
+    };
+  }
+
   private incompleteHint(): string | null {
     const v = this.form.getRawValue();
     if (v.customerId == null || v.performerId == null) {
@@ -357,7 +427,7 @@ export class TripNewComponent implements OnInit {
     this.errorMessage = `Запрос не выполнен (код ${err.status}).`;
   }
 
-  /** Создаёт рейс и переходит на карточку без завершения (черновик с полными данными формы). */
+  /** Создаёт или обновляет рейс одним запросом и переходит на карточку. */
   saveDraft(): void {
     this.errorMessage = null;
     this.form.markAllAsTouched();
@@ -371,26 +441,25 @@ export class TripNewComponent implements OnInit {
       return;
     }
 
-    const v = this.form.getRawValue();
-    const body = this.buildUpdateRequest();
     this.busy = true;
-    this.orders
-      .create({
-        customerId: v.customerId!,
-        performerId: v.performerId!,
-        vehicleId: v.vehicleId,
-        driverId: v.driverId,
-      })
-      .pipe(concatMap((created) => this.orders.update(created.id, body)))
-      .subscribe({
-        next: (o) => {
-          this.busy = false;
-          void this.router.navigate(['/orders', o.id]);
-        },
-        error: (err: HttpErrorResponse) => {
-          this.handleError(err);
-          this.busy = false;
-        },
-      });
+    const id = this.editOrderId;
+    const req$ =
+      id != null
+        ? this.orders.update(id, this.buildUpdateRequest())
+        : this.orders.create(this.buildFullCreateRequest());
+    req$.subscribe({
+      next: (o) => {
+        this.busy = false;
+        void this.router.navigate(['/orders', o.id]);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.handleError(err);
+        this.busy = false;
+      },
+    });
+  }
+
+  get isEditMode(): boolean {
+    return this.editOrderId != null;
   }
 }

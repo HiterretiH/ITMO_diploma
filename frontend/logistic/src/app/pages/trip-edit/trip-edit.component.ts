@@ -2,15 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, from } from 'rxjs';
+import { from } from 'rxjs';
 import { concatMap, delay, finalize, tap } from 'rxjs/operators';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { TableModule } from 'primeng/table';
-import { TabsModule } from 'primeng/tabs';
-import { AuditApiService } from '../../core/audit-api.service';
-import { AuditEventResponse } from '../../core/audit.models';
 import { localizeProblemToast } from '../../core/error-messages';
 import { OrderApiService } from '../../core/order-api.service';
 import {
@@ -32,7 +29,6 @@ import { orderReadyForBackendComplete } from '../../shared/order-ui';
     Button,
     Message,
     TableModule,
-    TabsModule,
     OrderStatusBadgeComponent,
   ],
   templateUrl: './trip-edit.component.html',
@@ -49,12 +45,9 @@ export class TripEditComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly ordersApi = inject(OrderApiService);
-  private readonly auditApi = inject(AuditApiService);
   private readonly confirm = inject(ConfirmationService);
 
   order: OrderResponse | null = null;
-  auditEvents: AuditEventResponse[] = [];
-  mainTab: string | number = 'overview';
   docs: OrderDocumentDescriptor[] = [];
 
   busy = false;
@@ -76,24 +69,12 @@ export class TripEditComponent implements OnInit {
     this.reload(id);
   }
 
-  onMainTabChange(value: string | number): void {
-    if (value === 'audit') {
-      this.mainTab = 'audit';
-    } else {
-      this.mainTab = 'overview';
-    }
-  }
-
   reload(id: number): void {
     this.busy = true;
     this.conflictDetail = null;
-    forkJoin({
-      order: this.ordersApi.get(id),
-      audit: this.auditApi.listByOrder(id),
-    }).subscribe({
-      next: ({ order, audit }) => {
+    this.ordersApi.get(id).subscribe({
+      next: (order) => {
         this.order = order;
-        this.auditEvents = audit;
         this.refreshDocumentsIfNeeded(id);
         this.busy = false;
       },
@@ -105,7 +86,7 @@ export class TripEditComponent implements OnInit {
   }
 
   private refreshDocumentsIfNeeded(id: number): void {
-    if (this.order?.completed) {
+    if (this.order && orderReadyForBackendComplete(this.order)) {
       this.ordersApi.listDocuments(id).subscribe({
         next: (d) => (this.docs = d),
         error: () => (this.docs = []),
@@ -124,7 +105,7 @@ export class TripEditComponent implements OnInit {
   }
 
   showDocuments(): boolean {
-    return this.orderCompleted;
+    return this.order != null && orderReadyForBackendComplete(this.order);
   }
 
   docTypeLabel(t: DocumentTypeName): string {
@@ -154,6 +135,13 @@ export class TripEditComponent implements OnInit {
 
   get orderId(): number | null {
     return this.order?.id ?? null;
+  }
+
+  goToEdit(): void {
+    const id = this.orderId;
+    if (id) {
+      void this.router.navigate(['/orders', id, 'edit']);
+    }
   }
 
   private handleSaveError(err: HttpErrorResponse): void {
@@ -206,31 +194,43 @@ export class TripEditComponent implements OnInit {
         this.incompleteHintFromOrder(o) ?? 'Рейс не готов к завершению.';
       return;
     }
-    this.confirm.confirm({
-      message: 'Завершить рейс? Будут сгенерированы документы.',
-      header: 'Подтверждение',
-      icon: 'pi pi-check-circle',
-      accept: () => {
-        this.busy = true;
-        this.conflictDetail = null;
-        this.ordersApi.complete(id).subscribe({
-          next: (updated) => {
-            this.order = updated;
-            this.refreshDocumentsIfNeeded(id);
-            this.auditApi.listByOrder(id).subscribe({
-              next: (ev) => (this.auditEvents = ev),
-              error: () => (this.auditEvents = []),
-            });
-            this.busy = false;
-          },
-          error: (err: HttpErrorResponse) => {
-            this.handleSaveError(err);
-            if (!this.conflictDetail) {
-              this.conflictDetail = `Не удалось завершить рейс (код ${err.status}).`;
-            }
-            this.busy = false;
-          },
-        });
+    this.busy = true;
+    this.conflictDetail = null;
+    this.ordersApi.complete(id).subscribe({
+      next: (updated) => {
+        this.order = updated;
+        this.refreshDocumentsIfNeeded(id);
+        this.busy = false;
+      },
+      error: (err: HttpErrorResponse) => {
+        this.handleSaveError(err);
+        if (!this.conflictDetail) {
+          this.conflictDetail = `Не удалось завершить рейс (код ${err.status}).`;
+        }
+        this.busy = false;
+      },
+    });
+  }
+
+  reopenTrip(): void {
+    const id = this.orderId;
+    if (!id || !this.orderCompleted) {
+      return;
+    }
+    this.busy = true;
+    this.conflictDetail = null;
+    this.ordersApi.reopen(id).subscribe({
+      next: (updated) => {
+        this.order = updated;
+        this.refreshDocumentsIfNeeded(id);
+        this.busy = false;
+      },
+      error: (err: HttpErrorResponse) => {
+        this.handleSaveError(err);
+        if (!this.conflictDetail) {
+          this.conflictDetail = `Не удалось вернуть рейс в работу (код ${err.status}).`;
+        }
+        this.busy = false;
       },
     });
   }
@@ -319,37 +319,5 @@ export class TripEditComponent implements OnInit {
 
   isDownloadBusy(key: string): boolean {
     return this.downloadKey === key;
-  }
-
-  eventTypeLabel(t: AuditEventResponse['eventType']): string {
-    switch (t) {
-      case 'ORDER_CREATED':
-        return 'Рейс создан';
-      case 'ORDER_UPDATED':
-        return 'Изменение';
-      case 'ORDER_COMPLETED':
-        return 'Завершён';
-      case 'ORDER_DELETED':
-        return 'Удалён';
-      case 'DOCUMENTS_GENERATED':
-        return 'Документы сформированы';
-      case 'LOGIN':
-        return 'Вход';
-      case 'REGISTER':
-        return 'Регистрация';
-      default:
-        return t;
-    }
-  }
-
-  prettyPayload(raw: string | null): string {
-    if (!raw) {
-      return '';
-    }
-    try {
-      return JSON.stringify(JSON.parse(raw), null, 2);
-    } catch {
-      return raw;
-    }
   }
 }

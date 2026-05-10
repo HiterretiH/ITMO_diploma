@@ -1,4 +1,3 @@
-import { AuditEventResponse } from '../core/audit.models';
 import { OrderResponse } from '../core/order.models';
 
 /** Mirrors backend OrderService.validateReadyForComplete */
@@ -11,10 +10,6 @@ export function orderReadyForBackendComplete(o: OrderResponse): boolean {
     (o.orderDate ?? '').trim().length > 0 &&
     o.totalPrice != null
   );
-}
-
-export function orderMarkedCompleted(events: AuditEventResponse[]): boolean {
-  return events.some((e) => e.eventType === 'ORDER_COMPLETED');
 }
 
 export type OrderUiPhase = 'draft' | 'ready' | 'completed';

@@ -6,7 +6,6 @@ import { ActivatedRoute } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { of } from 'rxjs';
-import { AuditApiService } from '../../core/audit-api.service';
 import { OrderApiService } from '../../core/order-api.service';
 import { OrderResponse } from '../../core/order.models';
 import { TripEditComponent } from './trip-edit.component';
@@ -60,12 +59,7 @@ describe('TripEditComponent', () => {
             listDocuments: () => of([]),
             downloadDocument: () =>
               of({ blob: new Blob(), fileName: 'f.docx' }),
-          },
-        },
-        {
-          provide: AuditApiService,
-          useValue: {
-            listByOrder: () => of([]),
+            reopen: () => of({ ...order, completed: false }),
           },
         },
       ],
