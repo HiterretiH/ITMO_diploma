@@ -11,102 +11,99 @@ CREATE TABLE user_roles (
     PRIMARY KEY (user_id, role)
 );
 
-CREATE TABLE counterparties (
+CREATE TABLE customers (
     id BIGSERIAL PRIMARY KEY,
-    owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    name VARCHAR(512) NOT NULL,
-    inn VARCHAR(12),
-    legal_address VARCHAR(1024),
-    phone VARCHAR(64),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    short_name TEXT NOT NULL,
+    full_name TEXT,
+    phone TEXT,
+    requisites TEXT
 );
 
-CREATE INDEX idx_counterparties_owner ON counterparties (owner_id);
-
-CREATE TABLE drivers (
+CREATE TABLE performers (
     id BIGSERIAL PRIMARY KEY,
-    owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    full_name VARCHAR(255) NOT NULL,
-    license_number VARCHAR(64) NOT NULL,
-    license_category VARCHAR(16),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    short_name TEXT NOT NULL,
+    full_name TEXT,
+    phone TEXT,
+    bank_name TEXT,
+    inn TEXT,
+    bik TEXT,
+    kpp TEXT,
+    payment_account TEXT,
+    corr_account TEXT,
+    requisites TEXT
 );
-
-CREATE INDEX idx_drivers_owner ON drivers (owner_id);
 
 CREATE TABLE vehicles (
     id BIGSERIAL PRIMARY KEY,
-    owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    plate_number VARCHAR(32) NOT NULL,
-    model VARCHAR(255),
-    load_capacity_kg INTEGER,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    owner_id BIGINT NOT NULL REFERENCES performers (id) ON DELETE CASCADE,
+    brand_model TEXT,
+    plate_number TEXT,
+    type TEXT,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+CREATE UNIQUE INDEX uq_vehicles_default_per_owner ON vehicles (owner_id)
+    WHERE is_default;
 
 CREATE INDEX idx_vehicles_owner ON vehicles (owner_id);
 
-CREATE TABLE places (
+CREATE TABLE drivers (
     id BIGSERIAL PRIMARY KEY,
-    owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    address VARCHAR(1024) NOT NULL,
-    contact VARCHAR(512),
-    place_type VARCHAR(16) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT places_type_check CHECK (place_type IN ('LOAD', 'UNLOAD', 'BOTH')),
-    UNIQUE (owner_id, address, place_type)
+    employer_id BIGINT NOT NULL REFERENCES performers (id) ON DELETE CASCADE,
+    full_name TEXT,
+    phone TEXT,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX idx_places_owner_type ON places (owner_id, place_type);
+CREATE UNIQUE INDEX uq_drivers_default_per_employer ON drivers (employer_id)
+    WHERE is_default;
 
-CREATE TABLE trips (
+CREATE INDEX idx_drivers_employer ON drivers (employer_id);
+
+CREATE TABLE orders (
     id BIGSERIAL PRIMARY KEY,
-    owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    status VARCHAR(32) NOT NULL DEFAULT 'IN_PROGRESS',
-    shipper_id BIGINT REFERENCES counterparties (id),
-    consignee_id BIGINT REFERENCES counterparties (id),
-    cargo_description VARCHAR(2048),
-    cargo_weight_kg NUMERIC(14, 3),
-    route_from VARCHAR(512),
-    route_to VARCHAR(512),
-    load_date DATE,
-    unload_date DATE,
-    driver_id BIGINT REFERENCES drivers (id),
+    customer_id BIGINT NOT NULL REFERENCES customers (id),
+    performer_id BIGINT NOT NULL REFERENCES performers (id),
     vehicle_id BIGINT REFERENCES vehicles (id),
-    price_amount NUMERIC(14, 2),
-    currency VARCHAR(8) DEFAULT 'RUB',
-    snapshot_json TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT trips_status_check CHECK (status IN ('IN_PROGRESS', 'COMPLETED'))
+    driver_id BIGINT REFERENCES drivers (id),
+    order_number INTEGER NOT NULL,
+    order_date DATE NOT NULL,
+    loading_place TEXT NOT NULL,
+    loading_contact TEXT,
+    unloading_place TEXT NOT NULL,
+    unloading_contact TEXT,
+    trip_count INTEGER NOT NULL DEFAULT 1,
+    price_per_trip NUMERIC(10, 2),
+    total_price NUMERIC(10, 2),
+    template_version INTEGER NOT NULL DEFAULT 1
 );
 
-CREATE INDEX idx_trips_owner_status ON trips (owner_id, status);
+CREATE INDEX idx_orders_customer ON orders (customer_id);
+CREATE INDEX idx_orders_performer ON orders (performer_id);
+CREATE INDEX idx_orders_vehicle ON orders (vehicle_id);
+CREATE INDEX idx_orders_driver ON orders (driver_id);
 
 CREATE TABLE generated_documents (
     id BIGSERIAL PRIMARY KEY,
-    trip_id BIGINT NOT NULL REFERENCES trips (id) ON DELETE CASCADE,
+    order_id BIGINT NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
     document_type VARCHAR(32) NOT NULL,
     file_format VARCHAR(16) NOT NULL,
     storage_path VARCHAR(1024) NOT NULL,
     content_sha256 VARCHAR(64) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (trip_id, document_type, file_format)
+    UNIQUE (order_id, document_type, file_format)
 );
 
-CREATE INDEX idx_generated_documents_trip ON generated_documents (trip_id);
+CREATE INDEX idx_generated_documents_order ON generated_documents (order_id);
 
 CREATE TABLE audit_events (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT REFERENCES users (id),
-    trip_id BIGINT REFERENCES trips (id) ON DELETE SET NULL,
+    order_id BIGINT REFERENCES orders (id) ON DELETE SET NULL,
     event_type VARCHAR(64) NOT NULL,
     payload TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_trip ON audit_events (trip_id);
+CREATE INDEX idx_audit_order ON audit_events (order_id);
 CREATE INDEX idx_audit_user ON audit_events (user_id);
