@@ -16,7 +16,9 @@ import com.logistic.backend.catalog.PerformerRepository;
 import com.logistic.backend.catalog.Vehicle;
 import com.logistic.backend.catalog.VehicleRepository;
 import com.logistic.backend.config.StorageProperties;
+import com.logistic.backend.document.DocumentGenerationService;
 import com.logistic.backend.document.DocumentTemplateVersion;
+import com.logistic.backend.document.DocumentType;
 import com.logistic.backend.document.FileFormat;
 import com.logistic.backend.document.GeneratedDocument;
 import com.logistic.backend.document.GeneratedDocumentRepository;
@@ -48,6 +50,7 @@ public class OrderService {
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
     private final AuditService auditService;
+    private final DocumentGenerationService documentGenerationService;
     private final GeneratedDocumentRepository generatedDocumentRepository;
     private final StorageProperties storageProperties;
 
@@ -144,6 +147,17 @@ public class OrderService {
                                         g.getContentSha256(),
                                         g.getCreatedAt()))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentDownload downloadOrderDocument(
+            Long orderId, DocumentType documentType, FileFormat format, User actor) throws IOException {
+        Order o = loadDetailed(actor, orderId);
+        validateReadyForComplete(o);
+        byte[] bytes = documentGenerationService.generateDocument(o, documentType, format);
+        String filename = DocumentGenerationService.downloadFileName(documentType, format);
+        String contentType = DocumentGenerationService.contentTypeFor(format);
+        return new DocumentDownload(new ByteArrayResource(bytes), filename, contentType);
     }
 
     @Transactional(readOnly = true)

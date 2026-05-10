@@ -1,15 +1,23 @@
 package com.logistic.backend.api;
 
+import com.logistic.backend.api.dto.DocumentDownload;
 import com.logistic.backend.api.dto.GeneratedDocumentResponse;
 import com.logistic.backend.api.dto.OrderCreateRequest;
 import com.logistic.backend.api.dto.OrderResponse;
 import com.logistic.backend.api.dto.OrderUpdateRequest;
+import com.logistic.backend.document.DocumentType;
+import com.logistic.backend.document.FileFormat;
 import com.logistic.backend.order.OrderService;
 import com.logistic.backend.security.CurrentUserService;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +26,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -70,5 +80,29 @@ public class OrderController {
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public List<GeneratedDocumentResponse> listDocuments(@PathVariable Long id) {
         return orderService.listDocuments(id, currentUserService.requireUser());
+    }
+
+    @GetMapping("/{orderId}/documents/{documentType}/file")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    public ResponseEntity<Resource> downloadOrderDocument(
+            @PathVariable Long orderId,
+            @PathVariable String documentType,
+            @RequestParam FileFormat format)
+            throws IOException {
+        DocumentType type;
+        try {
+            type = DocumentType.valueOf(documentType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown document type");
+        }
+        DocumentDownload d =
+                orderService.downloadOrderDocument(
+                        orderId, type, format, currentUserService.requireUser());
+        ContentDisposition disposition =
+                ContentDisposition.attachment().filename(d.filename()).build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .header(HttpHeaders.CONTENT_TYPE, d.contentType())
+                .body(d.resource());
     }
 }
