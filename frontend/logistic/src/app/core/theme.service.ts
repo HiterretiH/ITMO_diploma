@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, inject, signal } from '@angular/core';
 
-export type ThemePreference = 'auto' | 'light' | 'dark';
+export type ThemePreference = 'light' | 'dark';
 
 const STORAGE_KEY = 'logistic.theme';
 const DARK_CLASS = 'app-dark';
@@ -10,27 +10,20 @@ const DARK_CLASS = 'app-dark';
 export class ThemeService {
   private readonly doc = inject(DOCUMENT);
 
-  /** Выбор пользователя: auto следует за ОС. */
-  readonly preference = signal<ThemePreference>('auto');
+  /** Светлая или тёмная тема (после первого визита всегда явно в localStorage). */
+  readonly preference = signal<ThemePreference>('light');
 
-  /** Фактическая светлая/тёмная тема PrimeNG. */
+  /** Фактическая светлая/тёмная тема PrimeNG (совпадает с preference). */
   readonly effective = signal<'light' | 'dark'>('light');
-
-  private mediaQuery: MediaQueryList | null = null;
-  private mediaListener?: (e: MediaQueryListEvent) => void;
 
   constructor() {
     this.hydrateFromStorage();
     this.apply();
-    this.attachMediaListener();
   }
 
-  /** auto → light → dark → auto */
+  /** Переключение только светлая ↔ тёмная. */
   cycle(): void {
-    const order: ThemePreference[] = ['auto', 'light', 'dark'];
-    const cur = this.preference();
-    const i = order.indexOf(cur);
-    const next = order[(i + 1) % order.length];
+    const next: ThemePreference = this.preference() === 'light' ? 'dark' : 'light';
     this.preference.set(next);
     try {
       localStorage.setItem(STORAGE_KEY, next);
@@ -38,64 +31,38 @@ export class ThemeService {
       /* ignore */
     }
     this.apply();
-    this.attachMediaListener();
   }
 
-  /** Иконка PrimeIcons для кнопки в шапке. */
+  /** Иконка текущей темы для кнопки в шапке. */
   cycleIcon(): string {
-    switch (this.preference()) {
-      case 'light':
-        return 'pi pi-sun';
-      case 'dark':
-        return 'pi pi-moon';
-      default:
-        return 'pi pi-desktop';
-    }
+    return this.preference() === 'dark' ? 'pi pi-moon' : 'pi pi-sun';
   }
 
   private hydrateFromStorage(): void {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw === 'light' || raw === 'dark' || raw === 'auto') {
+      if (raw === 'light' || raw === 'dark') {
         this.preference.set(raw);
+        return;
       }
+      // Нет ключа, мусор или устаревшее 'auto' — один раз учитываем ОС и фиксируем выбор.
+      const initial = this.systemPrefersDarkOnce() ? 'dark' : 'light';
+      this.preference.set(initial);
+      localStorage.setItem(STORAGE_KEY, initial);
     } catch {
-      /* ignore */
+      this.preference.set('light');
     }
   }
 
-  private attachMediaListener(): void {
-    if (this.mediaQuery && this.mediaListener) {
-      this.mediaQuery.removeEventListener('change', this.mediaListener);
-      this.mediaQuery = null;
-      this.mediaListener = undefined;
-    }
-    if (this.preference() !== 'auto') {
-      return;
-    }
+  private systemPrefersDarkOnce(): boolean {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return;
+      return false;
     }
-    this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    this.mediaListener = () => this.apply();
-    this.mediaQuery.addEventListener('change', this.mediaListener);
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
 
   private apply(): void {
-    const pref = this.preference();
-    let dark = false;
-    if (pref === 'dark') {
-      dark = true;
-    } else if (pref === 'light') {
-      dark = false;
-    } else if (
-      typeof window !== 'undefined' &&
-      typeof window.matchMedia === 'function'
-    ) {
-      dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    } else {
-      dark = false;
-    }
+    const dark = this.preference() === 'dark';
     this.effective.set(dark ? 'dark' : 'light');
     const el = this.doc.documentElement;
     el.classList.toggle(DARK_CLASS, dark);
