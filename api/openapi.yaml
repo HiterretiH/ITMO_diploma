@@ -733,14 +733,14 @@ paths:
   /api/v1/orders/{id}/complete:
     post:
       tags: [Orders]
-      summary: Complete order (generate documents)
+      summary: Complete order (validate data readiness)
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '200':
-          description: Order completed; documents generated
+          description: Order marked complete; documents are generated on download only
           content:
             application/json:
               schema:
@@ -759,20 +759,20 @@ paths:
   /api/v1/orders/{id}/documents:
     get:
       tags: [Documents]
-      summary: List generated documents for order
+      summary: List document types available for order (on-demand generation)
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '200':
-          description: Generated document list
+          description: Descriptor list (no stored file ids)
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GeneratedDocumentResponse'
+                  $ref: '#/components/schemas/OrderDocumentDescriptor'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -782,14 +782,31 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/generated-documents/{id}/file:
+  /api/v1/orders/{orderId}/documents/{documentType}/file:
     get:
       tags: [Documents]
-      summary: Download generated document file
+      summary: Download document file (generated on the fly; not stored)
       security:
         - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/IdPath'
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: documentType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [CONTRACT_APPLICATION, WAYBILL, ACT_OF_WORK]
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [DOCX, PDF]
       responses:
         '200':
           description: Binary file stream
@@ -802,6 +819,8 @@ paths:
               schema:
                 type: string
                 format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1280,23 +1299,19 @@ components:
           type: integer
           format: int32
 
-    GeneratedDocumentResponse:
+    OrderDocumentDescriptor:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
         documentType:
           type: string
           enum: [CONTRACT_APPLICATION, WAYBILL, ACT_OF_WORK]
-        fileFormat:
-          type: string
-          enum: [PDF, DOCX]
-        sha256:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
+        formats:
+          type: array
+          items:
+            type: string
+            enum: [PDF, DOCX]
+        requiresCompleteData:
+          type: boolean
 
     AuditEventResponse:
       type: object
