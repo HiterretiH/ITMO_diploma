@@ -38,6 +38,8 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -94,7 +96,7 @@ public class OrderService {
         Long oid = o.getId();
         generatedDocumentCache.invalidate(ownerId, oid);
         if (OrderTripCompleteness.readyForTripDocuments(o)) {
-            documentPrefetchService.prefetchOrderDocuments(ownerId, oid);
+            schedulePrefetchAfterCommit(ownerId, oid);
         }
         return toDto(loadDetailed(actor, oid));
     }
@@ -112,7 +114,7 @@ public class OrderService {
         Long oid = o.getId();
         generatedDocumentCache.invalidate(ownerId, oid);
         if (OrderTripCompleteness.readyForTripDocuments(o)) {
-            documentPrefetchService.prefetchOrderDocuments(ownerId, oid);
+            schedulePrefetchAfterCommit(ownerId, oid);
         }
         return toDto(o);
     }
@@ -129,7 +131,7 @@ public class OrderService {
         o.setCompleted(true);
         orderRepository.save(o);
         auditService.record(actor, o, AuditEventType.ORDER_COMPLETED, Map.of("orderId", id.toString()));
-        documentPrefetchService.prefetchOrderDocuments(o.getOwner().getId(), id);
+        schedulePrefetchAfterCommit(o.getOwner().getId(), id);
         return toDto(o);
     }
 
@@ -145,7 +147,7 @@ public class OrderService {
         auditService.record(actor, o, AuditEventType.ORDER_REOPENED, Map.of("orderId", id.toString()));
         Long ownerId = o.getOwner().getId();
         if (OrderTripCompleteness.readyForTripDocuments(o)) {
-            documentPrefetchService.prefetchOrderDocuments(ownerId, id);
+            schedulePrefetchAfterCommit(ownerId, id);
         }
         return toDto(o);
     }
@@ -360,6 +362,24 @@ public class OrderService {
                 o.isCompleted(),
                 o.getCustomer().getShortName(),
                 o.getPerformer().getShortName());
+    }
+
+    /**
+     * Async prefetch reads the order from the DB; scheduling after commit avoids racing the worker
+     * before this transaction has written the row.
+     */
+    private void schedulePrefetchAfterCommit(Long ownerUserId, Long orderId) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            documentPrefetchService.prefetchOrderDocuments(ownerUserId, orderId);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        documentPrefetchService.prefetchOrderDocuments(ownerUserId, orderId);
+                    }
+                });
     }
 
     private ResponseStatusException notFound() {
