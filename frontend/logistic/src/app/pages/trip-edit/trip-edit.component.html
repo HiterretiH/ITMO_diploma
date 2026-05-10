@@ -83,25 +83,25 @@
           <div class="bundle-actions">
             <p-button
               type="button"
-              label="Все DOCX (ZIP)"
+              label="Скачать все DOCX"
               icon="pi pi-download"
               severity="secondary"
               [outlined]="true"
               size="small"
-              [disabled]="busy || (downloadKey !== null && downloadKey !== 'bundle-DOCX')"
-              [loading]="downloadKey === 'bundle-DOCX'"
-              (onClick)="downloadBundle('DOCX')"
+              [disabled]="busy || (downloadKey !== null && downloadKey !== 'all-DOCX')"
+              [loading]="downloadKey === 'all-DOCX'"
+              (onClick)="downloadAllDocuments('DOCX')"
             />
             <p-button
               type="button"
-              label="Все PDF (ZIP)"
+              label="Скачать все PDF"
               icon="pi pi-download"
               severity="secondary"
               [outlined]="true"
               size="small"
-              [disabled]="busy || (downloadKey !== null && downloadKey !== 'bundle-PDF')"
-              [loading]="downloadKey === 'bundle-PDF'"
-              (onClick)="downloadBundle('PDF')"
+              [disabled]="busy || (downloadKey !== null && downloadKey !== 'all-PDF')"
+              [loading]="downloadKey === 'all-PDF'"
+              (onClick)="downloadAllDocuments('PDF')"
             />
           </div>
           @if (docs.length > 0) {

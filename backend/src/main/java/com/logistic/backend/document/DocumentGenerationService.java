@@ -67,15 +67,6 @@ public class DocumentGenerationService {
         return s.substring(0, Math.max(1, maxChars - 1)) + "…";
     }
 
-    /** Outer ZIP filename for all documents of one format. */
-    public static String bundleZipFileName(OrderPrintSnapshot snapshot) {
-        String num = snapshot.orderNumber() != null ? snapshot.orderNumber().toString() : "0";
-        String datePart = snapshot.orderDate() != null ? snapshot.orderDate().toString() : "";
-        String core = String.format("рейс №%s %s", num, datePart).replace(" ", "_");
-        core = truncateUtf(core, 120);
-        return core + ".zip";
-    }
-
     public static String contentTypeFor(FileFormat format) {
         return format == FileFormat.PDF
                 ? MediaType.APPLICATION_PDF_VALUE

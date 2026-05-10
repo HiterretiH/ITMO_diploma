@@ -909,44 +909,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/orders/{orderId}/documents/bundle:
-    get:
-      tags: [Documents]
-      summary: Download ZIP with all document types for the order in one format
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: orderId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: format
-          in: query
-          required: true
-          schema:
-            type: string
-            enum: [DOCX, PDF]
-      responses:
-        '200':
-          description: ZIP archive (application/zip)
-          content:
-            application/zip:
-              schema:
-                type: string
-                format: binary
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
   /api/v1/orders/{orderId}/audit-events:
     get:
       tags: [Audit]

@@ -60,8 +60,6 @@ describe('TripEditComponent', () => {
             listDocuments: () => of([]),
             downloadDocument: () =>
               of({ blob: new Blob(), fileName: 'f.docx' }),
-            downloadDocumentsBundle: () =>
-              of({ blob: new Blob(), fileName: 'x.zip' }),
           },
         },
         {

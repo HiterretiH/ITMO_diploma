@@ -2,8 +2,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { forkJoin, from } from 'rxjs';
+import { concatMap, delay, finalize, tap } from 'rxjs/operators';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
@@ -39,6 +39,13 @@ import { orderReadyForBackendComplete } from '../../shared/order-ui';
   styleUrl: './trip-edit.component.css',
 })
 export class TripEditComponent implements OnInit {
+  /** Same order as backend DocumentType enum iteration for bundled downloads. */
+  private static readonly ALL_DOCUMENT_TYPES: DocumentTypeName[] = [
+    'CONTRACT_APPLICATION',
+    'WAYBILL',
+    'ACT_OF_WORK',
+  ];
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly ordersApi = inject(OrderApiService);
@@ -265,39 +272,45 @@ export class TripEditComponent implements OnInit {
       .pipe(finalize(() => (this.downloadKey = null)))
       .subscribe({
         next: ({ blob, fileName }) => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName;
-          a.click();
-          URL.revokeObjectURL(url);
+          this.triggerBlobDownload(blob, fileName);
         },
       });
   }
 
-  downloadBundle(format: FileFormatName): void {
+  /** Downloads three files sequentially (same format) so the browser saves each one. */
+  downloadAllDocuments(format: FileFormatName): void {
     const id = this.orderId;
-    if (!id || !this.order) {
+    if (!id) {
       return;
     }
-    const key = `bundle-${format}`;
+    const key = `all-${format}`;
     this.downloadKey = key;
-    this.ordersApi
-      .downloadDocumentsBundle(id, format, {
-        orderNumber: this.order.orderNumber,
-        orderDate: this.order.orderDate,
-      })
-      .pipe(finalize(() => (this.downloadKey = null)))
+    from(TripEditComponent.ALL_DOCUMENT_TYPES)
+      .pipe(
+        concatMap((docType) =>
+          this.ordersApi.downloadDocument(id, docType, format).pipe(
+            tap(({ blob, fileName }) =>
+              this.triggerBlobDownload(blob, fileName),
+            ),
+            delay(350),
+          ),
+        ),
+        finalize(() => (this.downloadKey = null)),
+      )
       .subscribe({
-        next: ({ blob, fileName }) => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName;
-          a.click();
-          URL.revokeObjectURL(url);
+        error: () => {
+          this.downloadKey = null;
         },
       });
+  }
+
+  private triggerBlobDownload(blob: Blob, fileName: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   docDownloadKey(docType: DocumentTypeName, format: FileFormatName): string {
