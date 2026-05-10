@@ -2,13 +2,11 @@ package com.logistic.backend.document;
 
 import com.logistic.backend.order.Order;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DocumentGenerationService {
 
+    private final DocumentTemplateCache documentTemplateCache;
     private final DocxTemplateRenderer templateRenderer;
     private final DocxPdfConverter docxPdfConverter;
     private final OrderSnapshotMapper orderSnapshotMapper;
@@ -42,18 +41,8 @@ public class DocumentGenerationService {
     }
 
     private byte[] renderDocxFromTemplate(DocumentType type, OrderPrintSnapshot snapshot) throws IOException {
-        String resourcePath = "templates/documents/" + templateName(type);
-        try (InputStream in = new ClassPathResource(resourcePath).getInputStream()) {
-            return templateRenderer.render(in.readAllBytes(), snapshotToContext(snapshot));
-        }
-    }
-
-    private static String templateName(DocumentType type) {
-        return switch (type) {
-            case CONTRACT_APPLICATION -> "contract_application.docx";
-            case WAYBILL -> "waybill.docx";
-            case ACT_OF_WORK -> "act_of_work.docx";
-        };
+        byte[] template = documentTemplateCache.templateBytes(type);
+        return templateRenderer.render(template, snapshotToContext(snapshot));
     }
 
     static Map<String, String> snapshotToContext(OrderPrintSnapshot s) {
