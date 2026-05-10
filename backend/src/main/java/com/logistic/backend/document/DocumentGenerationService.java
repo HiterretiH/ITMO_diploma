@@ -89,9 +89,9 @@ public class DocumentGenerationService {
         String contactLoading = asString(s.loadingContact());
         String contactUnloading = asString(s.unloadingContact());
         String count = s.tripCount() > 0 ? Integer.toString(s.tripCount()) : "1";
-        String price = money(s.pricePerTrip());
-        String totalPrice = money(s.totalPrice());
-        String wordPrice = capitalize(totalPrice + " рублей");
+        String price = RubMoneyWords.formatMoneyTwoDecimals(s.pricePerTrip());
+        String totalPrice = RubMoneyWords.formatMoneyTwoDecimals(s.totalPrice());
+        String wordPrice = RubMoneyWords.amountInWords(s.totalPrice());
 
         /** Printed legal blocks: single DB field only (see Customer/Performer.requisites). */
         String customerRequisitesText = asString(s.customerRequisites());
@@ -156,13 +156,6 @@ public class DocumentGenerationService {
         return ctx;
     }
 
-    private static String money(BigDecimal value) {
-        if (value == null) {
-            return "";
-        }
-        return value.stripTrailingZeros().toPlainString();
-    }
-
     private static String formatRuDate(LocalDate date) {
         if (date == null) {
             return "";
@@ -188,12 +181,5 @@ public class DocumentGenerationService {
 
     private static String asString(Object value) {
         return value == null ? "" : value.toString();
-    }
-
-    private static String capitalize(String value) {
-        if (value == null || value.isBlank()) {
-            return "";
-        }
-        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 }
