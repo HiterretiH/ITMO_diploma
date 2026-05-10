@@ -13,14 +13,18 @@ CREATE TABLE user_roles (
 
 CREATE TABLE customers (
     id BIGSERIAL PRIMARY KEY,
+    owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     short_name TEXT NOT NULL,
     full_name TEXT,
     phone TEXT,
     requisites TEXT
 );
 
+CREATE INDEX idx_customers_owner ON customers (owner_id);
+
 CREATE TABLE performers (
     id BIGSERIAL PRIMARY KEY,
+    owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     short_name TEXT NOT NULL,
     full_name TEXT,
     phone TEXT,
@@ -32,6 +36,8 @@ CREATE TABLE performers (
     corr_account TEXT,
     requisites TEXT
 );
+
+CREATE INDEX idx_performers_owner ON performers (owner_id);
 
 CREATE TABLE vehicles (
     id BIGSERIAL PRIMARY KEY,
@@ -62,6 +68,7 @@ CREATE INDEX idx_drivers_employer ON drivers (employer_id);
 
 CREATE TABLE orders (
     id BIGSERIAL PRIMARY KEY,
+    owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     customer_id BIGINT NOT NULL REFERENCES customers (id),
     performer_id BIGINT NOT NULL REFERENCES performers (id),
     vehicle_id BIGINT REFERENCES vehicles (id),
@@ -78,6 +85,7 @@ CREATE TABLE orders (
     template_version INTEGER NOT NULL DEFAULT 1
 );
 
+CREATE INDEX idx_orders_owner ON orders (owner_id);
 CREATE INDEX idx_orders_customer ON orders (customer_id);
 CREATE INDEX idx_orders_performer ON orders (performer_id);
 CREATE INDEX idx_orders_vehicle ON orders (vehicle_id);
