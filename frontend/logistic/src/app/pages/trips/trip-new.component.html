@@ -31,6 +31,9 @@
     <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveDraft()">
       <section class="block" aria-labelledby="sec-customer">
         <h2 id="sec-customer" class="block-heading">Заказчик и исполнитель</h2>
+        <p class="block-hint">
+          Выберите стороны из справочника или добавьте новую запись кнопкой «Добавить…».
+        </p>
         <div class="field">
           <label for="cust">Заказчик</label>
           <p-dropdown
@@ -109,6 +112,10 @@
 
       <section class="block" aria-labelledby="sec-performer">
         <h2 id="sec-performer" class="block-heading">Транспорт</h2>
+        <p class="block-hint">
+          В списке только водители и ТС выбранного исполнителя; при необходимости заведите их в
+          справочнике.
+        </p>
         <div class="grid-2">
           <div class="field">
             <label for="driver">Водитель</label>
@@ -189,6 +196,9 @@
 
       <section class="block" aria-labelledby="sec-route">
         <h2 id="sec-route" class="block-heading">Маршрут</h2>
+        <p class="block-hint">
+          Адреса и контакты — как для водителя и заявки; переносы строк сохраняются.
+        </p>
         <div class="field">
           <label for="loadPl">Погрузка (адрес)</label>
           <textarea
@@ -223,6 +233,7 @@
 
       <section class="block" aria-labelledby="sec-date">
         <h2 id="sec-date" class="block-heading">Дата и номер</h2>
+        <p class="block-hint">Дата заявки попадает в документы.</p>
         <div class="field">
           <label for="loadD">Дата заявки</label>
           <p-datepicker
@@ -244,9 +255,6 @@
             placeholder="—"
             styleClass="w-full"
           />
-          <p class="field-hint">
-            Подставляется следующий свободный номер; при необходимости измените до сохранения.
-          </p>
         </div>
       </section>
 
@@ -254,6 +262,9 @@
 
       <section class="block" aria-labelledby="sec-money">
         <h2 id="sec-money" class="block-heading">Оплата</h2>
+        <p class="block-hint">
+          Сумма по умолчанию — ставка × число перевозок; поле «Итого» можно исправить отдельно.
+        </p>
         <div class="grid-money">
           <div class="field">
             <label for="rate">Ставка за рейс</label>
@@ -293,9 +304,6 @@
               placeholder="0"
               styleClass="w-full"
             />
-            <p class="field-hint">
-              Пересчитывается как ставка × число перевозок; можно изменить вручную.
-            </p>
           </div>
         </div>
       </section>
