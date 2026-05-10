@@ -1,6 +1,6 @@
 package com.logistic.backend.audit;
 
-import com.logistic.backend.trip.Trip;
+import com.logistic.backend.order.Order;
 import com.logistic.backend.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,8 +32,8 @@ public class AuditEvent {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trip_id")
-    private Trip trip;
+    @JoinColumn(name = "order_id")
+    private Order order;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false, length = 64)

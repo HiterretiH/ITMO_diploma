@@ -1,8 +1,7 @@
 package com.logistic.backend.document;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logistic.backend.config.StorageProperties;
-import com.logistic.backend.trip.Trip;
+import com.logistic.backend.order.Order;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -23,22 +22,19 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DocumentGenerationService {
 
-    private final ObjectMapper objectMapper;
     private final StorageProperties storageProperties;
     private final GeneratedDocumentRepository generatedDocumentRepository;
     private final DocxTemplateRenderer templateRenderer;
     private final DocxPdfConverter docxPdfConverter;
+    private final OrderSnapshotMapper orderSnapshotMapper;
 
     @Transactional
-    public void generateAndPersist(Trip trip) throws IOException {
-        TripPrintSnapshot snap =
-                objectMapper.readValue(trip.getSnapshotJson(), TripPrintSnapshot.class);
+    public void generateAndPersist(Order order) throws IOException {
+        OrderPrintSnapshot snap = orderSnapshotMapper.fromOrder(order);
         Path base =
-                Path.of(storageProperties.getRoot())
-                        .resolve("trips")
-                        .resolve(trip.getId().toString());
+                Path.of(storageProperties.getRoot()).resolve("orders").resolve(order.getId().toString());
         Files.createDirectories(base);
-        generatedDocumentRepository.deleteByTrip(trip);
+        generatedDocumentRepository.deleteByOrder(order);
 
         for (DocumentType dt : DocumentType.values()) {
             byte[] renderedDocx = renderDocxFromTemplate(dt, snap);
@@ -51,7 +47,7 @@ public class DocumentGenerationService {
                 Files.write(path, body);
 
                 GeneratedDocument gd = new GeneratedDocument();
-                gd.setTrip(trip);
+                gd.setOrder(order);
                 gd.setDocumentType(dt);
                 gd.setFileFormat(ff);
                 gd.setStoragePath(path.toAbsolutePath().toString());
@@ -61,7 +57,7 @@ public class DocumentGenerationService {
         }
     }
 
-    private byte[] renderDocxFromTemplate(DocumentType type, TripPrintSnapshot snapshot)
+    private byte[] renderDocxFromTemplate(DocumentType type, OrderPrintSnapshot snapshot)
             throws IOException {
         String resourcePath = "templates/documents/" + templateName(type);
         try (InputStream in = new ClassPathResource(resourcePath).getInputStream()) {
@@ -77,45 +73,42 @@ public class DocumentGenerationService {
         };
     }
 
-    private static Map<String, String> snapshotToContext(TripPrintSnapshot s) {
+    static Map<String, String> snapshotToContext(OrderPrintSnapshot s) {
         Map<String, String> ctx = new LinkedHashMap<>();
 
-        String number = asString(s.tripId());
-        String date = asString(s.loadDate());
-        String wordDate = formatRuDate(s.loadDate());
-        String loadingPlace = asString(s.routeFrom());
-        String unloadingPlace = asString(s.routeTo());
-        String count = "1";
-        String price = money(s.priceAmount());
-        String totalPrice = money(s.priceAmount());
+        String number = asString(s.orderNumber());
+        String date = asString(s.orderDate());
+        String wordDate = formatRuDate(s.orderDate());
+        String loadingPlace = asString(s.loadingPlace());
+        String unloadingPlace = asString(s.unloadingPlace());
+        String contactLoading = asString(s.loadingContact());
+        String contactUnloading = asString(s.unloadingContact());
+        String count = s.tripCount() > 0 ? Integer.toString(s.tripCount()) : "1";
+        String price = money(s.pricePerTrip());
+        String totalPrice = money(s.totalPrice());
         String wordPrice = capitalize(totalPrice + " рублей");
+
         String performerInfoWs =
-                String.join(
-                                ", ",
-                                asString(s.ownerUsername()),
-                                "ТС " + asString(s.vehicleModel()),
-                                "г/н " + asString(s.vehiclePlate()),
-                                "водитель " + asString(s.driverName()),
-                                "ВУ " + asString(s.driverLicense()))
-                        .replaceAll("(,\\s*)+", ", ")
-                        .replaceAll("^,\\s*|,\\s*$", "");
+                joinWs(
+                        asString(s.performerFullName()),
+                        "ИНН " + asString(s.performerInn()),
+                        "БИК " + asString(s.performerBik()),
+                        "р/с " + asString(s.performerPaymentAccount()),
+                        "к/с " + asString(s.performerCorrAccount()),
+                        asString(s.performerRequisites()));
         String customerInfoWs =
-                String.join(
-                                ", ",
-                                asString(s.shipperName()),
-                                "ИНН " + asString(s.shipperInn()),
-                                asString(s.shipperAddress()),
-                                "маршрут " + loadingPlace + " - " + unloadingPlace)
-                        .replaceAll("(,\\s*)+", ", ")
-                        .replaceAll("^,\\s*|,\\s*$", "");
+                joinWs(
+                        asString(s.customerFullName()),
+                        asString(s.customerRequisites()),
+                        "тел. " + asString(s.customerPhone()));
 
         ctx.put("number", number);
         ctx.put("date", date);
         ctx.put("word_date", wordDate);
         ctx.put("loading_place", loadingPlace);
         ctx.put("unloading_place", unloadingPlace);
-        ctx.put("contact_loading", loadingPlace);
-        ctx.put("contact_unloading", unloadingPlace);
+        ctx.put("contact_loading", contactLoading);
+        ctx.put("contact_unloading", contactUnloading);
         ctx.put("count", count);
         ctx.put("price", price);
         ctx.put("total_price", totalPrice);
@@ -123,50 +116,63 @@ public class DocumentGenerationService {
         ctx.put("performer_info_ws", performerInfoWs);
         ctx.put("customer_info_ws", customerInfoWs);
 
-        ctx.put("performer_name", asString(s.ownerUsername()));
-        ctx.put("performer_full_name", asString(s.ownerUsername()));
-        ctx.put("performer_info", performerInfoWs);
-        ctx.put("performer_phone", "");
-        ctx.put("performer_bank", "");
-        ctx.put("performer_vehicle", asString(s.vehicleModel()));
-        ctx.put("performer_vehicle_number", asString(s.vehiclePlate()));
-        ctx.put("performer_driver", asString(s.driverName()));
-        ctx.put("performer_driver_phone", "");
-        ctx.put("performer_vehicle_type", asString(s.vehicleCapacityKg()));
-        ctx.put("performer_inn", "");
-        ctx.put("performer_bik", "");
-        ctx.put("performer_kpp", "");
-        ctx.put("performer_rsh", "");
-        ctx.put("performer_ksh", "");
+        ctx.put("performer_name", asString(s.performerShortName()));
+        ctx.put("performer_full_name", asString(s.performerFullName()));
+        ctx.put("performer_info", asString(s.performerRequisites()));
+        ctx.put("performer_phone", asString(s.performerPhone()));
+        ctx.put("performer_bank", asString(s.performerBankName()));
+        ctx.put("performer_vehicle", asString(s.vehicleBrandModel()));
+        ctx.put("performer_vehicle_number", asString(s.vehiclePlateNumber()));
+        ctx.put("performer_driver", asString(s.driverFullName()));
+        ctx.put("performer_driver_phone", asString(s.driverPhone()));
+        ctx.put("performer_vehicle_type", asString(s.vehicleType()));
+        ctx.put("performer_inn", asString(s.performerInn()));
+        ctx.put("performer_bik", asString(s.performerBik()));
+        ctx.put("performer_kpp", asString(s.performerKpp()));
+        ctx.put("performer_rsh", asString(s.performerPaymentAccount()));
+        ctx.put("performer_ksh", asString(s.performerCorrAccount()));
 
-        ctx.put("customer_name", asString(s.shipperName()));
-        ctx.put("customer_full_name", asString(s.shipperName()));
-        ctx.put("customer_info", customerInfoWs);
-        ctx.put("customer_phone", "");
+        ctx.put("customer_name", asString(s.customerShortName()));
+        ctx.put("customer_full_name", asString(s.customerFullName()));
+        ctx.put("customer_info", asString(s.customerRequisites()));
+        ctx.put("customer_phone", asString(s.customerPhone()));
         ctx.put("customer_bank", "");
 
-        ctx.put("tripId", asString(s.tripId()));
-        ctx.put("ownerUsername", asString(s.ownerUsername()));
-        ctx.put("shipperName", asString(s.shipperName()));
-        ctx.put("shipperInn", asString(s.shipperInn()));
-        ctx.put("shipperAddress", asString(s.shipperAddress()));
-        ctx.put("consigneeName", asString(s.consigneeName()));
-        ctx.put("consigneeInn", asString(s.consigneeInn()));
-        ctx.put("consigneeAddress", asString(s.consigneeAddress()));
-        ctx.put("cargoDescription", asString(s.cargoDescription()));
-        ctx.put("cargoWeightKg", asString(s.cargoWeightKg()));
-        ctx.put("routeFrom", asString(s.routeFrom()));
-        ctx.put("routeTo", asString(s.routeTo()));
-        ctx.put("loadDate", asString(s.loadDate()));
-        ctx.put("unloadDate", asString(s.unloadDate()));
-        ctx.put("driverName", asString(s.driverName()));
-        ctx.put("driverLicense", asString(s.driverLicense()));
-        ctx.put("vehiclePlate", asString(s.vehiclePlate()));
-        ctx.put("vehicleModel", asString(s.vehicleModel()));
-        ctx.put("vehicleCapacityKg", asString(s.vehicleCapacityKg()));
-        ctx.put("priceAmount", asString(s.priceAmount()));
-        ctx.put("currency", asString(s.currency()));
+        ctx.put("orderId", asString(s.orderId()));
+        ctx.put("shipperName", asString(s.customerShortName()));
+        ctx.put("shipperInn", "");
+        ctx.put("shipperAddress", asString(s.customerRequisites()));
+        ctx.put("consigneeName", "");
+        ctx.put("consigneeInn", "");
+        ctx.put("consigneeAddress", "");
+        ctx.put("cargoDescription", "");
+        ctx.put("cargoWeightKg", "");
+        ctx.put("routeFrom", loadingPlace);
+        ctx.put("routeTo", unloadingPlace);
+        ctx.put("loadDate", date);
+        ctx.put("unloadDate", "");
+        ctx.put("driverName", asString(s.driverFullName()));
+        ctx.put("driverLicense", "");
+        ctx.put("vehiclePlate", asString(s.vehiclePlateNumber()));
+        ctx.put("vehicleModel", asString(s.vehicleBrandModel()));
+        ctx.put("vehicleCapacityKg", "");
+        ctx.put("priceAmount", totalPrice);
+        ctx.put("currency", "RUB");
         return ctx;
+    }
+
+    private static String joinWs(String... parts) {
+        StringBuilder sb = new StringBuilder();
+        for (String p : parts) {
+            if (p == null || p.isBlank()) {
+                continue;
+            }
+            if (!sb.isEmpty()) {
+                sb.append(", ");
+            }
+            sb.append(p.trim());
+        }
+        return sb.toString();
     }
 
     private static String money(BigDecimal value) {

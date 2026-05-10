@@ -6,8 +6,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import java.io.InputStream;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import org.apache.pdfbox.Loader;
@@ -40,8 +38,8 @@ class DocxPdfConverterTest {
 
     @Test
     void renderedDocxConvertsToLayoutPdfWithCyrillicText() throws Exception {
-        TripPrintSnapshot snapshot = sampleSnapshot();
-        Map<String, String> context = DocumentFixtureGenerator.snapshotToContext(snapshot);
+        OrderPrintSnapshot snapshot = DocumentFixtureGenerator.sampleSnapshot();
+        Map<String, String> context = DocumentGenerationService.snapshotToContext(snapshot);
         DocxTemplateRenderer renderer = new DocxTemplateRenderer();
         byte[] templateBytes;
         try (InputStream in =
@@ -72,8 +70,8 @@ class DocxPdfConverterTest {
 
     @Test
     void allDocumentTemplatesConvertToPdfWithoutFallback() throws Exception {
-        TripPrintSnapshot snapshot = sampleSnapshot();
-        Map<String, String> context = DocumentFixtureGenerator.snapshotToContext(snapshot);
+        OrderPrintSnapshot snapshot = DocumentFixtureGenerator.sampleSnapshot();
+        Map<String, String> context = DocumentGenerationService.snapshotToContext(snapshot);
         DocxTemplateRenderer renderer = new DocxTemplateRenderer();
         DocxPdfConverter converter = new DocxPdfConverter();
         for (String template :
@@ -101,30 +99,5 @@ class DocxPdfConverterTest {
                         .map(ILoggingEvent::getFormattedMessage)
                         .anyMatch(m -> m.contains("plain text fallback"));
         assertThat(bad).as("DocxPdfConverter must not use plain text PDF fallback").isFalse();
-    }
-
-    private static TripPrintSnapshot sampleSnapshot() {
-        return new TripPrintSnapshot(
-                1001L,
-                "ip_petrov",
-                "ООО Ромашка",
-                "7701234567",
-                "г. Москва, ул. Ленина, 1",
-                "ООО Василек",
-                "7810123456",
-                "г. Санкт-Петербург, Невский пр., 10",
-                "Строительные смеси, 24 паллеты",
-                new BigDecimal("12000.500"),
-                "Москва",
-                "Санкт-Петербург",
-                LocalDate.of(2026, 5, 15),
-                LocalDate.of(2026, 5, 16),
-                "Иванов Иван Иванович",
-                "77 01 123456",
-                "А123ВС178",
-                "Volvo FH",
-                20000,
-                new BigDecimal("98500.00"),
-                "RUB");
     }
 }

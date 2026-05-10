@@ -1,6 +1,6 @@
 package com.logistic.backend.document;
 
-import com.logistic.backend.trip.Trip;
+import com.logistic.backend.order.Order;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,7 +20,8 @@ import lombok.Setter;
 @Entity
 @Table(
         name = "generated_documents",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"trip_id", "document_type", "file_format"}))
+        uniqueConstraints =
+                @UniqueConstraint(columnNames = {"order_id", "document_type", "file_format"}))
 @Getter
 @Setter
 public class GeneratedDocument {
@@ -30,8 +31,8 @@ public class GeneratedDocument {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "trip_id")
-    private Trip trip;
+    @JoinColumn(name = "order_id")
+    private Order order;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "document_type", nullable = false, length = 32)

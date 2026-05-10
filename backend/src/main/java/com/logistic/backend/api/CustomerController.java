@@ -1,10 +1,8 @@
 package com.logistic.backend.api;
 
-import com.logistic.backend.api.dto.PlaceRequest;
-import com.logistic.backend.api.dto.PlaceResponse;
-import com.logistic.backend.catalog.PlaceService;
-import com.logistic.backend.catalog.PlaceType;
-import com.logistic.backend.security.CurrentUserService;
+import com.logistic.backend.api.dto.CustomerRequest;
+import com.logistic.backend.api.dto.CustomerResponse;
+import com.logistic.backend.catalog.CustomerService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -20,42 +18,39 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/places")
+@RequestMapping("/api/v1/customers")
 @RequiredArgsConstructor
-public class PlaceController {
+public class CustomerController {
 
-    private final PlaceService placeService;
-    private final CurrentUserService currentUserService;
+    private final CustomerService customerService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
-    public List<PlaceResponse> list(
-            @RequestParam(required = false) PlaceType type,
-            @RequestParam(required = false) String q) {
-        return placeService.list(currentUserService.requireUser(), type, q);
+    public List<CustomerResponse> list(@RequestParam(required = false) String q) {
+        return customerService.list(q);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
-    public PlaceResponse get(@PathVariable Long id) {
-        return placeService.get(currentUserService.requireUser(), id);
+    public CustomerResponse get(@PathVariable Long id) {
+        return customerService.get(id);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
-    public PlaceResponse create(@Valid @RequestBody PlaceRequest request) {
-        return placeService.create(currentUserService.requireUser(), request);
+    public CustomerResponse create(@Valid @RequestBody CustomerRequest request) {
+        return customerService.create(request);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
-    public PlaceResponse update(@PathVariable Long id, @Valid @RequestBody PlaceRequest request) {
-        return placeService.update(currentUserService.requireUser(), id, request);
+    public CustomerResponse update(@PathVariable Long id, @Valid @RequestBody CustomerRequest request) {
+        return customerService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public void delete(@PathVariable Long id) {
-        placeService.delete(currentUserService.requireUser(), id);
+        customerService.delete(id);
     }
 }

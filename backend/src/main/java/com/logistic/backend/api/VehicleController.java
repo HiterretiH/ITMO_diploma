@@ -3,7 +3,6 @@ package com.logistic.backend.api;
 import com.logistic.backend.api.dto.VehicleRequest;
 import com.logistic.backend.api.dto.VehicleResponse;
 import com.logistic.backend.catalog.VehicleService;
-import com.logistic.backend.security.CurrentUserService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,36 +23,35 @@ import org.springframework.web.bind.annotation.RestController;
 public class VehicleController {
 
     private final VehicleService vehicleService;
-    private final CurrentUserService currentUserService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public List<VehicleResponse> list(@RequestParam(required = false) String q) {
-        return vehicleService.list(currentUserService.requireUser(), q);
+        return vehicleService.list(q);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public VehicleResponse get(@PathVariable Long id) {
-        return vehicleService.get(currentUserService.requireUser(), id);
+        return vehicleService.get(id);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public VehicleResponse create(@Valid @RequestBody VehicleRequest request) {
-        return vehicleService.create(currentUserService.requireUser(), request);
+        return vehicleService.create(request);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public VehicleResponse update(
             @PathVariable Long id, @Valid @RequestBody VehicleRequest request) {
-        return vehicleService.update(currentUserService.requireUser(), id, request);
+        return vehicleService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public void delete(@PathVariable Long id) {
-        vehicleService.delete(currentUserService.requireUser(), id);
+        vehicleService.delete(id);
     }
 }

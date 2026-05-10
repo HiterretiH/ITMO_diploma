@@ -3,10 +3,12 @@ package com.logistic.backend.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.logistic.backend.api.dto.CounterpartyRequest;
+import com.logistic.backend.api.dto.CustomerRequest;
 import com.logistic.backend.api.dto.DriverRequest;
 import com.logistic.backend.api.dto.LoginRequest;
-import com.logistic.backend.api.dto.TripUpdateRequest;
+import com.logistic.backend.api.dto.OrderCreateRequest;
+import com.logistic.backend.api.dto.OrderUpdateRequest;
+import com.logistic.backend.api.dto.PerformerRequest;
 import com.logistic.backend.api.dto.UserCreateRequest;
 import com.logistic.backend.api.dto.VehicleRequest;
 import com.logistic.backend.user.Role;
@@ -34,7 +36,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
 @ActiveProfiles("test")
-class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
+class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Autowired UserRepository userRepository;
     @Autowired PasswordEncoder passwordEncoder;
@@ -68,28 +70,27 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void employeeCanCompleteOwnTrip() throws Exception {
-        long tripId = createTripReadyToComplete(tokenEmpA);
+    void employeeCanCompleteOrder() throws Exception {
+        long orderId = createOrderReadyToComplete(tokenEmpA);
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
-                        "/api/v1/trips/" + tripId + "/complete",
+                        "/api/v1/orders/" + orderId + "/complete",
                         new HttpEntity<>(bearer(tokenEmpA)),
                         String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(objectMapper.readTree(r.getBody()).get("status").asText()).isEqualTo("COMPLETED");
+        assertThat(objectMapper.readTree(r.getBody()).get("templateVersion").asInt()).isGreaterThan(0);
     }
 
     @Test
-    void peerCannotDeleteOthersTrip() throws Exception {
-        long tripId = createEmptyTrip(tokenEmpA);
+    void peerCanDeleteOrderCreatedByAnotherEmployee() throws Exception {
+        long orderId = createEmptyOrder(tokenEmpA);
         ResponseEntity<String> r =
                 restTemplate.exchange(
-                        "/api/v1/trips/" + tripId,
+                        "/api/v1/orders/" + orderId,
                         HttpMethod.DELETE,
                         new HttpEntity<>(bearer(tokenEmpB)),
                         String.class);
-        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertProblemJson(r, HttpStatus.FORBIDDEN);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
     @Test
@@ -105,10 +106,10 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void getUnknownTripReturns404() throws Exception {
+    void getUnknownOrderReturns404() throws Exception {
         ResponseEntity<String> r =
                 restTemplate.exchange(
-                        "/api/v1/trips/999999",
+                        "/api/v1/orders/999999",
                         HttpMethod.GET,
                         new HttpEntity<>(bearer(tokenEmpA)),
                         String.class);
@@ -117,10 +118,10 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void getUnknownCounterpartyReturns404() throws Exception {
+    void getUnknownCustomerReturns404() throws Exception {
         ResponseEntity<String> r =
                 restTemplate.exchange(
-                        "/api/v1/counterparties/999999",
+                        "/api/v1/customers/999999",
                         HttpMethod.GET,
                         new HttpEntity<>(bearer(tokenEmpA)),
                         String.class);
@@ -129,25 +130,11 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void updateCompletedTripWithIncompleteDataReturns400() throws Exception {
-        long tripId = createCompletedTrip(tokenEmpA);
-        String stripCargo = "{\"cargoDescription\":\"\"}";
-        ResponseEntity<String> r =
-                restTemplate.exchange(
-                        "/api/v1/trips/" + tripId,
-                        HttpMethod.PUT,
-                        new HttpEntity<>(stripCargo, bearer(tokenEmpA)),
-                        String.class);
-        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertProblemJson(r, HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    void completeIncompleteTripReturns400() throws Exception {
-        long tripId = createEmptyTrip(tokenEmpA);
+    void completeIncompleteOrderReturns400() throws Exception {
+        long orderId = createEmptyOrder(tokenEmpA);
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
-                        "/api/v1/trips/" + tripId + "/complete",
+                        "/api/v1/orders/" + orderId + "/complete",
                         new HttpEntity<>(bearer(tokenEmpA)),
                         String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -155,32 +142,30 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void invalidInnReturns400() throws Exception {
-        String body =
-                objectMapper.writeValueAsString(new CounterpartyRequest("Co", "abc", null, null));
+    void invalidCustomerShortNameReturns400() throws Exception {
+        String body = objectMapper.writeValueAsString(new CustomerRequest("", null, null, null));
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
-                        "/api/v1/counterparties", new HttpEntity<>(body, bearer(tokenEmpA)), String.class);
+                        "/api/v1/customers", new HttpEntity<>(body, bearer(tokenEmpA)), String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertProblemJson(r, HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void peerEmployeeCannotReadOthersTrip() throws Exception {
-        long tripId = createEmptyTrip(tokenEmpA);
+    void peerEmployeeCanReadOrderCreatedByAnother() throws Exception {
+        long orderId = createEmptyOrder(tokenEmpA);
         ResponseEntity<String> r =
                 restTemplate.exchange(
-                        "/api/v1/trips/" + tripId,
+                        "/api/v1/orders/" + orderId,
                         HttpMethod.GET,
                         new HttpEntity<>(bearer(tokenEmpB)),
                         String.class);
-        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertProblemJson(r, HttpStatus.FORBIDDEN);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
-    void unauthenticatedTripListReturns401() {
-        ResponseEntity<String> r = restTemplate.getForEntity("/api/v1/trips", String.class);
+    void unauthenticatedOrderListReturns401() {
+        ResponseEntity<String> r = restTemplate.getForEntity("/api/v1/orders", String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(r.getHeaders().getContentType())
                 .isNotNull()
@@ -196,59 +181,87 @@ class TripSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
         assertThat(n.path("title").asText()).isNotBlank();
     }
 
-    private long createEmptyTrip(String token) throws Exception {
+    private long createEmptyOrder(String token) throws Exception {
+        Long customerId =
+                postCustomer(token, new CustomerRequest("C", "CFull", null, null));
+        Long performerId =
+                postPerformer(
+                        token,
+                        new PerformerRequest("P", "PFull", null, null, null, null, null, null, null, null));
+        String body =
+                objectMapper.writeValueAsString(new OrderCreateRequest(customerId, performerId, null, null));
         ResponseEntity<String> r =
-                restTemplate.postForEntity("/api/v1/trips", new HttpEntity<>(bearer(token)), String.class);
+                restTemplate.postForEntity(
+                        "/api/v1/orders", new HttpEntity<>(body, bearer(token)), String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
         return objectMapper.readTree(r.getBody()).get("id").asLong();
     }
 
-    private long createTripReadyToComplete(String token) throws Exception {
-        Long shipperId = postCounterparty(token, new CounterpartyRequest("S", "1234567890", "a", "1"));
-        Long consigneeId = postCounterparty(token, new CounterpartyRequest("C", "0987654321", "b", "2"));
-        Long driverId = postDriver(token, new DriverRequest("D", "7712345678", "B"));
-        Long vehicleId = postVehicle(token, new VehicleRequest("A111AA77", "M", 1000));
-        long tripId = createEmptyTrip(token);
+    private long createOrderReadyToComplete(String token) throws Exception {
+        Long customerId = postCustomer(token, new CustomerRequest("S", "SFull", null, null));
+        Long performerId =
+                postPerformer(
+                        token,
+                        new PerformerRequest(
+                                "P",
+                                "PFull",
+                                null,
+                                null,
+                                "1234567890",
+                                null,
+                                null,
+                                null,
+                                null,
+                                null));
+        Long driverId = postDriver(token, new DriverRequest(performerId, "D", null, false));
+        Long vehicleId = postVehicle(token, new VehicleRequest(performerId, "M", "A111AA77", null, false));
+        String create =
+                objectMapper.writeValueAsString(new OrderCreateRequest(customerId, performerId, null, null));
+        ResponseEntity<String> createR =
+                restTemplate.postForEntity(
+                        "/api/v1/orders", new HttpEntity<>(create, bearer(token)), String.class);
+        assertThat(createR.getStatusCode()).isEqualTo(HttpStatus.OK);
+        long orderId = objectMapper.readTree(createR.getBody()).get("id").asLong();
+
+        OrderUpdateRequest full =
+                new OrderUpdateRequest(
+                        null,
+                        null,
+                        vehicleId,
+                        driverId,
+                        LocalDate.of(2026, 7, 1),
+                        null,
+                        "A",
+                        null,
+                        "B",
+                        null,
+                        null,
+                        new BigDecimal("100.00"),
+                        new BigDecimal("100.00"));
         ResponseEntity<String> upd =
                 restTemplate.exchange(
-                        "/api/v1/trips/" + tripId,
+                        "/api/v1/orders/" + orderId,
                         HttpMethod.PUT,
-                        new HttpEntity<>(
-                                objectMapper.writeValueAsString(
-                                        new TripUpdateRequest(
-                                                shipperId,
-                                                consigneeId,
-                                                driverId,
-                                                vehicleId,
-                                                "Cargo",
-                                                new BigDecimal("1.000"),
-                                                "A",
-                                                "B",
-                                                LocalDate.of(2026, 7, 1),
-                                                LocalDate.of(2026, 7, 2),
-                                                new BigDecimal("100.00"),
-                                                "RUB")),
-                                bearer(token)),
+                        new HttpEntity<>(objectMapper.writeValueAsString(full), bearer(token)),
                         String.class);
         assertThat(upd.getStatusCode()).isEqualTo(HttpStatus.OK);
-        return tripId;
+        return orderId;
     }
 
-    private long createCompletedTrip(String token) throws Exception {
-        long tripId = createTripReadyToComplete(token);
-        ResponseEntity<String> done =
-                restTemplate.postForEntity(
-                        "/api/v1/trips/" + tripId + "/complete",
-                        new HttpEntity<>(bearer(token)),
-                        String.class);
-        assertThat(done.getStatusCode()).isEqualTo(HttpStatus.OK);
-        return tripId;
-    }
-
-    private Long postCounterparty(String token, CounterpartyRequest body) throws Exception {
+    private Long postCustomer(String token, CustomerRequest body) throws Exception {
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
-                        "/api/v1/counterparties",
+                        "/api/v1/customers",
+                        new HttpEntity<>(objectMapper.writeValueAsString(body), bearer(token)),
+                        String.class);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
+        return objectMapper.readTree(r.getBody()).get("id").asLong();
+    }
+
+    private Long postPerformer(String token, PerformerRequest body) throws Exception {
+        ResponseEntity<String> r =
+                restTemplate.postForEntity(
+                        "/api/v1/performers",
                         new HttpEntity<>(objectMapper.writeValueAsString(body), bearer(token)),
                         String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);

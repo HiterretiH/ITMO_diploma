@@ -1,8 +1,8 @@
 package com.logistic.backend.api;
 
 import com.logistic.backend.api.dto.DocumentDownload;
+import com.logistic.backend.order.OrderService;
 import com.logistic.backend.security.CurrentUserService;
-import com.logistic.backend.trip.TripService;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
@@ -18,14 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class DocumentDownloadController {
 
-    private final TripService tripService;
+    private final OrderService orderService;
     private final CurrentUserService currentUserService;
 
     @GetMapping("/{id}/file")
     public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable Long id)
             throws IOException {
-        DocumentDownload d =
-                tripService.prepareDocumentDownload(id, currentUserService.requireUser());
+        currentUserService.requireUser();
+        DocumentDownload d = orderService.prepareDocumentDownload(id);
         ContentDisposition disposition =
                 ContentDisposition.attachment().filename(d.filename()).build();
         return ResponseEntity.ok()

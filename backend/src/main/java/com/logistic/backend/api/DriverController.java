@@ -3,7 +3,6 @@ package com.logistic.backend.api;
 import com.logistic.backend.api.dto.DriverRequest;
 import com.logistic.backend.api.dto.DriverResponse;
 import com.logistic.backend.catalog.DriverService;
-import com.logistic.backend.security.CurrentUserService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,35 +23,34 @@ import org.springframework.web.bind.annotation.RestController;
 public class DriverController {
 
     private final DriverService driverService;
-    private final CurrentUserService currentUserService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public List<DriverResponse> list(@RequestParam(required = false) String q) {
-        return driverService.list(currentUserService.requireUser(), q);
+        return driverService.list(q);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public DriverResponse get(@PathVariable Long id) {
-        return driverService.get(currentUserService.requireUser(), id);
+        return driverService.get(id);
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public DriverResponse create(@Valid @RequestBody DriverRequest request) {
-        return driverService.create(currentUserService.requireUser(), request);
+        return driverService.create(request);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public DriverResponse update(@PathVariable Long id, @Valid @RequestBody DriverRequest request) {
-        return driverService.update(currentUserService.requireUser(), id, request);
+        return driverService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
     public void delete(@PathVariable Long id) {
-        driverService.delete(currentUserService.requireUser(), id);
+        driverService.delete(id);
     }
 }

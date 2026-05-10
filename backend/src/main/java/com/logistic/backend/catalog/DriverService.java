@@ -2,7 +2,6 @@ package com.logistic.backend.catalog;
 
 import com.logistic.backend.api.dto.DriverRequest;
 import com.logistic.backend.api.dto.DriverResponse;
-import com.logistic.backend.user.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,67 +14,75 @@ import org.springframework.web.server.ResponseStatusException;
 public class DriverService {
 
     private final DriverRepository driverRepository;
+    private final PerformerRepository performerRepository;
 
     @Transactional
-    public DriverResponse create(User owner, DriverRequest req) {
+    public DriverResponse create(DriverRequest req) {
+        Performer p = performerRepository.findById(req.performerId()).orElseThrow(this::notFound);
+        if (Boolean.TRUE.equals(req.isDefault())) {
+            driverRepository.clearDefaultForEmployer(p.getId());
+            driverRepository.flush();
+        }
         Driver d = new Driver();
-        d.setOwner(owner);
-        apply(d, req);
+        d.setEmployer(p);
+        d.setFullName(req.fullName());
+        d.setPhone(emptyToNull(req.phone()));
+        d.setDefaultForEmployer(Boolean.TRUE.equals(req.isDefault()));
         driverRepository.save(d);
         return toDto(d);
     }
 
     @Transactional
-    public DriverResponse update(User owner, Long id, DriverRequest req) {
+    public DriverResponse update(Long id, DriverRequest req) {
         Driver d = driverRepository.findById(id).orElseThrow(this::notFound);
-        assertOwner(owner, d);
-        apply(d, req);
+        Performer p = performerRepository.findById(req.performerId()).orElseThrow(this::notFound);
+        if (Boolean.TRUE.equals(req.isDefault())) {
+            driverRepository.clearDefaultForEmployer(p.getId());
+            driverRepository.flush();
+        }
+        d.setEmployer(p);
+        d.setFullName(req.fullName());
+        d.setPhone(emptyToNull(req.phone()));
+        d.setDefaultForEmployer(Boolean.TRUE.equals(req.isDefault()));
         driverRepository.save(d);
         return toDto(d);
     }
 
     @Transactional(readOnly = true)
-    public DriverResponse get(User owner, Long id) {
+    public DriverResponse get(Long id) {
         Driver d = driverRepository.findById(id).orElseThrow(this::notFound);
-        assertOwner(owner, d);
         return toDto(d);
     }
 
     @Transactional(readOnly = true)
-    public List<DriverResponse> list(User owner, String q) {
+    public List<DriverResponse> list(String q) {
         if (q == null || q.isBlank()) {
-            return driverRepository.findByOwnerOrderByFullNameAsc(owner).stream()
+            return driverRepository.findAllByOrderByFullNameAsc().stream()
                     .map(this::toDto)
                     .toList();
         }
-        return driverRepository.findByOwnerAndFullNameContainingIgnoreCaseOrderByFullNameAsc(owner, q)
-                .stream()
+        return driverRepository.findByFullNameContainingIgnoreCaseOrderByFullNameAsc(q).stream()
                 .map(this::toDto)
                 .toList();
     }
 
     @Transactional
-    public void delete(User owner, Long id) {
+    public void delete(Long id) {
         Driver d = driverRepository.findById(id).orElseThrow(this::notFound);
-        assertOwner(owner, d);
         driverRepository.delete(d);
     }
 
-    private void apply(Driver d, DriverRequest req) {
-        d.setFullName(req.fullName());
-        d.setLicenseNumber(req.licenseNumber());
-        d.setLicenseCategory(req.licenseCategory());
-    }
-
-    private static void assertOwner(User owner, Driver d) {
-        if (!d.getOwner().getId().equals(owner.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+    private static String emptyToNull(String s) {
+        return s == null || s.isBlank() ? null : s;
     }
 
     private DriverResponse toDto(Driver d) {
         return new DriverResponse(
-                d.getId(), d.getFullName(), d.getLicenseNumber(), d.getLicenseCategory());
+                d.getId(),
+                d.getEmployer().getId(),
+                d.getFullName(),
+                d.getPhone(),
+                d.isDefaultForEmployer());
     }
 
     private ResponseStatusException notFound() {

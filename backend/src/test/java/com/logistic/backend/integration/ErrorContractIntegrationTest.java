@@ -72,7 +72,7 @@ class ErrorContractIntegrationTest extends AbstractPostgresIntegrationTest {
     @Test
     void missingAuthReturns401ProblemJson() throws Exception {
         ResponseEntity<String> r =
-                restTemplate.getForEntity("/api/v1/trips", String.class);
+                restTemplate.getForEntity("/api/v1/orders", String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(r.getHeaders().getContentType())
                 .isNotNull()
@@ -81,12 +81,12 @@ class ErrorContractIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void unknownTripReturns404ProblemJson() throws Exception {
+    void unknownOrderReturns404ProblemJson() throws Exception {
         HttpHeaders h = new HttpHeaders();
         h.setBearerAuth(token);
         ResponseEntity<String> r =
                 restTemplate.exchange(
-                        "/api/v1/trips/999999",
+                        "/api/v1/orders/999999",
                         HttpMethod.GET,
                         new HttpEntity<>(h),
                         String.class);

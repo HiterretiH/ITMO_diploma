@@ -2,7 +2,6 @@ package com.logistic.backend.catalog;
 
 import com.logistic.backend.api.dto.VehicleRequest;
 import com.logistic.backend.api.dto.VehicleResponse;
-import com.logistic.backend.user.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,67 +14,78 @@ import org.springframework.web.server.ResponseStatusException;
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
+    private final PerformerRepository performerRepository;
 
     @Transactional
-    public VehicleResponse create(User owner, VehicleRequest req) {
+    public VehicleResponse create(VehicleRequest req) {
+        Performer p = performerRepository.findById(req.performerId()).orElseThrow(this::notFound);
+        if (Boolean.TRUE.equals(req.isDefault())) {
+            vehicleRepository.clearDefaultForOwner(p.getId());
+            vehicleRepository.flush();
+        }
         Vehicle v = new Vehicle();
-        v.setOwner(owner);
-        apply(v, req);
+        v.setOwner(p);
+        v.setBrandModel(emptyToNull(req.brandModel()));
+        v.setPlateNumber(emptyToNull(req.plateNumber()));
+        v.setType(emptyToNull(req.type()));
+        v.setDefaultForPerformer(Boolean.TRUE.equals(req.isDefault()));
         vehicleRepository.save(v);
         return toDto(v);
     }
 
     @Transactional
-    public VehicleResponse update(User owner, Long id, VehicleRequest req) {
+    public VehicleResponse update(Long id, VehicleRequest req) {
         Vehicle v = vehicleRepository.findById(id).orElseThrow(this::notFound);
-        assertOwner(owner, v);
-        apply(v, req);
+        Performer p = performerRepository.findById(req.performerId()).orElseThrow(this::notFound);
+        if (Boolean.TRUE.equals(req.isDefault())) {
+            vehicleRepository.clearDefaultForOwner(p.getId());
+            vehicleRepository.flush();
+        }
+        v.setOwner(p);
+        v.setBrandModel(emptyToNull(req.brandModel()));
+        v.setPlateNumber(emptyToNull(req.plateNumber()));
+        v.setType(emptyToNull(req.type()));
+        v.setDefaultForPerformer(Boolean.TRUE.equals(req.isDefault()));
         vehicleRepository.save(v);
         return toDto(v);
     }
 
     @Transactional(readOnly = true)
-    public VehicleResponse get(User owner, Long id) {
+    public VehicleResponse get(Long id) {
         Vehicle v = vehicleRepository.findById(id).orElseThrow(this::notFound);
-        assertOwner(owner, v);
         return toDto(v);
     }
 
     @Transactional(readOnly = true)
-    public List<VehicleResponse> list(User owner, String q) {
+    public List<VehicleResponse> list(String q) {
         if (q == null || q.isBlank()) {
-            return vehicleRepository.findByOwnerOrderByPlateNumberAsc(owner).stream()
+            return vehicleRepository.findAllByOrderByPlateNumberAsc().stream()
                     .map(this::toDto)
                     .toList();
         }
-        return vehicleRepository
-                .findByOwnerAndPlateNumberContainingIgnoreCaseOrderByPlateNumberAsc(owner, q)
-                .stream()
+        return vehicleRepository.findByPlateNumberContainingIgnoreCaseOrderByPlateNumberAsc(q).stream()
                 .map(this::toDto)
                 .toList();
     }
 
     @Transactional
-    public void delete(User owner, Long id) {
+    public void delete(Long id) {
         Vehicle v = vehicleRepository.findById(id).orElseThrow(this::notFound);
-        assertOwner(owner, v);
         vehicleRepository.delete(v);
     }
 
-    private void apply(Vehicle v, VehicleRequest req) {
-        v.setPlateNumber(req.plateNumber());
-        v.setModel(req.model());
-        v.setLoadCapacityKg(req.loadCapacityKg());
-    }
-
-    private static void assertOwner(User owner, Vehicle v) {
-        if (!v.getOwner().getId().equals(owner.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+    private static String emptyToNull(String s) {
+        return s == null || s.isBlank() ? null : s;
     }
 
     private VehicleResponse toDto(Vehicle v) {
-        return new VehicleResponse(v.getId(), v.getPlateNumber(), v.getModel(), v.getLoadCapacityKg());
+        return new VehicleResponse(
+                v.getId(),
+                v.getOwner().getId(),
+                v.getBrandModel(),
+                v.getPlateNumber(),
+                v.getType(),
+                v.isDefaultForPerformer());
     }
 
     private ResponseStatusException notFound() {

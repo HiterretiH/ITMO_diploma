@@ -1,0 +1,6 @@
+package com.logistic.backend.api.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record CustomerRequest(
+        @NotBlank String shortName, String fullName, String phone, String requisites) {}

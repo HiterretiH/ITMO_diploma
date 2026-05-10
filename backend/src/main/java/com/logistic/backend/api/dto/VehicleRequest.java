@@ -1,5 +1,10 @@
 package com.logistic.backend.api.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-public record VehicleRequest(@NotBlank String plateNumber, String model, Integer loadCapacityKg) {}
+public record VehicleRequest(
+        @NotNull Long performerId,
+        String brandModel,
+        String plateNumber,
+        String type,
+        Boolean isDefault) {}

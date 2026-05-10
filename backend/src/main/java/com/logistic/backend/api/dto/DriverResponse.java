@@ -1,3 +1,4 @@
 package com.logistic.backend.api.dto;
 
-public record DriverResponse(Long id, String fullName, String licenseNumber, String licenseCategory) {}
+public record DriverResponse(
+        Long id, Long performerId, String fullName, String phone, boolean isDefault) {}
