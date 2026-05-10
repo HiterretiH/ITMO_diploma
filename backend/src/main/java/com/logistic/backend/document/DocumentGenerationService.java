@@ -102,19 +102,9 @@ public class DocumentGenerationService {
         String totalPrice = money(s.totalPrice());
         String wordPrice = capitalize(totalPrice + " рублей");
 
-        String performerInfoWs =
-                joinWs(
-                        asString(s.performerFullName()),
-                        "ИНН " + asString(s.performerInn()),
-                        "БИК " + asString(s.performerBik()),
-                        "р/с " + asString(s.performerPaymentAccount()),
-                        "к/с " + asString(s.performerCorrAccount()),
-                        asString(s.performerRequisites()));
-        String customerInfoWs =
-                joinWs(
-                        asString(s.customerFullName()),
-                        asString(s.customerRequisites()),
-                        "тел. " + asString(s.customerPhone()));
+        /** Printed legal blocks: single DB field only (see Customer/Performer.requisites). */
+        String customerRequisitesText = asString(s.customerRequisites());
+        String performerRequisitesText = asString(s.performerRequisites());
 
         ctx.put("number", number);
         ctx.put("date", date);
@@ -127,12 +117,12 @@ public class DocumentGenerationService {
         ctx.put("price", price);
         ctx.put("total_price", totalPrice);
         ctx.put("word_price", wordPrice);
-        ctx.put("performer_info_ws", performerInfoWs);
-        ctx.put("customer_info_ws", customerInfoWs);
+        ctx.put("performer_info_ws", performerRequisitesText);
+        ctx.put("customer_info_ws", customerRequisitesText);
 
         ctx.put("performer_name", asString(s.performerShortName()));
         ctx.put("performer_full_name", asString(s.performerFullName()));
-        ctx.put("performer_info", asString(s.performerRequisites()));
+        ctx.put("performer_info", performerRequisitesText);
         ctx.put("performer_phone", asString(s.performerPhone()));
         ctx.put("performer_bank", asString(s.performerBankName()));
         ctx.put("performer_vehicle", asString(s.vehicleBrandModel()));
@@ -148,14 +138,14 @@ public class DocumentGenerationService {
 
         ctx.put("customer_name", asString(s.customerShortName()));
         ctx.put("customer_full_name", asString(s.customerFullName()));
-        ctx.put("customer_info", asString(s.customerRequisites()));
+        ctx.put("customer_info", customerRequisitesText);
         ctx.put("customer_phone", asString(s.customerPhone()));
         ctx.put("customer_bank", "");
 
         ctx.put("orderId", asString(s.orderId()));
         ctx.put("shipperName", asString(s.customerShortName()));
         ctx.put("shipperInn", "");
-        ctx.put("shipperAddress", asString(s.customerRequisites()));
+        ctx.put("shipperAddress", customerRequisitesText);
         ctx.put("consigneeName", "");
         ctx.put("consigneeInn", "");
         ctx.put("consigneeAddress", "");
@@ -173,20 +163,6 @@ public class DocumentGenerationService {
         ctx.put("priceAmount", totalPrice);
         ctx.put("currency", "RUB");
         return ctx;
-    }
-
-    private static String joinWs(String... parts) {
-        StringBuilder sb = new StringBuilder();
-        for (String p : parts) {
-            if (p == null || p.isBlank()) {
-                continue;
-            }
-            if (!sb.isEmpty()) {
-                sb.append(", ");
-            }
-            sb.append(p.trim());
-        }
-        return sb.toString();
     }
 
     private static String money(BigDecimal value) {
