@@ -19,7 +19,7 @@ export class OrderStatusBadgeComponent {
       case 'completed':
         return 'Завершён';
       case 'ready':
-        return 'Готов к завершению';
+        return 'Можно завершить';
       default:
         return 'Черновик';
     }
