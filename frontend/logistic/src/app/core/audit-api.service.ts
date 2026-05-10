@@ -14,9 +14,4 @@ export class AuditApiService {
       `${this.base}/orders/${orderId}/audit-events`,
     );
   }
-
-  /** @deprecated use listByOrder */
-  listByTrip(tripId: number): Observable<AuditEventResponse[]> {
-    return this.listByOrder(tripId);
-  }
 }
