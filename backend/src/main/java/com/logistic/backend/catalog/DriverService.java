@@ -21,7 +21,9 @@ public class DriverService {
     @Transactional
     public DriverResponse create(DriverRequest req, User current) {
         Performer p = loadPerformerForMutation(current, req.performerId());
-        if (Boolean.TRUE.equals(req.isDefault())) {
+        boolean firstForPerformer = driverRepository.countByEmployer_Id(p.getId()) == 0;
+        boolean effectiveDefault = Boolean.TRUE.equals(req.isDefault()) || firstForPerformer;
+        if (effectiveDefault) {
             driverRepository.clearDefaultForEmployer(p.getId());
             driverRepository.flush();
         }
@@ -29,7 +31,7 @@ public class DriverService {
         d.setEmployer(p);
         d.setFullName(req.fullName());
         d.setPhone(emptyToNull(req.phone()));
-        d.setDefaultForEmployer(Boolean.TRUE.equals(req.isDefault()));
+        d.setDefaultForEmployer(effectiveDefault);
         driverRepository.save(d);
         return toDto(d);
     }

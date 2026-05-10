@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
+    long countByOwner_Id(Long ownerId);
+
     List<Vehicle> findAllByOrderByPlateNumberAsc();
 
     List<Vehicle> findByPlateNumberContainingIgnoreCaseOrderByPlateNumberAsc(String q);

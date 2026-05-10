@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface DriverRepository extends JpaRepository<Driver, Long> {
 
+    long countByEmployer_Id(Long employerId);
+
     List<Driver> findAllByOrderByFullNameAsc();
 
     List<Driver> findByFullNameContainingIgnoreCaseOrderByFullNameAsc(String q);

@@ -21,7 +21,9 @@ public class VehicleService {
     @Transactional
     public VehicleResponse create(VehicleRequest req, User current) {
         Performer p = loadPerformerForMutation(current, req.performerId());
-        if (Boolean.TRUE.equals(req.isDefault())) {
+        boolean firstForPerformer = vehicleRepository.countByOwner_Id(p.getId()) == 0;
+        boolean effectiveDefault = Boolean.TRUE.equals(req.isDefault()) || firstForPerformer;
+        if (effectiveDefault) {
             vehicleRepository.clearDefaultForOwner(p.getId());
             vehicleRepository.flush();
         }
@@ -30,7 +32,7 @@ public class VehicleService {
         v.setBrandModel(emptyToNull(req.brandModel()));
         v.setPlateNumber(emptyToNull(req.plateNumber()));
         v.setType(emptyToNull(req.type()));
-        v.setDefaultForPerformer(Boolean.TRUE.equals(req.isDefault()));
+        v.setDefaultForPerformer(effectiveDefault);
         vehicleRepository.save(v);
         return toDto(v);
     }
