@@ -1,8 +1,8 @@
 package com.logistic.backend.order;
 
 import com.logistic.backend.api.dto.DocumentDownload;
-import com.logistic.backend.api.dto.GeneratedDocumentResponse;
 import com.logistic.backend.api.dto.OrderCreateRequest;
+import com.logistic.backend.api.dto.OrderDocumentDescriptor;
 import com.logistic.backend.api.dto.OrderResponse;
 import com.logistic.backend.api.dto.OrderUpdateRequest;
 import com.logistic.backend.audit.AuditEventType;
@@ -15,27 +15,20 @@ import com.logistic.backend.catalog.Performer;
 import com.logistic.backend.catalog.PerformerRepository;
 import com.logistic.backend.catalog.Vehicle;
 import com.logistic.backend.catalog.VehicleRepository;
-import com.logistic.backend.config.StorageProperties;
 import com.logistic.backend.document.DocumentGenerationService;
 import com.logistic.backend.document.DocumentTemplateVersion;
 import com.logistic.backend.document.DocumentType;
 import com.logistic.backend.document.FileFormat;
-import com.logistic.backend.document.GeneratedDocument;
-import com.logistic.backend.document.GeneratedDocumentRepository;
 import com.logistic.backend.user.User;
 import com.logistic.backend.user.UserAccess;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -51,8 +44,6 @@ public class OrderService {
     private final DriverRepository driverRepository;
     private final AuditService auditService;
     private final DocumentGenerationService documentGenerationService;
-    private final GeneratedDocumentRepository generatedDocumentRepository;
-    private final StorageProperties storageProperties;
 
     @Transactional
     public OrderResponse create(OrderCreateRequest req, User actor) {
@@ -112,7 +103,6 @@ public class OrderService {
     public void delete(Long id, User actor) {
         Order o = loadDetailed(actor, id);
         Long orderId = o.getId();
-        deleteOrderStorageBestEffort(storageProperties.getRoot(), orderId);
         orderRepository.delete(o);
         auditService.record(actor, AuditEventType.ORDER_DELETED, Map.of("orderId", orderId.toString()));
     }
@@ -135,17 +125,13 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<GeneratedDocumentResponse> listDocuments(Long orderId, User actor) {
-        Order o = loadDetailed(actor, orderId);
-        return generatedDocumentRepository.findByOrder(o).stream()
+    public List<OrderDocumentDescriptor> listDocuments(Long orderId, User actor) {
+        loadDetailed(actor, orderId);
+        return Arrays.stream(DocumentType.values())
                 .map(
-                        g ->
-                                new GeneratedDocumentResponse(
-                                        g.getId(),
-                                        g.getDocumentType(),
-                                        g.getFileFormat(),
-                                        g.getContentSha256(),
-                                        g.getCreatedAt()))
+                        dt ->
+                                new OrderDocumentDescriptor(
+                                        dt, List.of(FileFormat.DOCX, FileFormat.PDF), true))
                 .toList();
     }
 
@@ -157,21 +143,6 @@ public class OrderService {
         byte[] bytes = documentGenerationService.generateDocument(o, documentType, format);
         String filename = DocumentGenerationService.downloadFileName(documentType, format);
         String contentType = DocumentGenerationService.contentTypeFor(format);
-        return new DocumentDownload(new ByteArrayResource(bytes), filename, contentType);
-    }
-
-    @Transactional(readOnly = true)
-    public DocumentDownload prepareDocumentDownload(Long documentId, User actor) throws IOException {
-        GeneratedDocument gd =
-                generatedDocumentRepository.findById(documentId).orElseThrow(this::notFound);
-        loadDetailed(actor, gd.getOrder().getId());
-        byte[] bytes = Files.readAllBytes(Path.of(gd.getStoragePath()));
-        String ext = gd.getFileFormat() == FileFormat.PDF ? ".pdf" : ".docx";
-        String filename = gd.getDocumentType().name().toLowerCase() + ext;
-        String contentType =
-                gd.getFileFormat() == FileFormat.PDF
-                        ? MediaType.APPLICATION_PDF_VALUE
-                        : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
         return new DocumentDownload(new ByteArrayResource(bytes), filename, contentType);
     }
 
@@ -311,24 +282,6 @@ public class OrderService {
                 || o.getOrderDate() == null
                 || o.getTotalPrice() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incomplete order data");
-        }
-    }
-
-    private static void deleteOrderStorageBestEffort(String root, long orderId) {
-        Path dir = Path.of(root).resolve("orders").resolve(Long.toString(orderId));
-        if (!Files.exists(dir)) {
-            return;
-        }
-        try (Stream<Path> walk = Files.walk(dir)) {
-            walk.sorted(Comparator.reverseOrder())
-                    .forEach(
-                            p -> {
-                                try {
-                                    Files.deleteIfExists(p);
-                                } catch (IOException ignored) {
-                                }
-                            });
-        } catch (IOException ignored) {
         }
     }
 

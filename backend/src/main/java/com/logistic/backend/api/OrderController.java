@@ -1,7 +1,7 @@
 package com.logistic.backend.api;
 
 import com.logistic.backend.api.dto.DocumentDownload;
-import com.logistic.backend.api.dto.GeneratedDocumentResponse;
+import com.logistic.backend.api.dto.OrderDocumentDescriptor;
 import com.logistic.backend.api.dto.OrderCreateRequest;
 import com.logistic.backend.api.dto.OrderResponse;
 import com.logistic.backend.api.dto.OrderUpdateRequest;
@@ -78,7 +78,7 @@ public class OrderController {
 
     @GetMapping("/{id}/documents")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public List<GeneratedDocumentResponse> listDocuments(@PathVariable Long id) {
+    public List<OrderDocumentDescriptor> listDocuments(@PathVariable Long id) {
         return orderService.listDocuments(id, currentUserService.requireUser());
     }
 
