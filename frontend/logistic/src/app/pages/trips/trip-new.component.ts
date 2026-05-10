@@ -357,6 +357,43 @@ export class TripNewComponent implements OnInit {
     this.errorMessage = `Запрос не выполнен (код ${err.status}).`;
   }
 
+  /** Создаёт рейс и переходит на карточку без завершения (черновик с полными данными формы). */
+  saveDraft(): void {
+    this.errorMessage = null;
+    this.form.markAllAsTouched();
+    if (this.form.invalid) {
+      this.errorMessage = 'Проверьте обязательные поля.';
+      return;
+    }
+    const hint = this.incompleteHint();
+    if (hint) {
+      this.errorMessage = hint;
+      return;
+    }
+
+    const v = this.form.getRawValue();
+    const body = this.buildUpdateRequest();
+    this.busy = true;
+    this.orders
+      .create({
+        customerId: v.customerId!,
+        performerId: v.performerId!,
+        vehicleId: v.vehicleId,
+        driverId: v.driverId,
+      })
+      .pipe(concatMap((created) => this.orders.update(created.id, body)))
+      .subscribe({
+        next: (o) => {
+          this.busy = false;
+          void this.router.navigate(['/orders', o.id]);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.handleError(err);
+          this.busy = false;
+        },
+      });
+  }
+
   saveAndComplete(): void {
     this.errorMessage = null;
     this.form.markAllAsTouched();

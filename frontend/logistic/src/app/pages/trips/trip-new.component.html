@@ -301,6 +301,15 @@
           routerLink="/orders"
         />
         <p-button
+          type="button"
+          label="Создать рейс"
+          icon="pi pi-file"
+          severity="secondary"
+          [loading]="busy"
+          [disabled]="busy"
+          (onClick)="saveDraft()"
+        />
+        <p-button
           type="submit"
           label="Создать и завершить рейс"
           icon="pi pi-check"

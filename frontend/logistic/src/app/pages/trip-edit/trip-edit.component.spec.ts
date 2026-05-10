@@ -8,7 +8,6 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { AuditApiService } from '../../core/audit-api.service';
 import { OrderApiService } from '../../core/order-api.service';
-import { CatalogApiService } from '../../core/catalog-api.service';
 import { OrderResponse } from '../../core/order.models';
 import { TripEditComponent } from './trip-edit.component';
 
@@ -56,11 +55,13 @@ describe('TripEditComponent', () => {
           provide: OrderApiService,
           useValue: {
             get: () => of(order),
-            update: () => of(order),
             complete: () => of(order),
             delete: () => of(void 0),
             listDocuments: () => of([]),
-            downloadDocument: () => of(new Blob()),
+            downloadDocument: () =>
+              of({ blob: new Blob(), fileName: 'f.docx' }),
+            downloadDocumentsBundle: () =>
+              of({ blob: new Blob(), fileName: 'x.zip' }),
           },
         },
         {
@@ -69,39 +70,20 @@ describe('TripEditComponent', () => {
             listByOrder: () => of([]),
           },
         },
-        {
-          provide: CatalogApiService,
-          useValue: {
-            listCustomers: () => of([]),
-            listPerformers: () => of([]),
-            listDrivers: () => of([]),
-            listVehicles: () => of([]),
-            createCustomer: () => of({} as never),
-            updateCustomer: () => of({} as never),
-            createPerformer: () => of({} as never),
-            updatePerformer: () => of({} as never),
-            createDriver: () => of({} as never),
-            updateDriver: () => of({} as never),
-            createVehicle: () => of({} as never),
-            updateVehicle: () => of({} as never),
-          },
-        },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TripEditComponent);
   });
 
-  it('loads order and patches loading/unloading fields', () => {
+  it('loads order for overview', () => {
     fixture.detectChanges();
     const cmp = fixture.componentInstance;
     expect(cmp.order?.id).toBe(1);
-    expect(cmp.form.controls.loadingPlace.value).toBe('A');
-    expect(cmp.form.controls.unloadingPlace.value).toBe('B');
-    expect(cmp.form.controls.orderNumber.value).toBe(1);
+    expect(cmp.routeSnippet(order)).toContain('A');
   });
 
-  it('inProgress when audit has no ORDER_COMPLETED', () => {
+  it('inProgress when order not completed', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.inProgress()).toBe(true);
   });

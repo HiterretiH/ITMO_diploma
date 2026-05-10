@@ -1,31 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { concatMap, forkJoin } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
-import { DatePickerModule } from 'primeng/datepicker';
-import { DropdownModule } from 'primeng/dropdown';
-import { InputNumber } from 'primeng/inputnumber';
-import { InputText } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
 import { Message } from 'primeng/message';
-import { StepperModule } from 'primeng/stepper';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
-import { CatalogApiService } from '../../core/catalog-api.service';
-import {
-  CustomerResponse,
-  DriverResponse,
-  PerformerResponse,
-  VehicleResponse,
-} from '../../core/catalog.models';
 import { AuditApiService } from '../../core/audit-api.service';
 import { AuditEventResponse } from '../../core/audit.models';
 import { localizeProblemToast } from '../../core/error-messages';
@@ -35,29 +17,19 @@ import {
   FileFormatName,
   OrderDocumentDescriptor,
   OrderResponse,
-  OrderUpdateRequest,
 } from '../../core/order.models';
 import { ProblemDetail } from '../../models/problem.models';
 import { documentTypeLabelRu } from '../../shared/document-type-ui';
 import { OrderStatusBadgeComponent } from '../../shared/layout/order-status-badge.component';
-import { OrderCatalogDialogsComponent } from '../../shared/order-catalog-dialogs/order-catalog-dialogs.component';
-import { orderMarkedCompleted } from '../../shared/order-ui';
+import { orderReadyForBackendComplete } from '../../shared/order-ui';
 
 @Component({
   selector: 'app-trip-edit',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    StepperModule,
-    DropdownModule,
-    DatePickerModule,
-    InputText,
-    InputTextarea,
-    InputNumber,
     Button,
     Message,
-    OrderCatalogDialogsComponent,
     TableModule,
     TabsModule,
     OrderStatusBadgeComponent,
@@ -70,41 +42,15 @@ export class TripEditComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly ordersApi = inject(OrderApiService);
   private readonly auditApi = inject(AuditApiService);
-  private readonly catalog = inject(CatalogApiService);
-  private readonly fb = inject(FormBuilder);
   private readonly confirm = inject(ConfirmationService);
 
   order: OrderResponse | null = null;
   auditEvents: AuditEventResponse[] = [];
-  mainTab: string | number = 'edit';
+  mainTab: string | number = 'overview';
   docs: OrderDocumentDescriptor[] = [];
-  customers: CustomerResponse[] = [];
-  performers: PerformerResponse[] = [];
-  drivers: DriverResponse[] = [];
-  vehicles: VehicleResponse[] = [];
 
   busy = false;
-  stepperValue: number | undefined = 1;
   conflictDetail: string | null = null;
-
-  readonly form = this.fb.group({
-    customerId: this.fb.control<number | null>(null, Validators.required),
-    performerId: this.fb.control<number | null>(null, Validators.required),
-    driverId: this.fb.control<number | null>(null),
-    vehicleId: this.fb.control<number | null>(null),
-    orderNumber: this.fb.control<number | null>(null, [
-      Validators.required,
-      Validators.min(1),
-    ]),
-    loadingPlace: ['', Validators.required],
-    loadingContact: [''],
-    unloadingPlace: ['', Validators.required],
-    unloadingContact: [''],
-    orderDate: this.fb.control<Date | null>(null, Validators.required),
-    tripCount: this.fb.control<number>(1, [Validators.required, Validators.min(1)]),
-    pricePerTrip: this.fb.control<number | null>(null, [Validators.min(0)]),
-    totalPrice: this.fb.control<number | null>(null, [Validators.required, Validators.min(0)]),
-  });
 
   ngOnInit(): void {
     const raw = this.route.snapshot.paramMap.get('orderId');
@@ -120,33 +66,25 @@ export class TripEditComponent implements OnInit {
     this.reload(id);
   }
 
+  onMainTabChange(value: string | number): void {
+    if (value === 'audit') {
+      this.mainTab = 'audit';
+    } else {
+      this.mainTab = 'overview';
+    }
+  }
+
   reload(id: number): void {
     this.busy = true;
     this.conflictDetail = null;
     forkJoin({
       order: this.ordersApi.get(id),
-      customers: this.catalog.listCustomers(),
-      performers: this.catalog.listPerformers(),
-      drivers: this.catalog.listDrivers(),
-      vehicles: this.catalog.listVehicles(),
+      audit: this.auditApi.listByOrder(id),
     }).subscribe({
-      next: ({ order, customers, performers, drivers, vehicles }) => {
+      next: ({ order, audit }) => {
         this.order = order;
-        this.customers = customers;
-        this.performers = performers;
-        this.drivers = drivers;
-        this.vehicles = vehicles;
-        this.patchForm(order);
-        this.auditApi.listByOrder(id).subscribe({
-          next: (ev) => {
-            this.auditEvents = ev;
-            this.refreshDocumentsIfNeeded(id);
-          },
-          error: () => {
-            this.auditEvents = [];
-            this.docs = [];
-          },
-        });
+        this.auditEvents = audit;
+        this.refreshDocumentsIfNeeded(id);
         this.busy = false;
       },
       error: () => {
@@ -156,25 +94,8 @@ export class TripEditComponent implements OnInit {
     });
   }
 
-  /** Обновить справочники после создания/изменения записи в модалке. */
-  onCatalogSaved(): void {
-    forkJoin({
-      customers: this.catalog.listCustomers(),
-      performers: this.catalog.listPerformers(),
-      drivers: this.catalog.listDrivers(),
-      vehicles: this.catalog.listVehicles(),
-    }).subscribe({
-      next: ({ customers, performers, drivers, vehicles }) => {
-        this.customers = customers;
-        this.performers = performers;
-        this.drivers = drivers;
-        this.vehicles = vehicles;
-      },
-    });
-  }
-
   private refreshDocumentsIfNeeded(id: number): void {
-    if (this.orderCompleted) {
+    if (this.order?.completed) {
       this.ordersApi.listDocuments(id).subscribe({
         next: (d) => (this.docs = d),
         error: () => (this.docs = []),
@@ -185,135 +106,11 @@ export class TripEditComponent implements OnInit {
   }
 
   get orderCompleted(): boolean {
-    return orderMarkedCompleted(this.auditEvents);
-  }
-
-  private patchForm(t: OrderResponse): void {
-    const d = t.orderDate
-      ? new Date(t.orderDate.slice(0, 10) + 'T12:00:00')
-      : null;
-    this.form.patchValue({
-      customerId: t.customerId,
-      performerId: t.performerId,
-      driverId: t.driverId,
-      vehicleId: t.vehicleId,
-      orderNumber: t.orderNumber,
-      loadingPlace: t.loadingPlace ?? '',
-      loadingContact: t.loadingContact ?? '',
-      unloadingPlace: t.unloadingPlace ?? '',
-      unloadingContact: t.unloadingContact ?? '',
-      orderDate: d,
-      tripCount: t.tripCount,
-      pricePerTrip:
-        t.pricePerTrip === null || t.pricePerTrip === undefined
-          ? null
-          : Number(t.pricePerTrip),
-      totalPrice:
-        t.totalPrice === null || t.totalPrice === undefined
-          ? null
-          : Number(t.totalPrice),
-    });
-  }
-
-  private sortOpts<T extends { label: string }>(rows: T[]): T[] {
-    return [...rows].sort((a, b) => a.label.localeCompare(b.label, 'ru'));
-  }
-
-  customerOptions(): { label: string; value: number }[] {
-    return this.sortOpts(
-      this.customers.map((c) => ({ label: c.shortName, value: c.id })),
-    );
-  }
-
-  performerOptions(): { label: string; value: number }[] {
-    return this.sortOpts(
-      this.performers.map((p) => ({ label: p.shortName, value: p.id })),
-    );
-  }
-
-  driverOptions(): { label: string; value: number }[] {
-    const pid = this.form.getRawValue().performerId;
-    const list =
-      pid == null
-        ? this.drivers
-        : this.drivers.filter((d) => d.performerId === pid);
-    return this.sortOpts(
-      list.map((d) => ({
-        label: d.fullName,
-        value: d.id,
-      })),
-    );
-  }
-
-  vehicleOptions(): { label: string; value: number }[] {
-    const pid = this.form.getRawValue().performerId;
-    const list =
-      pid == null
-        ? this.vehicles
-        : this.vehicles.filter((v) => v.performerId === pid);
-    return this.sortOpts(
-      list.map((v) => ({
-        label: `${v.plateNumber ?? ''}${v.brandModel ? ' · ' + v.brandModel : ''}`,
-        value: v.id,
-      })),
-    );
-  }
-
-  private toIsoDate(d: Date | null | undefined): string | undefined {
-    if (!d) {
-      return undefined;
-    }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-
-  private buildBody(): OrderUpdateRequest {
-    const v = this.form.getRawValue();
-    return {
-      customerId: v.customerId ?? undefined,
-      performerId: v.performerId ?? undefined,
-      vehicleId: v.vehicleId ?? undefined,
-      driverId: v.driverId ?? undefined,
-      orderNumber: v.orderNumber ?? undefined,
-      orderDate: this.toIsoDate(v.orderDate),
-      loadingPlace: (v.loadingPlace ?? '').trim(),
-      loadingContact: (v.loadingContact ?? '').trim() || undefined,
-      unloadingPlace: (v.unloadingPlace ?? '').trim(),
-      unloadingContact: (v.unloadingContact ?? '').trim() || undefined,
-      tripCount: v.tripCount ?? undefined,
-      pricePerTrip: v.pricePerTrip ?? undefined,
-      totalPrice: v.totalPrice ?? undefined,
-    };
-  }
-
-  private incompleteHint(): string | null {
-    const v = this.form.getRawValue();
-    if (v.customerId == null || v.performerId == null) {
-      return 'Выберите заказчика и исполнителя.';
-    }
-    if (v.driverId == null || v.vehicleId == null) {
-      return 'Выберите водителя и транспорт.';
-    }
-    if (!(v.loadingPlace ?? '').trim() || !(v.unloadingPlace ?? '').trim()) {
-      return 'Укажите адреса погрузки и выгрузки.';
-    }
-    if (v.orderDate == null) {
-      return 'Укажите дату заявки.';
-    }
-    if (v.totalPrice == null) {
-      return 'Укажите итоговую сумму.';
-    }
-    return null;
+    return this.order?.completed === true;
   }
 
   inProgress(): boolean {
     return !this.orderCompleted;
-  }
-
-  canEditCatalog(): boolean {
-    return true;
   }
 
   showDocuments(): boolean {
@@ -322,6 +119,27 @@ export class TripEditComponent implements OnInit {
 
   docTypeLabel(t: DocumentTypeName): string {
     return documentTypeLabelRu(t);
+  }
+
+  routeSnippet(o: OrderResponse): string {
+    const a = (o.loadingPlace ?? '').trim();
+    const b = (o.unloadingPlace ?? '').trim();
+    const trunc = (s: string, n: number) =>
+      s.length > n ? `${s.slice(0, n)}…` : s;
+    if (!a && !b) {
+      return '—';
+    }
+    return `${trunc(a, 48)} → ${trunc(b, 48)}`;
+  }
+
+  formatMoney(v: number | null): string {
+    if (v === null || v === undefined) {
+      return '—';
+    }
+    return new Intl.NumberFormat('ru-RU', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(v) + ' ₽';
   }
 
   get orderId(): number | null {
@@ -348,40 +166,34 @@ export class TripEditComponent implements OnInit {
     this.conflictDetail = null;
   }
 
-  save(): void {
-    const id = this.orderId;
-    if (!id || this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+  private incompleteHintFromOrder(o: OrderResponse): string | null {
+    if (o.customerId == null || o.performerId == null) {
+      return 'В заказе не указаны заказчик и исполнитель.';
     }
-    this.busy = true;
-    this.conflictDetail = null;
-    this.ordersApi.update(id, this.buildBody()).subscribe({
-      next: (o) => {
-        this.order = o;
-        this.patchForm(o);
-        this.refreshDocumentsIfNeeded(id);
-        this.busy = false;
-      },
-      error: (err: HttpErrorResponse) => {
-        this.handleSaveError(err);
-        this.busy = false;
-      },
-    });
+    if (o.driverId == null || o.vehicleId == null) {
+      return 'Укажите водителя и транспорт (через форму создания рейса или API).';
+    }
+    if (!(o.loadingPlace ?? '').trim() || !(o.unloadingPlace ?? '').trim()) {
+      return 'Укажите адреса погрузки и выгрузки.';
+    }
+    if (!(o.orderDate ?? '').toString().trim()) {
+      return 'Укажите дату заявки.';
+    }
+    if (o.totalPrice == null) {
+      return 'Укажите итоговую сумму.';
+    }
+    return null;
   }
 
   complete(): void {
     const id = this.orderId;
-    if (!id || !this.inProgress()) {
+    const o = this.order;
+    if (!id || !o || !this.inProgress()) {
       return;
     }
-    this.form.markAllAsTouched();
-    if (this.form.invalid) {
-      return;
-    }
-    const hint = this.incompleteHint();
-    if (hint) {
-      this.conflictDetail = hint;
+    if (!orderReadyForBackendComplete(o)) {
+      this.conflictDetail =
+        this.incompleteHintFromOrder(o) ?? 'Рейс не готов к завершению.';
       return;
     }
     this.confirm.confirm({
@@ -391,19 +203,24 @@ export class TripEditComponent implements OnInit {
       accept: () => {
         this.busy = true;
         this.conflictDetail = null;
-        this.ordersApi
-          .update(id, this.buildBody())
-          .pipe(concatMap(() => this.ordersApi.complete(id)))
-          .subscribe({
-            next: () => {
-              this.reload(id);
-              this.busy = false;
-            },
-            error: (err: HttpErrorResponse) => {
-              this.handleSaveError(err);
-              this.busy = false;
-            },
-          });
+        this.ordersApi.complete(id).subscribe({
+          next: (updated) => {
+            this.order = updated;
+            this.refreshDocumentsIfNeeded(id);
+            this.auditApi.listByOrder(id).subscribe({
+              next: (ev) => (this.auditEvents = ev),
+              error: () => (this.auditEvents = []),
+            });
+            this.busy = false;
+          },
+          error: (err: HttpErrorResponse) => {
+            this.handleSaveError(err);
+            if (!this.conflictDetail) {
+              this.conflictDetail = `Не удалось завершить рейс (код ${err.status}).`;
+            }
+            this.busy = false;
+          },
+        });
       },
     });
   }
@@ -450,20 +267,21 @@ export class TripEditComponent implements OnInit {
     });
   }
 
-  customerSelected(): boolean {
-    return this.form.getRawValue().customerId != null;
-  }
-
-  performerSelected(): boolean {
-    return this.form.getRawValue().performerId != null;
-  }
-
-  driverSelected(): boolean {
-    return this.form.getRawValue().driverId != null;
-  }
-
-  vehicleSelected(): boolean {
-    return this.form.getRawValue().vehicleId != null;
+  downloadBundle(format: FileFormatName): void {
+    const id = this.orderId;
+    if (!id) {
+      return;
+    }
+    this.ordersApi.downloadDocumentsBundle(id, format).subscribe({
+      next: ({ blob, fileName }) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+    });
   }
 
   eventTypeLabel(t: AuditEventResponse['eventType']): string {
@@ -497,5 +315,4 @@ export class TripEditComponent implements OnInit {
       return raw;
     }
   }
-
 }
