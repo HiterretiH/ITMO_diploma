@@ -11,7 +11,7 @@ import { Card } from 'primeng/card';
     <div class="wrap">
       <p-card header="Доступ запрещён">
         <p>У вас недостаточно прав для этого раздела (403).</p>
-        <p-button label="На главную" routerLink="/trips" />
+        <p-button label="На главную" routerLink="/orders" />
       </p-card>
     </div>
   `,

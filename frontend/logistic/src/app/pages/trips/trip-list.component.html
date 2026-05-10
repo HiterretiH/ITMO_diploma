@@ -1,6 +1,6 @@
 <div class="head">
-  <h1 class="page-title">Рейсы</h1>
-  <p-button label="Создать" icon="pi pi-plus" routerLink="/trips/new" />
+  <h1 class="page-title">Заказы</h1>
+  <p-button label="Создать" icon="pi pi-plus" routerLink="/orders/new" />
 </div>
 
 <div class="toolbar">
@@ -30,7 +30,7 @@
   <ng-template pTemplate="body" let-t>
     <tr class="click-row" (click)="openTrip(t.id)">
       <td>
-        <a [routerLink]="['/trips', t.id]" (click)="$event.stopPropagation()">{{ t.id }}</a>
+        <a [routerLink]="['/orders', t.id]" (click)="$event.stopPropagation()">{{ t.id }}</a>
       </td>
       <td>
         <app-trip-status-badge [status]="t.status" />

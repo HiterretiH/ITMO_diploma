@@ -48,6 +48,6 @@ export class TripListComponent implements OnInit {
   }
 
   openTrip(id: number): void {
-    void this.router.navigate(['/trips', id]);
+    void this.router.navigate(['/orders', id]);
   }
 }

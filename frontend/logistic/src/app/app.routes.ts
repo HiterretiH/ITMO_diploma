@@ -31,23 +31,23 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/shell/shell.component').then((m) => m.ShellComponent),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'trips' },
+      { path: '', pathMatch: 'full', redirectTo: 'orders' },
       {
-        path: 'trips',
+        path: 'orders',
         loadComponent: () =>
           import('./pages/trips/trip-list.component').then(
             (m) => m.TripListComponent,
           ),
       },
       {
-        path: 'trips/new',
+        path: 'orders/new',
         loadComponent: () =>
           import('./pages/trips/trip-new.component').then(
             (m) => m.TripNewComponent,
           ),
       },
       {
-        path: 'trips/:tripId',
+        path: 'orders/:orderId',
         loadComponent: () =>
           import('./pages/trip-edit/trip-edit.component').then(
             (m) => m.TripEditComponent,

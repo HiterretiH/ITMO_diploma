@@ -47,7 +47,7 @@ export class LoginComponent {
     const { username, password } = this.form.getRawValue();
     this.busy = true;
     this.auth.login(username, password).subscribe({
-      next: () => void this.router.navigateByUrl('/trips'),
+      next: () => void this.router.navigateByUrl('/orders'),
       error: () => {
         this.busy = false;
       },

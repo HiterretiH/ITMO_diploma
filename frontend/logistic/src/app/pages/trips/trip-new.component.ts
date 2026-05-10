@@ -253,7 +253,7 @@ export class TripNewComponent implements OnInit {
       .subscribe({
         next: (t) => {
           this.busy = false;
-          void this.router.navigate(['/trips', t.id]);
+          void this.router.navigate(['/orders', t.id]);
         },
         error: (err: HttpErrorResponse) => {
           this.handleError(err);

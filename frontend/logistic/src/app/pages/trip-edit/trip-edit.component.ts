@@ -137,14 +137,14 @@ export class TripEditComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    const raw = this.route.snapshot.paramMap.get('tripId');
+    const raw = this.route.snapshot.paramMap.get('orderId');
     if (!raw) {
-      void this.router.navigateByUrl('/trips');
+      void this.router.navigateByUrl('/orders');
       return;
     }
     const id = Number(raw);
     if (!Number.isFinite(id)) {
-      void this.router.navigateByUrl('/trips');
+      void this.router.navigateByUrl('/orders');
       return;
     }
     this.reload(id);
@@ -182,7 +182,7 @@ export class TripEditComponent implements OnInit {
       },
       error: () => {
         this.busy = false;
-        void this.router.navigateByUrl('/trips');
+        void this.router.navigateByUrl('/orders');
       },
     });
   }
@@ -448,7 +448,7 @@ export class TripEditComponent implements OnInit {
         this.trips.delete(id).subscribe({
           next: () => {
             this.busy = false;
-            void this.router.navigate(['/trips']);
+            void this.router.navigate(['/orders']);
           },
           error: () => {
             this.busy = false;
