@@ -29,10 +29,11 @@ function parseProblem(err: HttpErrorResponse): { summary: string; detail?: strin
   };
 }
 
-function isTripPatch(req: { method: string; url: string }): boolean {
+/** Suppress toast for optimistic-lock style conflicts on order update */
+function isOrderPut(req: { method: string; url: string }): boolean {
   return (
-    req.method === 'PATCH' &&
-    /\/api\/v1\/trips\/[^/]+\/?$/.test(req.url.split('?')[0] ?? '')
+    req.method === 'PUT' &&
+    /\/api\/v1\/orders\/[^/]+\/?$/.test(req.url.split('?')[0] ?? '')
   );
 }
 
@@ -106,7 +107,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => err);
       }
 
-      if (err.status === 409 && isTripPatch(req)) {
+      if (err.status === 409 && isOrderPut(req)) {
         return throwError(() => err);
       }
 

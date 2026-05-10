@@ -33,8 +33,8 @@ describe('authInterceptor', () => {
 
   it('adds Authorization when token present and not login', () => {
     sessionStorage.setItem('access_token', 'abc');
-    http.get('/api/v1/trips').subscribe();
-    const req = httpMock.expectOne('/api/v1/trips');
+    http.get('/api/v1/orders').subscribe();
+    const req = httpMock.expectOne('/api/v1/orders');
     expect(req.request.headers.get('Authorization')).toBe('Bearer abc');
     req.flush([]);
   });

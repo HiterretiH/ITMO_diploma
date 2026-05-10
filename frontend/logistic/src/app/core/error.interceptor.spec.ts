@@ -72,12 +72,12 @@ describe('errorInterceptor', () => {
 
   it('logs out on 401 for protected resource', () => {
     sessionStorage.setItem('access_token', 't');
-    http.get('/api/v1/trips').subscribe({
+    http.get('/api/v1/orders').subscribe({
       error: () => {
         /* expected */
       },
     });
-    const req = httpMock.expectOne('/api/v1/trips');
+    const req = httpMock.expectOne('/api/v1/orders');
     req.flush('{}', {
       status: 401,
       statusText: 'Unauthorized',
@@ -86,14 +86,14 @@ describe('errorInterceptor', () => {
     expect(authLogoutSpy).toHaveBeenCalled();
   });
 
-  it('does not toast on 409 for trip PATCH', () => {
+  it('does not toast on 409 for order PUT', () => {
     sessionStorage.setItem('access_token', 't');
-    http.patch('/api/v1/trips/1', {}).subscribe({
+    http.put('/api/v1/orders/1', {}).subscribe({
       error: () => {
         /* expected */
       },
     });
-    const req = httpMock.expectOne('/api/v1/trips/1');
+    const req = httpMock.expectOne('/api/v1/orders/1');
     req.flush(
       { title: 'Conflict', detail: 'x', status: 409 },
       {

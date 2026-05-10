@@ -14,6 +14,7 @@ describe('CatalogApiService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         CatalogApiService,
@@ -27,37 +28,42 @@ describe('CatalogApiService', () => {
 
   afterEach(() => {
     http.verify();
+    TestBed.resetTestingModule();
   });
 
-  it('places() sends type and q query params', () => {
-    service.places('LOAD', 'склад').subscribe();
+  it('listCustomers sends q query param', () => {
+    service.listCustomers('ООО').subscribe();
 
     const req = http.expectOne(
       (r) =>
-        r.url.endsWith('/api/v1/places') &&
-        r.params.get('type') === 'LOAD' &&
-        r.params.get('q') === 'склад',
+        r.method === 'GET' &&
+        r.url.startsWith('/api/v1/customers') &&
+        r.url.includes(`q=${encodeURIComponent('ООО')}`),
     );
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
 
-  it('createPlace posts body', () => {
+  it('createCustomer posts body', () => {
     service
-      .createPlace({
-        address: 'А',
-        contact: 'Б',
-        placeType: 'BOTH',
+      .createCustomer({
+        shortName: 'ООО Рога',
+        fullName: 'Полное название',
       })
       .subscribe();
 
-    const req = http.expectOne((r) => r.url.endsWith('/api/v1/places'));
+    const req = http.expectOne((r) => r.url.endsWith('/api/v1/customers'));
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
-      address: 'А',
-      contact: 'Б',
-      placeType: 'BOTH',
+      shortName: 'ООО Рога',
+      fullName: 'Полное название',
     });
-    req.flush({ id: 1, address: 'А', contact: 'Б', placeType: 'BOTH' });
+    req.flush({
+      id: 1,
+      shortName: 'ООО Рога',
+      fullName: 'Полное название',
+      phone: null,
+      requisites: null,
+    });
   });
 });
