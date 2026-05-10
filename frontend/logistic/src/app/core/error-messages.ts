@@ -132,7 +132,7 @@ function translateDetailSegment(segment: string): string {
   return translateConstraintMessage(s);
 }
 
-/** Переводит текст detail/reason от API (включая составные validation-сообщения). */
+/** Переводит текст detail/reason от сервера (включая составные validation-сообщения). */
 export function translateBackendDetail(detail: string | undefined | null): string {
   if (detail == null || detail === '') {
     return '';

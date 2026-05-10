@@ -28,7 +28,7 @@ export class OrderStatusBadgeComponent {
   get severity(): 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' {
     switch (orderUiPhase(this.order, this.completed)) {
       case 'completed':
-        return 'success';
+        return 'info';
       case 'ready':
         return 'warn';
       default:
