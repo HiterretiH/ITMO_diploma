@@ -3,8 +3,8 @@ info:
   title: Logistic Document API
   version: 1.0.0
   description: >
-    REST API for managing catalogs, trips, lifecycle transitions, audit log,
-    and generated transport documents.
+    REST API for managing customers, performers, vehicles, drivers, orders,
+    audit log, and generated transport documents.
 
 servers:
   - url: http://localhost:8080
@@ -13,11 +13,11 @@ servers:
 tags:
   - name: Auth
   - name: Admin
-  - name: Counterparties
+  - name: Customers
+  - name: Performers
   - name: Drivers
   - name: Vehicles
-  - name: Places
-  - name: Trips
+  - name: Orders
   - name: Documents
   - name: Audit
 
@@ -110,10 +110,10 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/counterparties:
+  /api/v1/customers:
     get:
-      tags: [Counterparties]
-      summary: List counterparties
+      tags: [Customers]
+      summary: List customers
       security:
         - bearerAuth: []
       parameters:
@@ -123,13 +123,13 @@ paths:
             type: string
       responses:
         '200':
-          description: Counterparty list
+          description: Customer list
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CounterpartyResponse'
+                  $ref: '#/components/schemas/CustomerResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -137,8 +137,8 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
-      tags: [Counterparties]
-      summary: Create counterparty
+      tags: [Customers]
+      summary: Create customer
       security:
         - bearerAuth: []
       requestBody:
@@ -146,14 +146,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CounterpartyRequest'
+              $ref: '#/components/schemas/CustomerRequest'
       responses:
         '200':
-          description: Created counterparty
+          description: Created customer
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CounterpartyResponse'
+                $ref: '#/components/schemas/CustomerResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -163,21 +163,21 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/counterparties/{id}:
+  /api/v1/customers/{id}:
     get:
-      tags: [Counterparties]
-      summary: Get counterparty by id
+      tags: [Customers]
+      summary: Get customer by id
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '200':
-          description: Counterparty
+          description: Customer
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CounterpartyResponse'
+                $ref: '#/components/schemas/CustomerResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -187,8 +187,8 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
     put:
-      tags: [Counterparties]
-      summary: Update counterparty
+      tags: [Customers]
+      summary: Update customer
       security:
         - bearerAuth: []
       parameters:
@@ -198,14 +198,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CounterpartyRequest'
+              $ref: '#/components/schemas/CustomerRequest'
       responses:
         '200':
-          description: Updated counterparty
+          description: Updated customer
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CounterpartyResponse'
+                $ref: '#/components/schemas/CustomerResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -217,8 +217,133 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
-      tags: [Counterparties]
-      summary: Delete counterparty
+      tags: [Customers]
+      summary: Delete customer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/performers:
+    get:
+      tags: [Performers]
+      summary: List performers
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Performer list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Performers]
+      summary: Create performer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformerRequest'
+      responses:
+        '200':
+          description: Created performer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/performers/{id}:
+    get:
+      tags: [Performers]
+      summary: Get performer by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Performer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Performers]
+      summary: Update performer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformerRequest'
+      responses:
+        '200':
+          description: Updated performer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [Performers]
+      summary: Delete performer
       security:
         - bearerAuth: []
       parameters:
@@ -485,30 +610,21 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/places:
+  /api/v1/orders:
     get:
-      tags: [Places]
-      summary: List saved places (LOAD filter returns LOAD+BOTH; UNLOAD returns UNLOAD+BOTH)
+      tags: [Orders]
+      summary: List orders
       security:
         - bearerAuth: []
-      parameters:
-        - in: query
-          name: type
-          schema:
-            $ref: '#/components/schemas/PlaceType'
-        - in: query
-          name: q
-          schema:
-            type: string
       responses:
         '200':
-          description: Place list
+          description: Order list
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PlaceResponse'
+                  $ref: '#/components/schemas/OrderResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -516,8 +632,8 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
-      tags: [Places]
-      summary: Create place
+      tags: [Orders]
+      summary: Create order
       security:
         - bearerAuth: []
       requestBody:
@@ -525,14 +641,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PlaceRequest'
+              $ref: '#/components/schemas/OrderCreateRequest'
       responses:
         '200':
-          description: Created place
+          description: Created order
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PlaceResponse'
+                $ref: '#/components/schemas/OrderResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -542,21 +658,21 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/places/{id}:
+  /api/v1/orders/{id}:
     get:
-      tags: [Places]
-      summary: Get place by id
+      tags: [Orders]
+      summary: Get order by id
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '200':
-          description: Place
+          description: Order
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PlaceResponse'
+                $ref: '#/components/schemas/OrderResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -566,8 +682,8 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
     put:
-      tags: [Places]
-      summary: Update place
+      tags: [Orders]
+      summary: Update order
       security:
         - bearerAuth: []
       parameters:
@@ -577,14 +693,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PlaceRequest'
+              $ref: '#/components/schemas/OrderUpdateRequest'
       responses:
         '200':
-          description: Updated place
+          description: Updated order
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PlaceResponse'
+                $ref: '#/components/schemas/OrderResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -596,150 +712,15 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
-      tags: [Places]
-      summary: Delete place
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
-      responses:
-        '200':
-          description: Deleted
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/v1/trips:
-    get:
-      tags: [Trips]
-      summary: List trips
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: query
-          name: status
-          schema:
-            $ref: '#/components/schemas/TripStatus'
-      responses:
-        '200':
-          description: Trip list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TripResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      tags: [Trips]
-      summary: Create trip (IN_PROGRESS)
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Created trip
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TripResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/v1/trips/{id}:
-    get:
-      tags: [Trips]
-      summary: Get trip by id
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
-      responses:
-        '200':
-          description: Trip
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TripResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    put:
-      tags: [Trips]
-      summary: Update trip (IN_PROGRESS or COMPLETED)
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TripUpdateRequest'
-            examples:
-              sample:
-                summary: Full trip update
-                value:
-                  shipperId: 1
-                  consigneeId: 2
-                  driverId: 3
-                  vehicleId: 4
-                  cargoDescription: Bricks
-                  cargoWeightKg: 1200.5
-                  routeFrom: Moscow
-                  routeTo: Tver
-                  loadDate: '2026-06-01'
-                  unloadDate: '2026-06-02'
-                  priceAmount: 45000
-                  currency: RUB
-      responses:
-        '200':
-          description: Updated trip
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TripResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      tags: [Trips]
-      summary: Delete trip permanently
+      tags: [Orders]
+      summary: Delete order permanently
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '204':
-          description: Trip deleted
+          description: Order deleted
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -749,42 +730,21 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/trips/{id}/complete:
+  /api/v1/orders/{id}/complete:
     post:
-      tags: [Trips]
-      summary: Complete trip and generate documents
+      tags: [Orders]
+      summary: Complete order (generate documents)
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '200':
-          description: Trip completed
+          description: Order completed; documents generated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TripResponse'
-              examples:
-                completed:
-                  summary: After completion
-                  value:
-                    id: 10
-                    ownerId: 2
-                    ownerUsername: emp_demo
-                    status: COMPLETED
-                    shipperId: 1
-                    consigneeId: 2
-                    driverId: 3
-                    vehicleId: 4
-                    cargoDescription: Bricks
-                    cargoWeightKg: 1200.5
-                    routeFrom: Moscow
-                    routeTo: Tver
-                    loadDate: '2026-06-01'
-                    unloadDate: '2026-06-02'
-                    priceAmount: 45000
-                    currency: RUB
-                    updatedAt: '2026-05-05T12:00:00Z'
+                $ref: '#/components/schemas/OrderResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -793,15 +753,13 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/trips/{id}/documents:
+  /api/v1/orders/{id}/documents:
     get:
       tags: [Documents]
-      summary: List generated documents for trip
+      summary: List generated documents for order
       security:
         - bearerAuth: []
       parameters:
@@ -815,20 +773,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/GeneratedDocumentResponse'
-              examples:
-                sixFiles:
-                  summary: Six files (PDF+DOCx per type)
-                  value:
-                    - id: 101
-                      documentType: CONTRACT_APPLICATION
-                      fileFormat: PDF
-                      sha256: abcd01
-                      createdAt: '2026-05-05T12:00:00Z'
-                    - id: 102
-                      documentType: CONTRACT_APPLICATION
-                      fileFormat: DOCX
-                      sha256: abcd02
-                      createdAt: '2026-05-05T12:00:01Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -867,14 +811,14 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/trips/{tripId}/audit-events:
+  /api/v1/orders/{orderId}/audit-events:
     get:
       tags: [Audit]
-      summary: List audit events by trip
+      summary: List audit events by order
       security:
         - bearerAuth: []
       parameters:
-        - name: tripId
+        - name: orderId
           in: path
           required: true
           schema:
@@ -990,10 +934,6 @@ components:
       type: string
       enum: [EMPLOYEE, MANAGER, ADMIN]
 
-    TripStatus:
-      type: string
-      enum: [IN_PROGRESS, COMPLETED]
-
     LoginRequest:
       type: object
       required: [username, password]
@@ -1053,158 +993,195 @@ components:
           items:
             $ref: '#/components/schemas/Role'
 
-    CounterpartyRequest:
+    CustomerRequest:
       type: object
-      required: [name]
+      required: [shortName]
       properties:
-        name:
+        shortName:
           type: string
-        inn:
+        fullName:
           type: string
-          pattern: '^$|^([0-9]{10}|[0-9]{12})$'
-        legalAddress:
-          type: string
+          nullable: true
         phone:
           type: string
+          nullable: true
+        requisites:
+          type: string
+          nullable: true
 
-    CounterpartyResponse:
-      allOf:
-        - $ref: '#/components/schemas/CounterpartyRequest'
-        - type: object
-          properties:
-            id:
-              type: integer
-              format: int64
+    CustomerResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        shortName:
+          type: string
+        fullName:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        requisites:
+          type: string
+          nullable: true
+
+    PerformerRequest:
+      type: object
+      required: [shortName]
+      properties:
+        shortName:
+          type: string
+        fullName:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        bankName:
+          type: string
+          nullable: true
+        inn:
+          type: string
+          nullable: true
+        bik:
+          type: string
+          nullable: true
+        kpp:
+          type: string
+          nullable: true
+        paymentAccount:
+          type: string
+          nullable: true
+        corrAccount:
+          type: string
+          nullable: true
+        requisites:
+          type: string
+          nullable: true
+
+    PerformerResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        shortName:
+          type: string
+        fullName:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        bankName:
+          type: string
+          nullable: true
+        inn:
+          type: string
+          nullable: true
+        bik:
+          type: string
+          nullable: true
+        kpp:
+          type: string
+          nullable: true
+        paymentAccount:
+          type: string
+          nullable: true
+        corrAccount:
+          type: string
+          nullable: true
+        requisites:
+          type: string
+          nullable: true
 
     DriverRequest:
       type: object
-      required: [fullName, licenseNumber]
+      required: [performerId, fullName]
       properties:
+        performerId:
+          type: integer
+          format: int64
         fullName:
           type: string
-        licenseNumber:
+        phone:
           type: string
-        licenseCategory:
-          type: string
+          nullable: true
+        isDefault:
+          type: boolean
+          nullable: true
 
     DriverResponse:
-      allOf:
-        - $ref: '#/components/schemas/DriverRequest'
-        - type: object
-          properties:
-            id:
-              type: integer
-              format: int64
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        performerId:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        isDefault:
+          type: boolean
 
     VehicleRequest:
       type: object
-      required: [plateNumber]
+      required: [performerId]
       properties:
+        performerId:
+          type: integer
+          format: int64
+        brandModel:
+          type: string
+          nullable: true
         plateNumber:
           type: string
-        model:
+          nullable: true
+        type:
           type: string
-        loadCapacityKg:
-          type: integer
-          format: int32
+          nullable: true
+        isDefault:
+          type: boolean
+          nullable: true
 
     VehicleResponse:
-      allOf:
-        - $ref: '#/components/schemas/VehicleRequest'
-        - type: object
-          properties:
-            id:
-              type: integer
-              format: int64
-
-    PlaceType:
-      type: string
-      enum: [LOAD, UNLOAD, BOTH]
-
-    PlaceRequest:
-      type: object
-      required: [address, placeType]
-      properties:
-        address:
-          type: string
-          maxLength: 1024
-        contact:
-          type: string
-          maxLength: 512
-          nullable: true
-        placeType:
-          $ref: '#/components/schemas/PlaceType'
-
-    PlaceResponse:
       type: object
       properties:
         id:
           type: integer
           format: int64
-        address:
-          type: string
-        contact:
+        performerId:
+          type: integer
+          format: int64
+        brandModel:
           type: string
           nullable: true
-        placeType:
-          $ref: '#/components/schemas/PlaceType'
+        plateNumber:
+          type: string
+          nullable: true
+        type:
+          type: string
+          nullable: true
+        isDefault:
+          type: boolean
 
-    TripUpdateRequest:
+    OrderCreateRequest:
       type: object
+      required: [customerId, performerId]
       properties:
-        shipperId:
+        customerId:
           type: integer
           format: int64
-        consigneeId:
-          type: integer
-          format: int64
-        driverId:
+        performerId:
           type: integer
           format: int64
         vehicleId:
-          type: integer
-          format: int64
-        cargoDescription:
-          type: string
-        cargoWeightKg:
-          type: number
-          format: decimal
-          minimum: 0
-        routeFrom:
-          type: string
-        routeTo:
-          type: string
-        loadDate:
-          type: string
-          format: date
-        unloadDate:
-          type: string
-          format: date
-        priceAmount:
-          type: number
-          format: decimal
-          minimum: 0
-        currency:
-          type: string
-
-    TripResponse:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        ownerId:
-          type: integer
-          format: int64
-        ownerUsername:
-          type: string
-        status:
-          $ref: '#/components/schemas/TripStatus'
-        shipperId:
-          type: integer
-          format: int64
-          nullable: true
-        consigneeId:
           type: integer
           format: int64
           nullable: true
@@ -1212,41 +1189,96 @@ components:
           type: integer
           format: int64
           nullable: true
+
+    OrderUpdateRequest:
+      type: object
+      properties:
+        customerId:
+          type: integer
+          format: int64
+        performerId:
+          type: integer
+          format: int64
+        vehicleId:
+          type: integer
+          format: int64
+        driverId:
+          type: integer
+          format: int64
+        orderDate:
+          type: string
+          format: date
+        orderNumber:
+          type: integer
+          format: int32
+        loadingPlace:
+          type: string
+        loadingContact:
+          type: string
+        unloadingPlace:
+          type: string
+        unloadingContact:
+          type: string
+        tripCount:
+          type: integer
+          format: int32
+        pricePerTrip:
+          type: number
+          format: decimal
+        totalPrice:
+          type: number
+          format: decimal
+
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        customerId:
+          type: integer
+          format: int64
+        performerId:
+          type: integer
+          format: int64
         vehicleId:
           type: integer
           format: int64
           nullable: true
-        cargoDescription:
+        driverId:
+          type: integer
+          format: int64
+          nullable: true
+        orderNumber:
+          type: integer
+          format: int32
+        orderDate:
+          type: string
+          format: date
+        loadingPlace:
+          type: string
+        loadingContact:
           type: string
           nullable: true
-        cargoWeightKg:
+        unloadingPlace:
+          type: string
+        unloadingContact:
+          type: string
+          nullable: true
+        tripCount:
+          type: integer
+          format: int32
+        pricePerTrip:
           type: number
           format: decimal
           nullable: true
-        routeFrom:
-          type: string
-          nullable: true
-        routeTo:
-          type: string
-          nullable: true
-        loadDate:
-          type: string
-          format: date
-          nullable: true
-        unloadDate:
-          type: string
-          format: date
-          nullable: true
-        priceAmount:
+        totalPrice:
           type: number
           format: decimal
           nullable: true
-        currency:
-          type: string
-          nullable: true
-        updatedAt:
-          type: string
-          format: date-time
+        templateVersion:
+          type: integer
+          format: int32
 
     GeneratedDocumentResponse:
       type: object
@@ -1274,7 +1306,16 @@ components:
           format: int64
         eventType:
           type: string
-          enum: [REGISTER, TRIP_CREATED, TRIP_UPDATED, TRIP_COMPLETED, TRIP_DELETED, DOCUMENTS_GENERATED, LOGIN]
+          enum:
+            [
+              REGISTER,
+              ORDER_CREATED,
+              ORDER_UPDATED,
+              ORDER_COMPLETED,
+              ORDER_DELETED,
+              DOCUMENTS_GENERATED,
+              LOGIN,
+            ]
         payload:
           type: string
           nullable: true
