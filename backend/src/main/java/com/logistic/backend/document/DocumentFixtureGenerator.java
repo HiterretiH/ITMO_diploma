@@ -25,11 +25,13 @@ public final class DocumentFixtureGenerator {
         DocxPdfConverter pdfConverter = new DocxPdfConverter();
         Map<String, String> context = DocumentGenerationService.snapshotToContext(snapshot);
 
-        for (DocumentType type : DocumentType.values()) {
-            byte[] docx = renderDocx(type, renderer, context);
-            byte[] pdf = pdfConverter.convert(docx);
-            Files.write(outDir.resolve(type.name().toLowerCase() + "_sample.docx"), docx);
-            Files.write(outDir.resolve(type.name().toLowerCase() + "_sample.pdf"), pdf);
+        for (FileFormat ff : DocumentPrefetchService.PREFETCH_FORMAT_ORDER) {
+            for (DocumentType type : DocumentType.values()) {
+                byte[] docx = renderDocx(type, renderer, context);
+                byte[] out = ff == FileFormat.DOCX ? docx : pdfConverter.convert(docx);
+                String ext = ff == FileFormat.DOCX ? ".docx" : ".pdf";
+                Files.write(outDir.resolve(type.name().toLowerCase() + "_sample" + ext), out);
+            }
         }
 
         Files.writeString(outDir.resolve("context-preview.txt"), context.toString());

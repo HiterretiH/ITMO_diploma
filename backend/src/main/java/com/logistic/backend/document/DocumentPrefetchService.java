@@ -16,6 +16,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class DocumentPrefetchService {
 
+    /**
+     * All DOCX for each {@link DocumentType} in enum order, then all PDF in the same type order.
+     * {@link FileFormat#values()} lists PDF first, so iteration must not rely on it.
+     */
+    public static final FileFormat[] PREFETCH_FORMAT_ORDER = {FileFormat.DOCX, FileFormat.PDF};
+
     private final OrderRepository orderRepository;
     private final DocumentGenerationService documentGenerationService;
     private final GeneratedDocumentCache generatedDocumentCache;
@@ -37,8 +43,8 @@ public class DocumentPrefetchService {
             return;
         }
         Map<String, byte[]> bundle = new HashMap<>();
-        for (DocumentType dt : DocumentType.values()) {
-            for (FileFormat ff : FileFormat.values()) {
+        for (FileFormat ff : PREFETCH_FORMAT_ORDER) {
+            for (DocumentType dt : DocumentType.values()) {
                 try {
                     byte[] bytes = documentGenerationService.generateDocument(o, dt, ff);
                     bundle.put(GeneratedDocumentCache.compositeKey(dt, ff), bytes);

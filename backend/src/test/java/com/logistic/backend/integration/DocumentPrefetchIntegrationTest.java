@@ -2,6 +2,8 @@ package com.logistic.backend.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
@@ -13,6 +15,7 @@ import com.logistic.backend.api.dto.PerformerRequest;
 import com.logistic.backend.api.dto.VehicleRequest;
 import com.logistic.backend.document.DocumentGenerationService;
 import com.logistic.backend.document.DocumentType;
+import com.logistic.backend.document.FileFormat;
 import com.logistic.backend.integration.support.DocumentGenerationSpyConfiguration;
 import com.logistic.backend.order.Order;
 import com.logistic.backend.user.Role;
@@ -123,6 +126,20 @@ class DocumentPrefetchIntegrationTest extends AbstractPostgresIntegrationTest {
 
         verify(documentGenerationService, timeout(15_000).times(PREFETCH_GENERATION_CALLS))
                 .generateDocument(any(Order.class), any(), any());
+
+        var order = inOrder(documentGenerationService);
+        order.verify(documentGenerationService)
+                .generateDocument(any(Order.class), eq(DocumentType.CONTRACT_APPLICATION), eq(FileFormat.DOCX));
+        order.verify(documentGenerationService)
+                .generateDocument(any(Order.class), eq(DocumentType.WAYBILL), eq(FileFormat.DOCX));
+        order.verify(documentGenerationService)
+                .generateDocument(any(Order.class), eq(DocumentType.ACT_OF_WORK), eq(FileFormat.DOCX));
+        order.verify(documentGenerationService)
+                .generateDocument(any(Order.class), eq(DocumentType.CONTRACT_APPLICATION), eq(FileFormat.PDF));
+        order.verify(documentGenerationService)
+                .generateDocument(any(Order.class), eq(DocumentType.WAYBILL), eq(FileFormat.PDF));
+        order.verify(documentGenerationService)
+                .generateDocument(any(Order.class), eq(DocumentType.ACT_OF_WORK), eq(FileFormat.PDF));
     }
 
     private Long postCustomer(String token, CustomerRequest body) throws Exception {
