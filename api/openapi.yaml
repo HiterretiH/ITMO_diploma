@@ -23,6 +23,50 @@ tags:
   - name: Session
 
 paths:
+  /api/v1/me:
+    get:
+      tags: [Session]
+      summary: Current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User id, username, and roles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/me/password:
+    put:
+      tags: [Session]
+      summary: Change password for the current user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+      responses:
+        '204':
+          description: Password updated
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/v1/me/trip-form-draft:
     get:
       tags: [Session]
@@ -1008,6 +1052,17 @@ components:
           minLength: 3
           maxLength: 128
         password:
+          type: string
+          minLength: 6
+          maxLength: 128
+
+    PasswordChangeRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
           type: string
           minLength: 6
           maxLength: 128

@@ -54,6 +54,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'account',
+        loadComponent: () =>
+          import('./pages/account/account-page.component').then(
+            (m) => m.AccountPageComponent,
+          ),
+      },
+      {
         path: 'catalogs',
         pathMatch: 'full',
         redirectTo: 'catalogs/customers',

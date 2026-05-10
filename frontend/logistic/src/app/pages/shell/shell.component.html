@@ -46,9 +46,14 @@
       title="Тема: светлая или тёмная (нажмите для переключения)"
       (onClick)="cycleTheme()"
     />
-    @if (auth.username(); as u) {
-      <span class="user-label">{{ u }}</span>
-    }
+    <a
+      routerLink="/account"
+      routerLinkActive="active-link"
+      pButton
+      class="nav-link"
+      [text]="true"
+      label="Личный кабинет"
+    ></a>
     <p-button
       type="button"
       label="Выход"

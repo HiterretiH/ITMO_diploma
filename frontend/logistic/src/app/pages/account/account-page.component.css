@@ -1,0 +1,49 @@
+.account-wrap {
+  max-width: 32rem;
+}
+
+.profile-block {
+  margin-bottom: 1.25rem;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-bottom: 0.65rem;
+  align-items: baseline;
+}
+
+.field-row .label {
+  min-width: 5rem;
+  opacity: 0.85;
+  font-size: 0.9rem;
+}
+
+.field-row .value {
+  font-weight: 600;
+}
+
+.field-row .value.roles {
+  font-weight: 500;
+}
+
+.section-title {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+
+.pwd-form .field {
+  margin-bottom: 1rem;
+}
+
+.pwd-form label {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.load-error {
+  color: var(--p-red-500, #dc2626);
+  margin: 0;
+}

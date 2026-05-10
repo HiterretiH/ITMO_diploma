@@ -1,0 +1,82 @@
+<div class="account-wrap">
+  <p-card header="Личный кабинет">
+    @if (loadError) {
+      <p class="load-error">{{ loadError }}</p>
+    } @else if (profile) {
+      <div class="profile-block">
+        <div class="field-row">
+          <span class="label">Логин</span>
+          <span class="value">{{ profile.username }}</span>
+        </div>
+        <div class="field-row">
+          <span class="label">Роли</span>
+          <span class="value roles">{{ rolesLine(profile.roles) }}</span>
+        </div>
+      </div>
+
+      <h3 class="section-title">Смена пароля</h3>
+      <form [formGroup]="passwordForm" (ngSubmit)="submitPassword()" class="pwd-form">
+        <div class="field">
+          <label for="cur-pw">Текущий пароль</label>
+          <p-password
+            inputId="cur-pw"
+            formControlName="currentPassword"
+            [feedback]="false"
+            [toggleMask]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [fluid]="true"
+            autocomplete="current-password"
+          />
+          @if (
+            passwordForm.controls.currentPassword.touched &&
+            passwordForm.controls.currentPassword.invalid
+          ) {
+            <small class="p-error">Укажите текущий пароль</small>
+          }
+        </div>
+        <div class="field">
+          <label for="new-pw">Новый пароль</label>
+          <p-password
+            inputId="new-pw"
+            formControlName="newPassword"
+            [feedback]="false"
+            [toggleMask]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [fluid]="true"
+            autocomplete="new-password"
+          />
+          @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.invalid) {
+            <small class="p-error">Не короче 6 символов</small>
+          }
+        </div>
+        <div class="field">
+          <label for="new-pw2">Повтор нового пароля</label>
+          <p-password
+            inputId="new-pw2"
+            formControlName="newPasswordConfirm"
+            [feedback]="false"
+            [toggleMask]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [fluid]="true"
+            autocomplete="new-password"
+          />
+          @if (
+            passwordForm.controls.newPasswordConfirm.touched &&
+            passwordForm.errors?.['passwordMismatch']
+          ) {
+            <small class="p-error">Пароли не совпадают</small>
+          }
+        </div>
+        <p-button
+          type="submit"
+          label="Сохранить пароль"
+          [loading]="busy"
+          [disabled]="busy"
+        />
+      </form>
+    }
+  </p-card>
+</div>

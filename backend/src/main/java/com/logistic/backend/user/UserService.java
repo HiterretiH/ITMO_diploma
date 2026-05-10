@@ -33,6 +33,16 @@ public class UserService {
         return new UserResponse(u.getId(), u.getUsername(), u.getRoles());
     }
 
+    @Transactional
+    public void changePassword(User user, String currentPassword, String newPassword) {
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Текущий пароль указан неверно.");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     private static void validateRoles(Set<Role> roles) {
         if (roles == null || roles.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Укажите хотя бы одну роль");

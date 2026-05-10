@@ -44,12 +44,6 @@
   font-weight: 700;
 }
 
-.user-label {
-  font-size: 0.9rem;
-  margin-right: 0.75rem;
-  opacity: 0.85;
-}
-
 .shell-main {
   flex: 1 1 auto;
   padding: clamp(0.85rem, 2vw, 1.35rem) clamp(0.85rem, 3vw, 1.75rem);
