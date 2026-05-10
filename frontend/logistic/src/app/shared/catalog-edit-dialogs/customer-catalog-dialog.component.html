@@ -1,0 +1,52 @@
+<p-dialog
+  [header]="dialogHeader()"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '26rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" class="ccd-form">
+    <div class="field">
+      <label for="ccd-cu-sn">Краткое название *</label>
+      <input pInputText id="ccd-cu-sn" formControlName="shortName" class="w-full" />
+      @if (form.controls.shortName.touched && form.controls.shortName.invalid) {
+        <small class="p-error">Обязательное поле</small>
+      }
+    </div>
+    <div class="field">
+      <label for="ccd-cu-fn">Полное название</label>
+      <input pInputText id="ccd-cu-fn" formControlName="fullName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ccd-cu-ph">Телефон</label>
+      <input pInputText id="ccd-cu-ph" formControlName="phone" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ccd-cu-rq">Реквизиты</label>
+      <textarea
+        pInputTextarea
+        id="ccd-cu-rq"
+        formControlName="requisites"
+        rows="3"
+        class="w-full"
+      ></textarea>
+    </div>
+  </form>
+  <div class="dialog-actions">
+    <p-button
+      type="button"
+      label="Отмена"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="close()"
+    />
+    <p-button
+      type="button"
+      label="Сохранить"
+      icon="pi pi-check"
+      [loading]="saving"
+      [disabled]="form.invalid || saving"
+      (onClick)="save()"
+    />
+  </div>
+</p-dialog>

@@ -1,0 +1,76 @@
+<p-dialog
+  [header]="dialogHeader()"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '24rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" class="ccd-form">
+    @if (performerLockedId == null) {
+      <div class="field">
+        <label for="ccd-v-perf">Исполнитель *</label>
+        <p-dropdown
+          inputId="ccd-v-perf"
+          formControlName="performerId"
+          [options]="performerOptions()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="—"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+    }
+    <div class="field">
+      <label for="ccd-v-plate">Госномер *</label>
+      <input pInputText id="ccd-v-plate" formControlName="plateNumber" class="w-full" />
+      @if (form.controls.plateNumber.touched && form.controls.plateNumber.hasError('required')) {
+        <small class="p-error">Обязательное поле</small>
+      }
+      @if (form.controls.plateNumber.touched && form.controls.plateNumber.hasError('plate')) {
+        <small class="p-error">Некорректный номер</small>
+      }
+    </div>
+    <div class="field">
+      <label for="ccd-v-bm">Марка / модель</label>
+      <input pInputText id="ccd-v-bm" formControlName="brandModel" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ccd-v-type">Тип ТС</label>
+      <input pInputText id="ccd-v-type" formControlName="type" class="w-full" />
+    </div>
+    <div class="field">
+      <div class="flex gap-2 align-items-start">
+        <p-checkbox
+          inputId="ccd-v-def"
+          formControlName="isDefault"
+          [binary]="true"
+        />
+        <div class="flex flex-column gap-1">
+          <label for="ccd-v-def" class="m-0 cursor-pointer">Основное для исполнителя</label>
+          <small class="text-muted-color line-height-3">
+            Это транспорт будет предлагаться первым при новом рейсе с данным исполнителем.
+            У одного исполнителя может быть только одно основное ТС; новая галочка снимает предыдущую.
+          </small>
+        </div>
+      </div>
+    </div>
+  </form>
+  <div class="dialog-actions">
+    <p-button
+      type="button"
+      label="Отмена"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="close()"
+    />
+    <p-button
+      type="button"
+      [label]="editingId != null ? 'Сохранить' : 'Создать'"
+      icon="pi pi-check"
+      [loading]="saving"
+      [disabled]="form.invalid || saving"
+      (onClick)="save()"
+    />
+  </div>
+</p-dialog>

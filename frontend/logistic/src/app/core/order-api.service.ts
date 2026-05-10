@@ -9,12 +9,22 @@ import {
   OrderDocumentDescriptor,
   OrderResponse,
   OrderUpdateRequest,
+  TripFormDraftResponse,
 } from './order.models';
 
 @Injectable({ providedIn: 'root' })
 export class OrderApiService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiBase}/api/v1`;
+
+  /** Next application number and last picks for trip create form (current user). */
+  getTripFormDraft(customerId?: number | null): Observable<TripFormDraftResponse> {
+    let url = `${this.base}/me/trip-form-draft`;
+    if (customerId != null) {
+      url += `?customerId=${customerId}`;
+    }
+    return this.http.get<TripFormDraftResponse>(url);
+  }
 
   list(): Observable<OrderResponse[]> {
     return this.http.get<OrderResponse[]>(`${this.base}/orders`);

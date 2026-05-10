@@ -1,6 +1,8 @@
+<app-customer-catalog-dialog #catalogDlg (saved)="reload()" />
+
 <div class="page-head">
   <h1 class="page-title">Заказчики</h1>
-  <p-button type="button" label="Добавить" icon="pi pi-plus" (onClick)="openCreate()" />
+  <p-button type="button" label="Добавить" icon="pi pi-plus" (onClick)="catalogDlg.openCreate()" />
 </div>
 
 <p-table [value]="items" [tableStyle]="{ 'min-width': '44rem' }" styleClass="p-datatable-sm">
@@ -23,7 +25,7 @@
           icon="pi pi-pencil"
           [text]="true"
           severity="secondary"
-          (onClick)="openEdit(row)"
+          (onClick)="catalogDlg.openEdit(row)"
         />
         <p-button
           label="Удалить"
@@ -41,48 +43,3 @@
     </tr>
   </ng-template>
 </p-table>
-
-<p-dialog
-  [header]="dialogHeader()"
-  [(visible)]="dialogVisible"
-  [modal]="true"
-  [style]="{ width: '26rem' }"
-  [draggable]="false"
->
-  <form [formGroup]="form" (ngSubmit)="save()">
-    <div class="field">
-      <label for="cu-sn">Краткое название *</label>
-      <input pInputText id="cu-sn" formControlName="shortName" class="w-full" />
-      @if (form.controls.shortName.touched && form.controls.shortName.invalid) {
-        <small class="p-error">Обязательное поле</small>
-      }
-    </div>
-    <div class="field">
-      <label for="cu-fn">Полное название</label>
-      <input pInputText id="cu-fn" formControlName="fullName" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="cu-ph">Телефон</label>
-      <input pInputText id="cu-ph" formControlName="phone" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="cu-rq">Реквизиты</label>
-      <textarea
-        pInputTextarea
-        id="cu-rq"
-        formControlName="requisites"
-        rows="3"
-        class="w-full"
-      ></textarea>
-    </div>
-  </form>
-  <ng-template pTemplate="footer">
-    <p-button label="Отмена" [text]="true" (onClick)="dialogVisible = false" />
-    <p-button
-      label="Сохранить"
-      [loading]="saving"
-      [disabled]="form.invalid || saving"
-      (onClick)="save()"
-    />
-  </ng-template>
-</p-dialog>

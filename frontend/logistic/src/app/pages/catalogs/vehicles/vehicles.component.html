@@ -1,6 +1,8 @@
+<app-vehicle-catalog-dialog #catalogDlg [performers]="performers" (saved)="reload()" />
+
 <div class="page-head">
   <h1 class="page-title">Транспорт</h1>
-  <p-button type="button" label="Добавить" icon="pi pi-plus" (onClick)="openCreate()" />
+  <p-button type="button" label="Добавить" icon="pi pi-plus" (onClick)="catalogDlg.openCreate()" />
 </div>
 
 <p-table [value]="items" [tableStyle]="{ 'min-width': '44rem' }" styleClass="p-datatable-sm">
@@ -27,7 +29,7 @@
           icon="pi pi-pencil"
           [text]="true"
           severity="secondary"
-          (onClick)="openEdit(row)"
+          (onClick)="catalogDlg.openEdit(row)"
         />
         <p-button
           label="Удалить"
@@ -45,60 +47,3 @@
     </tr>
   </ng-template>
 </p-table>
-
-<p-dialog
-  [header]="dialogHeader()"
-  [(visible)]="dialogVisible"
-  [modal]="true"
-  [style]="{ width: '24rem' }"
-  [draggable]="false"
->
-  <form [formGroup]="form" (ngSubmit)="save()">
-    <div class="field">
-      <label for="v-perf">Исполнитель *</label>
-      <p-dropdown
-        inputId="v-perf"
-        formControlName="performerId"
-        [options]="performerOptions()"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="—"
-        appendTo="body"
-        styleClass="w-full"
-      />
-    </div>
-    <div class="field">
-      <label for="v-plate">Госномер *</label>
-      <input pInputText id="v-plate" formControlName="plateNumber" class="w-full" />
-      @if (form.controls.plateNumber.touched && form.controls.plateNumber.hasError('required')) {
-        <small class="p-error">Обязательное поле</small>
-      }
-      @if (form.controls.plateNumber.touched && form.controls.plateNumber.hasError('plate')) {
-        <small class="p-error">Некорректный номер</small>
-      }
-    </div>
-    <div class="field">
-      <label for="v-bm">Марка / модель</label>
-      <input pInputText id="v-bm" formControlName="brandModel" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="v-type">Тип ТС</label>
-      <input pInputText id="v-type" formControlName="type" class="w-full" />
-    </div>
-    <div class="field">
-      <label class="flex gap-2 align-items-center">
-        <input type="checkbox" formControlName="isDefault" />
-        Основное для исполнителя
-      </label>
-    </div>
-  </form>
-  <ng-template pTemplate="footer">
-    <p-button label="Отмена" [text]="true" (onClick)="dialogVisible = false" />
-    <p-button
-      label="Сохранить"
-      [loading]="saving"
-      [disabled]="form.invalid || saving"
-      (onClick)="save()"
-    />
-  </ng-template>
-</p-dialog>

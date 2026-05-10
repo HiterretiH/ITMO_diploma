@@ -1,6 +1,8 @@
+<app-performer-catalog-dialog #catalogDlg (saved)="reload()" />
+
 <div class="page-head">
   <h1 class="page-title">Исполнители</h1>
-  <p-button type="button" label="Добавить" icon="pi pi-plus" (onClick)="openCreate()" />
+  <p-button type="button" label="Добавить" icon="pi pi-plus" (onClick)="catalogDlg.openCreate()" />
 </div>
 
 <p-table [value]="items" [tableStyle]="{ 'min-width': '44rem' }" styleClass="p-datatable-sm">
@@ -23,7 +25,7 @@
           icon="pi pi-pencil"
           [text]="true"
           severity="secondary"
-          (onClick)="openEdit(row)"
+          (onClick)="catalogDlg.openEdit(row)"
         />
         <p-button
           label="Удалить"
@@ -41,72 +43,3 @@
     </tr>
   </ng-template>
 </p-table>
-
-<p-dialog
-  [header]="dialogHeader()"
-  [(visible)]="dialogVisible"
-  [modal]="true"
-  [style]="{ width: '28rem' }"
-  [draggable]="false"
->
-  <form [formGroup]="form" (ngSubmit)="save()">
-    <div class="field">
-      <label for="pf-sn">Краткое название *</label>
-      <input pInputText id="pf-sn" formControlName="shortName" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="pf-fn">Полное название</label>
-      <input pInputText id="pf-fn" formControlName="fullName" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="pf-ph">Телефон</label>
-      <input pInputText id="pf-ph" formControlName="phone" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="pf-inn">ИНН</label>
-      <input pInputText id="pf-inn" formControlName="inn" class="w-full" />
-      @if (form.controls.inn.touched && form.controls.inn.hasError('inn')) {
-        <small class="p-error">10 или 12 цифр</small>
-      }
-    </div>
-    <div class="field">
-      <label for="pf-bank">Банк</label>
-      <input pInputText id="pf-bank" formControlName="bankName" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="pf-bik">БИК</label>
-      <input pInputText id="pf-bik" formControlName="bik" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="pf-kpp">КПП</label>
-      <input pInputText id="pf-kpp" formControlName="kpp" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="pf-rs">Расчётный счёт</label>
-      <input pInputText id="pf-rs" formControlName="paymentAccount" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="pf-ks">Корр. счёт</label>
-      <input pInputText id="pf-ks" formControlName="corrAccount" class="w-full" />
-    </div>
-    <div class="field">
-      <label for="pf-rq">Реквизиты (текст)</label>
-      <textarea
-        pInputTextarea
-        id="pf-rq"
-        formControlName="requisites"
-        rows="2"
-        class="w-full"
-      ></textarea>
-    </div>
-  </form>
-  <ng-template pTemplate="footer">
-    <p-button label="Отмена" [text]="true" (onClick)="dialogVisible = false" />
-    <p-button
-      label="Сохранить"
-      [loading]="saving"
-      [disabled]="form.invalid || saving"
-      (onClick)="save()"
-    />
-  </ng-template>
-</p-dialog>

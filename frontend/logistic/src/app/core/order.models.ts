@@ -48,6 +48,14 @@ export type DocumentTypeName =
 
 export type FileFormatName = 'PDF' | 'DOCX';
 
+/** GET /api/v1/me/trip-form-draft */
+export interface TripFormDraftResponse {
+  nextOrderNumber: number;
+  lastPerformerId: number | null;
+  lastDriverId: number | null;
+  lastVehicleId: number | null;
+}
+
 export interface OrderDocumentDescriptor {
   documentType: DocumentTypeName;
   formats: FileFormatName[];

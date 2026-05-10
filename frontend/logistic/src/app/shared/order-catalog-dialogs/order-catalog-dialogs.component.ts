@@ -1,43 +1,36 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { Button } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
-import { CatalogApiService } from '../../core/catalog-api.service';
+import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { FormGroup } from '@angular/forms';
 import {
   CustomerResponse,
   DriverResponse,
   PerformerResponse,
   VehicleResponse,
 } from '../../core/catalog.models';
-import { innValidator } from '../forms/inn.validator';
-import { plateValidator } from '../forms/plate.validator';
+import { CustomerCatalogDialogComponent } from '../catalog-edit-dialogs/customer-catalog-dialog.component';
+import {
+  CustomerCatalogSaveEvent,
+  DriverCatalogSaveEvent,
+  PerformerCatalogSaveEvent,
+  VehicleCatalogSaveEvent,
+} from '../catalog-edit-dialogs/catalog-save.models';
+import { DriverCatalogDialogComponent } from '../catalog-edit-dialogs/driver-catalog-dialog.component';
+import { PerformerCatalogDialogComponent } from '../catalog-edit-dialogs/performer-catalog-dialog.component';
+import { VehicleCatalogDialogComponent } from '../catalog-edit-dialogs/vehicle-catalog-dialog.component';
 
 @Component({
   selector: 'app-order-catalog-dialogs',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    Dialog,
-    Button,
-    InputText,
-    InputTextarea,
+    CustomerCatalogDialogComponent,
+    PerformerCatalogDialogComponent,
+    DriverCatalogDialogComponent,
+    VehicleCatalogDialogComponent,
   ],
   templateUrl: './order-catalog-dialogs.component.html',
-  styleUrl: './order-catalog-dialogs.component.css',
 })
 export class OrderCatalogDialogsComponent {
-  private readonly catalog = inject(CatalogApiService);
-  private readonly fb = inject(FormBuilder);
-
   /** Форма заказа (родитель): customerId, performerId, driverId, vehicleId. */
   @Input({ required: true }) form!: FormGroup;
 
@@ -45,62 +38,23 @@ export class OrderCatalogDialogsComponent {
   /** Сообщение для баннера родителя (например «Сначала выберите исполнителя»). */
   @Output() readonly catalogHint = new EventEmitter<string>();
 
-  customerDialogVisible = false;
-  customerSaving = false;
-  customerEditingId: number | null = null;
-  readonly customerForm = this.fb.nonNullable.group({
-    shortName: ['', [Validators.required, Validators.minLength(1)]],
-    fullName: [''],
-    phone: [''],
-    requisites: [''],
-  });
+  @ViewChild(CustomerCatalogDialogComponent)
+  private customerDlg!: CustomerCatalogDialogComponent;
+  @ViewChild(PerformerCatalogDialogComponent)
+  private performerDlg!: PerformerCatalogDialogComponent;
+  @ViewChild(DriverCatalogDialogComponent)
+  private driverDlg!: DriverCatalogDialogComponent;
+  @ViewChild(VehicleCatalogDialogComponent)
+  private vehicleDlg!: VehicleCatalogDialogComponent;
 
-  performerDialogVisible = false;
-  performerSaving = false;
-  performerEditingId: number | null = null;
-  readonly performerForm = this.fb.nonNullable.group({
-    shortName: ['', [Validators.required, Validators.minLength(1)]],
-    fullName: [''],
-    phone: [''],
-    inn: ['', [innValidator]],
-    bankName: [''],
-    bik: [''],
-    kpp: [''],
-    paymentAccount: [''],
-    corrAccount: [''],
-    requisites: [''],
-  });
-
-  driverDialogVisible = false;
-  driverEditingId: number | null = null;
-  driverSaving = false;
-  readonly driverForm = this.fb.nonNullable.group({
-    fullName: ['', [Validators.required, Validators.minLength(1)]],
-    phone: [''],
-    isDefault: [false],
-  });
-
-  vehicleDialogVisible = false;
-  vehicleEditingId: number | null = null;
-  vehicleSaving = false;
-  readonly vehicleForm = this.fb.group({
-    plateNumber: this.fb.nonNullable.control('', {
-      validators: [Validators.required, plateValidator],
-    }),
-    brandModel: [''],
-    type: [''],
-    isDefault: this.fb.control(false),
-  });
+  /** Исполнитель из формы заказа — фиксируется для водителя/ТС. */
+  orderPerformerId(): number | null {
+    const id = this.form.getRawValue().performerId as number | null;
+    return id == null ? null : id;
+  }
 
   openCustomerCreate(): void {
-    this.customerEditingId = null;
-    this.customerForm.reset({
-      shortName: '',
-      fullName: '',
-      phone: '',
-      requisites: '',
-    });
-    this.customerDialogVisible = true;
+    this.customerDlg.openCreate();
   }
 
   openCustomerEdit(customers: CustomerResponse[]): void {
@@ -112,31 +66,11 @@ export class OrderCatalogDialogsComponent {
     if (!c) {
       return;
     }
-    this.customerEditingId = c.id;
-    this.customerForm.setValue({
-      shortName: c.shortName,
-      fullName: c.fullName ?? '',
-      phone: c.phone ?? '',
-      requisites: c.requisites ?? '',
-    });
-    this.customerDialogVisible = true;
+    this.customerDlg.openEdit(c);
   }
 
   openPerformerCreate(): void {
-    this.performerEditingId = null;
-    this.performerForm.reset({
-      shortName: '',
-      fullName: '',
-      phone: '',
-      inn: '',
-      bankName: '',
-      bik: '',
-      kpp: '',
-      paymentAccount: '',
-      corrAccount: '',
-      requisites: '',
-    });
-    this.performerDialogVisible = true;
+    this.performerDlg.openCreate();
   }
 
   openPerformerEdit(performers: PerformerResponse[]): void {
@@ -148,20 +82,7 @@ export class OrderCatalogDialogsComponent {
     if (!p) {
       return;
     }
-    this.performerEditingId = p.id;
-    this.performerForm.setValue({
-      shortName: p.shortName,
-      fullName: p.fullName ?? '',
-      phone: p.phone ?? '',
-      inn: p.inn ?? '',
-      bankName: p.bankName ?? '',
-      bik: p.bik ?? '',
-      kpp: p.kpp ?? '',
-      paymentAccount: p.paymentAccount ?? '',
-      corrAccount: p.corrAccount ?? '',
-      requisites: p.requisites ?? '',
-    });
-    this.performerDialogVisible = true;
+    this.performerDlg.openEdit(p);
   }
 
   openDriverCreate(): void {
@@ -169,13 +90,7 @@ export class OrderCatalogDialogsComponent {
       this.catalogHint.emit('Сначала выберите исполнителя.');
       return;
     }
-    this.driverEditingId = null;
-    this.driverForm.reset({
-      fullName: '',
-      phone: '',
-      isDefault: false,
-    });
-    this.driverDialogVisible = true;
+    this.driverDlg.openCreate();
   }
 
   openDriverEdit(drivers: DriverResponse[]): void {
@@ -187,13 +102,7 @@ export class OrderCatalogDialogsComponent {
     if (!d) {
       return;
     }
-    this.driverEditingId = d.id;
-    this.driverForm.setValue({
-      fullName: d.fullName,
-      phone: d.phone ?? '',
-      isDefault: d.isDefault,
-    });
-    this.driverDialogVisible = true;
+    this.driverDlg.openEdit(d);
   }
 
   openVehicleCreate(): void {
@@ -201,14 +110,7 @@ export class OrderCatalogDialogsComponent {
       this.catalogHint.emit('Сначала выберите исполнителя.');
       return;
     }
-    this.vehicleEditingId = null;
-    this.vehicleForm.reset({
-      plateNumber: '',
-      brandModel: '',
-      type: '',
-      isDefault: false,
-    });
-    this.vehicleDialogVisible = true;
+    this.vehicleDlg.openCreate();
   }
 
   openVehicleEdit(vehicles: VehicleResponse[]): void {
@@ -220,153 +122,34 @@ export class OrderCatalogDialogsComponent {
     if (!v) {
       return;
     }
-    this.vehicleEditingId = v.id;
-    this.vehicleForm.setValue({
-      plateNumber: v.plateNumber ?? '',
-      brandModel: v.brandModel ?? '',
-      type: v.type ?? '',
-      isDefault: v.isDefault,
-    });
-    this.vehicleDialogVisible = true;
+    this.vehicleDlg.openEdit(v);
   }
 
-  saveCustomerDialog(): void {
-    if (this.customerForm.invalid || this.customerSaving) {
-      this.customerForm.markAllAsTouched();
-      return;
+  onCustomerSaved(ev: CustomerCatalogSaveEvent): void {
+    if (ev.wasCreate) {
+      this.form.patchValue({ customerId: ev.entity.id });
     }
-    const v = this.customerForm.getRawValue();
-    const body = {
-      shortName: v.shortName.trim(),
-      fullName: v.fullName.trim() === '' ? null : v.fullName.trim(),
-      phone: v.phone.trim() === '' ? null : v.phone.trim(),
-      requisites: v.requisites.trim() === '' ? null : v.requisites.trim(),
-    };
-    this.customerSaving = true;
-    const obs =
-      this.customerEditingId != null
-        ? this.catalog.updateCustomer(this.customerEditingId, body)
-        : this.catalog.createCustomer(body);
-    obs.subscribe({
-      next: (c) => {
-        if (this.customerEditingId == null) {
-          this.form.patchValue({ customerId: c.id });
-        }
-        this.customerSaving = false;
-        this.customerDialogVisible = false;
-        this.catalogSaved.emit();
-      },
-      error: () => {
-        this.customerSaving = false;
-      },
-    });
+    this.catalogSaved.emit();
   }
 
-  savePerformerDialog(): void {
-    if (this.performerForm.invalid || this.performerSaving) {
-      this.performerForm.markAllAsTouched();
-      return;
+  onPerformerSaved(ev: PerformerCatalogSaveEvent): void {
+    if (ev.wasCreate) {
+      this.form.patchValue({ performerId: ev.entity.id });
     }
-    const v = this.performerForm.getRawValue();
-    const emptyToNull = (s: string) => (s.trim() === '' ? null : s.trim());
-    const body = {
-      shortName: v.shortName.trim(),
-      fullName: emptyToNull(v.fullName),
-      phone: emptyToNull(v.phone),
-      inn: emptyToNull(v.inn),
-      bankName: emptyToNull(v.bankName),
-      bik: emptyToNull(v.bik),
-      kpp: emptyToNull(v.kpp),
-      paymentAccount: emptyToNull(v.paymentAccount),
-      corrAccount: emptyToNull(v.corrAccount),
-      requisites: emptyToNull(v.requisites),
-    };
-    this.performerSaving = true;
-    const obs =
-      this.performerEditingId != null
-        ? this.catalog.updatePerformer(this.performerEditingId, body)
-        : this.catalog.createPerformer(body);
-    obs.subscribe({
-      next: (p) => {
-        if (this.performerEditingId == null) {
-          this.form.patchValue({ performerId: p.id });
-        }
-        this.performerSaving = false;
-        this.performerDialogVisible = false;
-        this.catalogSaved.emit();
-      },
-      error: () => {
-        this.performerSaving = false;
-      },
-    });
+    this.catalogSaved.emit();
   }
 
-  saveDriverDialog(): void {
-    const performerId = this.form.getRawValue().performerId as number | null;
-    if (performerId == null || this.driverForm.invalid || this.driverSaving) {
-      this.driverForm.markAllAsTouched();
-      return;
+  onDriverSaved(ev: DriverCatalogSaveEvent): void {
+    if (ev.wasCreate) {
+      this.form.patchValue({ driverId: ev.entity.id });
     }
-    const v = this.driverForm.getRawValue();
-    const body = {
-      performerId,
-      fullName: v.fullName.trim(),
-      phone: v.phone.trim() === '' ? null : v.phone.trim(),
-      isDefault: v.isDefault,
-    };
-    this.driverSaving = true;
-    const obs =
-      this.driverEditingId != null
-        ? this.catalog.updateDriver(this.driverEditingId, body)
-        : this.catalog.createDriver(body);
-    obs.subscribe({
-      next: (d) => {
-        if (this.driverEditingId == null) {
-          this.form.patchValue({ driverId: d.id });
-        }
-        this.driverSaving = false;
-        this.driverDialogVisible = false;
-        this.catalogSaved.emit();
-      },
-      error: () => {
-        this.driverSaving = false;
-      },
-    });
+    this.catalogSaved.emit();
   }
 
-  saveVehicleDialog(): void {
-    const performerId = this.form.getRawValue().performerId as number | null;
-    if (performerId == null || this.vehicleForm.invalid || this.vehicleSaving) {
-      this.vehicleForm.markAllAsTouched();
-      return;
+  onVehicleSaved(ev: VehicleCatalogSaveEvent): void {
+    if (ev.wasCreate) {
+      this.form.patchValue({ vehicleId: ev.entity.id });
     }
-    const v = this.vehicleForm.getRawValue();
-    const plate = v.plateNumber.replace(/\s+/g, '').toUpperCase();
-    const body = {
-      performerId,
-      plateNumber: plate === '' ? null : plate,
-      brandModel:
-        (v.brandModel ?? '').trim() === '' ? null : (v.brandModel ?? '').trim(),
-      type: (v.type ?? '').trim() === '' ? null : (v.type ?? '').trim(),
-      isDefault: !!v.isDefault,
-    };
-    this.vehicleSaving = true;
-    const obs =
-      this.vehicleEditingId != null
-        ? this.catalog.updateVehicle(this.vehicleEditingId, body)
-        : this.catalog.createVehicle(body);
-    obs.subscribe({
-      next: (ve) => {
-        if (this.vehicleEditingId == null) {
-          this.form.patchValue({ vehicleId: ve.id });
-        }
-        this.vehicleSaving = false;
-        this.vehicleDialogVisible = false;
-        this.catalogSaved.emit();
-      },
-      error: () => {
-        this.vehicleSaving = false;
-      },
-    });
+    this.catalogSaved.emit();
   }
 }

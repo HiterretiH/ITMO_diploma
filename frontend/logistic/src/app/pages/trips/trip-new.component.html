@@ -1,6 +1,6 @@
 <div class="trip-new-wrap">
   <header class="page-head">
-    <h1 class="page-title">Новый заказ</h1>
+    <h1 class="page-title">Новый рейс</h1>
     <p-button
       label="К списку"
       icon="pi pi-arrow-left"
@@ -39,16 +39,20 @@
             [options]="customerOptions()"
             optionLabel="label"
             optionValue="value"
+            [filter]="true"
+            filterBy="label"
             [showClear]="true"
+            [placeholder]="customers.length ? '—' : 'Нет заказчиков'"
             appendTo="body"
             styleClass="w-full"
           />
           <div class="catalog-row-actions">
             <p-button
               type="button"
-              label="+ Добавить"
-              [text]="true"
-              styleClass="p-0"
+              label="Добавить…"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
               (onClick)="catalogDialogs.openCustomerCreate()"
             />
             <p-button
@@ -69,16 +73,20 @@
             [options]="performerOptions()"
             optionLabel="label"
             optionValue="value"
+            [filter]="true"
+            filterBy="label"
             [showClear]="true"
+            [placeholder]="performers.length ? '—' : 'Нет исполнителей'"
             appendTo="body"
             styleClass="w-full"
           />
           <div class="catalog-row-actions">
             <p-button
               type="button"
-              label="+ Добавить"
-              [text]="true"
-              styleClass="p-0"
+              label="Добавить…"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
               (onClick)="catalogDialogs.openPerformerCreate()"
             />
             <p-button
@@ -106,16 +114,20 @@
               [options]="driverOptions()"
               optionLabel="label"
               optionValue="value"
+              [filter]="true"
+              filterBy="label"
               [showClear]="true"
+              [placeholder]="driverOptions().length ? '—' : 'Нет водителей'"
               appendTo="body"
               styleClass="w-full"
             />
             <div class="catalog-row-actions">
               <p-button
                 type="button"
-                label="+ Добавить водителя"
-                [text]="true"
-                styleClass="p-0"
+                label="Добавить…"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
                 (onClick)="catalogDialogs.openDriverCreate()"
               />
               <p-button
@@ -136,16 +148,20 @@
               [options]="vehicleOptions()"
               optionLabel="label"
               optionValue="value"
+              [filter]="true"
+              filterBy="label"
               [showClear]="true"
+              [placeholder]="vehicleOptions().length ? '—' : 'Нет ТС'"
               appendTo="body"
               styleClass="w-full"
             />
             <div class="catalog-row-actions">
               <p-button
                 type="button"
-                label="+ Добавить ТС"
-                [text]="true"
-                styleClass="p-0"
+                label="Добавить…"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
                 (onClick)="catalogDialogs.openVehicleCreate()"
               />
               <p-button
@@ -217,10 +233,11 @@
             formControlName="orderNumber"
             [min]="1"
             [useGrouping]="false"
+            placeholder="—"
             styleClass="w-full"
           />
           <p class="field-hint">
-            Необязательно: если не указать, останется номер, назначенный при создании.
+            Подставляется следующий свободный номер; при необходимости измените до сохранения.
           </p>
         </div>
       </section>
@@ -240,6 +257,7 @@
               [minFractionDigits]="0"
               [maxFractionDigits]="2"
               suffix=" ₽"
+              placeholder="0"
               styleClass="w-full"
             />
           </div>
@@ -250,6 +268,7 @@
               formControlName="legCount"
               [min]="1"
               [useGrouping]="false"
+              placeholder="1"
               styleClass="w-full"
             />
           </div>
@@ -263,6 +282,7 @@
               [minFractionDigits]="0"
               [maxFractionDigits]="2"
               suffix=" ₽"
+              placeholder="0"
               styleClass="w-full"
             />
             <p class="field-hint">
@@ -282,7 +302,7 @@
         />
         <p-button
           type="submit"
-          label="Создать и завершить заказ"
+          label="Создать и завершить рейс"
           icon="pi pi-check"
           [loading]="busy"
           [disabled]="busy"

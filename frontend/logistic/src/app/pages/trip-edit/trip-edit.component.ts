@@ -214,54 +214,48 @@ export class TripEditComponent implements OnInit {
     });
   }
 
-  customerOptions(): { label: string; value: number | null }[] {
-    return [
-      { label: '—', value: null },
-      ...this.customers.map((c) => ({
-        label: c.shortName,
-        value: c.id,
-      })),
-    ];
+  private sortOpts<T extends { label: string }>(rows: T[]): T[] {
+    return [...rows].sort((a, b) => a.label.localeCompare(b.label, 'ru'));
   }
 
-  performerOptions(): { label: string; value: number | null }[] {
-    return [
-      { label: '—', value: null },
-      ...this.performers.map((p) => ({
-        label: p.shortName,
-        value: p.id,
-      })),
-    ];
+  customerOptions(): { label: string; value: number }[] {
+    return this.sortOpts(
+      this.customers.map((c) => ({ label: c.shortName, value: c.id })),
+    );
   }
 
-  driverOptions(): { label: string; value: number | null }[] {
+  performerOptions(): { label: string; value: number }[] {
+    return this.sortOpts(
+      this.performers.map((p) => ({ label: p.shortName, value: p.id })),
+    );
+  }
+
+  driverOptions(): { label: string; value: number }[] {
     const pid = this.form.getRawValue().performerId;
     const list =
       pid == null
         ? this.drivers
         : this.drivers.filter((d) => d.performerId === pid);
-    return [
-      { label: '—', value: null },
-      ...list.map((d) => ({
+    return this.sortOpts(
+      list.map((d) => ({
         label: d.fullName,
         value: d.id,
       })),
-    ];
+    );
   }
 
-  vehicleOptions(): { label: string; value: number | null }[] {
+  vehicleOptions(): { label: string; value: number }[] {
     const pid = this.form.getRawValue().performerId;
     const list =
       pid == null
         ? this.vehicles
         : this.vehicles.filter((v) => v.performerId === pid);
-    return [
-      { label: '—', value: null },
-      ...list.map((v) => ({
+    return this.sortOpts(
+      list.map((v) => ({
         label: `${v.plateNumber ?? ''}${v.brandModel ? ' · ' + v.brandModel : ''}`,
         value: v.id,
       })),
-    ];
+    );
   }
 
   private toIsoDate(d: Date | null | undefined): string | undefined {
@@ -386,7 +380,7 @@ export class TripEditComponent implements OnInit {
       return;
     }
     this.confirm.confirm({
-      message: 'Завершить заказ? Будут сгенерированы документы.',
+      message: 'Завершить рейс? Будут сгенерированы документы.',
       header: 'Подтверждение',
       icon: 'pi pi-check-circle',
       accept: () => {
@@ -415,7 +409,7 @@ export class TripEditComponent implements OnInit {
       return;
     }
     this.confirm.confirm({
-      message: 'Удалить заказ? Это действие необратимо.',
+      message: 'Удалить рейс? Это действие необратимо.',
       header: 'Подтверждение',
       icon: 'pi pi-trash',
       acceptButtonStyleClass: 'p-button-danger',
@@ -472,7 +466,7 @@ export class TripEditComponent implements OnInit {
   eventTypeLabel(t: AuditEventResponse['eventType']): string {
     switch (t) {
       case 'ORDER_CREATED':
-        return 'Заказ создан';
+        return 'Рейс создан';
       case 'ORDER_UPDATED':
         return 'Изменение';
       case 'ORDER_COMPLETED':

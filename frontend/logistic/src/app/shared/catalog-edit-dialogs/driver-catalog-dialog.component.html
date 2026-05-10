@@ -1,0 +1,69 @@
+<p-dialog
+  [header]="dialogHeader()"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '24rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" class="ccd-form">
+    @if (performerLockedId == null) {
+      <div class="field">
+        <label for="ccd-dr-perf">Исполнитель *</label>
+        <p-dropdown
+          inputId="ccd-dr-perf"
+          formControlName="performerId"
+          [options]="performerOptions()"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="—"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+    }
+    <div class="field">
+      <label for="ccd-dr-name">ФИО *</label>
+      <input pInputText id="ccd-dr-name" formControlName="fullName" class="w-full" />
+      @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
+        <small class="p-error">Обязательное поле</small>
+      }
+    </div>
+    <div class="field">
+      <label for="ccd-dr-ph">Телефон</label>
+      <input pInputText id="ccd-dr-ph" formControlName="phone" class="w-full" />
+    </div>
+    <div class="field">
+      <div class="flex gap-2 align-items-start">
+        <p-checkbox
+          inputId="ccd-dr-def"
+          formControlName="isDefault"
+          [binary]="true"
+        />
+        <div class="flex flex-column gap-1">
+          <label for="ccd-dr-def" class="m-0 cursor-pointer">Основной для исполнителя</label>
+          <small class="text-muted-color line-height-3">
+            Такого водителя система предложит первым при создании нового рейса с этим исполнителем.
+            Только один водитель может быть основным; при включении галочки предыдущий основной снимается.
+          </small>
+        </div>
+      </div>
+    </div>
+  </form>
+  <div class="dialog-actions">
+    <p-button
+      type="button"
+      label="Отмена"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="close()"
+    />
+    <p-button
+      type="button"
+      [label]="editingId != null ? 'Сохранить' : 'Создать'"
+      icon="pi pi-check"
+      [loading]="saving"
+      [disabled]="form.invalid || saving"
+      (onClick)="save()"
+    />
+  </div>
+</p-dialog>

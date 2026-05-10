@@ -29,6 +29,13 @@ describe('TripNewComponent', () => {
         {
           provide: OrderApiService,
           useValue: {
+            getTripFormDraft: () =>
+              of({
+                nextOrderNumber: 1,
+                lastPerformerId: null,
+                lastDriverId: null,
+                lastVehicleId: null,
+              }),
             create: () =>
               of({
                 id: 99,

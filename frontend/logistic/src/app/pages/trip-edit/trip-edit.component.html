@@ -4,7 +4,7 @@
 
 @if (order) {
   <div class="top">
-    <h1>Заказ № {{ order.orderNumber }}</h1>
+    <h1>Рейс № {{ order.orderNumber }}</h1>
     <app-order-status-badge [order]="order" [completed]="orderCompleted" />
   </div>
 
@@ -52,7 +52,9 @@
                         [options]="customerOptions()"
                         optionLabel="label"
                         optionValue="value"
-                        placeholder="—"
+                        [filter]="true"
+                        filterBy="label"
+                        [placeholder]="customers.length ? '—' : 'Нет заказчиков'"
                         [showClear]="true"
                         appendTo="body"
                         styleClass="w-full"
@@ -61,9 +63,10 @@
                         <div class="catalog-row-actions">
                           <p-button
                             type="button"
-                            label="+ Добавить"
-                            [text]="true"
-                            styleClass="p-0"
+                            label="Добавить…"
+                            severity="secondary"
+                            [outlined]="true"
+                            size="small"
                             (onClick)="catalogDialogs.openCustomerCreate()"
                           />
                           <p-button
@@ -85,7 +88,9 @@
                         [options]="performerOptions()"
                         optionLabel="label"
                         optionValue="value"
-                        placeholder="—"
+                        [filter]="true"
+                        filterBy="label"
+                        [placeholder]="performers.length ? '—' : 'Нет исполнителей'"
                         [showClear]="true"
                         appendTo="body"
                         styleClass="w-full"
@@ -94,9 +99,10 @@
                         <div class="catalog-row-actions">
                           <p-button
                             type="button"
-                            label="+ Добавить"
-                            [text]="true"
-                            styleClass="p-0"
+                            label="Добавить…"
+                            severity="secondary"
+                            [outlined]="true"
+                            size="small"
                             (onClick)="catalogDialogs.openPerformerCreate()"
                           />
                           <p-button
@@ -134,7 +140,9 @@
                         [options]="driverOptions()"
                         optionLabel="label"
                         optionValue="value"
-                        placeholder="—"
+                        [filter]="true"
+                        filterBy="label"
+                        [placeholder]="driverOptions().length ? '—' : 'Нет водителей'"
                         [showClear]="true"
                         appendTo="body"
                         styleClass="w-full"
@@ -143,9 +151,10 @@
                         <div class="catalog-row-actions">
                           <p-button
                             type="button"
-                            label="+ Добавить водителя"
-                            [text]="true"
-                            styleClass="p-0"
+                            label="Добавить…"
+                            severity="secondary"
+                            [outlined]="true"
+                            size="small"
                             (onClick)="catalogDialogs.openDriverCreate()"
                           />
                           <p-button
@@ -167,7 +176,9 @@
                         [options]="vehicleOptions()"
                         optionLabel="label"
                         optionValue="value"
-                        placeholder="—"
+                        [filter]="true"
+                        filterBy="label"
+                        [placeholder]="vehicleOptions().length ? '—' : 'Нет ТС'"
                         [showClear]="true"
                         appendTo="body"
                         styleClass="w-full"
@@ -176,9 +187,10 @@
                         <div class="catalog-row-actions">
                           <p-button
                             type="button"
-                            label="+ Добавить ТС"
-                            [text]="true"
-                            styleClass="p-0"
+                            label="Добавить…"
+                            severity="secondary"
+                            [outlined]="true"
+                            size="small"
                             (onClick)="catalogDialogs.openVehicleCreate()"
                           />
                           <p-button
@@ -335,7 +347,7 @@
                       />
                       <p-button
                         type="button"
-                        label="Завершить заказ"
+                        label="Завершить рейс"
                         icon="pi pi-check"
                         severity="success"
                         [disabled]="busy || !inProgress()"

@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { concatMap, forkJoin } from 'rxjs';
+import { concatMap, distinctUntilChanged, forkJoin } from 'rxjs';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -27,7 +27,7 @@ import {
 } from '../../core/catalog.models';
 import { localizeProblemToast } from '../../core/error-messages';
 import { OrderApiService } from '../../core/order-api.service';
-import { OrderUpdateRequest } from '../../core/order.models';
+import { OrderUpdateRequest, TripFormDraftResponse } from '../../core/order.models';
 import { ProblemDetail } from '../../models/problem.models';
 import { OrderCatalogDialogsComponent } from '../../shared/order-catalog-dialogs/order-catalog-dialogs.component';
 
@@ -77,12 +77,12 @@ export class TripNewComponent implements OnInit {
     unloadingPlace: ['', Validators.required],
     unloadingContact: [''],
     orderDate: this.fb.control<Date | null>(null, Validators.required),
-    legCount: this.fb.control<number>(1, [Validators.required, Validators.min(1)]),
-    ratePerLeg: this.fb.control<number | null>(0, [Validators.min(0)]),
-    priceAmount: this.fb.control<number | null>(0, [
+    legCount: this.fb.control<number | null>(1, [
       Validators.required,
-      Validators.min(0),
+      Validators.min(1),
     ]),
+    ratePerLeg: this.fb.control<number | null>(null, [Validators.min(0)]),
+    priceAmount: this.fb.control<number | null>(null, [Validators.min(0)]),
   });
 
   constructor() {
@@ -92,12 +92,33 @@ export class TripNewComponent implements OnInit {
     this.form.controls.legCount.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.applyTotalFromRateAndLegs());
+
+    this.form.controls.customerId.valueChanges
+      .pipe(distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe((customerId) => {
+        this.orders.getTripFormDraft(customerId ?? undefined).subscribe({
+          next: (d) =>
+            this.form.patchValue(
+              { orderNumber: d.nextOrderNumber },
+              { emitEvent: false },
+            ),
+          error: () => {},
+        });
+      });
   }
 
   private applyTotalFromRateAndLegs(): void {
     const v = this.form.getRawValue();
-    const rate = Number(v.ratePerLeg ?? 0);
+    const rawRate = v.ratePerLeg;
     const n = Number(v.legCount ?? 1);
+    if (
+      rawRate === null ||
+      rawRate === undefined ||
+      !Number.isFinite(Number(rawRate))
+    ) {
+      return;
+    }
+    const rate = Number(rawRate);
     this.form.patchValue({ priceAmount: rate * n }, { emitEvent: false });
   }
 
@@ -113,18 +134,61 @@ export class TripNewComponent implements OnInit {
       performers: this.catalog.listPerformers(),
       drivers: this.catalog.listDrivers(),
       vehicles: this.catalog.listVehicles(),
+      draft: this.orders.getTripFormDraft(),
     }).subscribe({
-      next: ({ customers, performers, drivers, vehicles }) => {
+      next: ({ customers, performers, drivers, vehicles, draft }) => {
         this.customers = customers;
         this.performers = performers;
         this.drivers = drivers;
         this.vehicles = vehicles;
+        this.applyTripDraft(draft);
       },
       error: () => {
         this.errorMessage =
           'Не удалось загрузить справочники. Проверьте доступ к API и обновите страницу.';
       },
     });
+  }
+
+  private applyTripDraft(draft: TripFormDraftResponse): void {
+    this.form.patchValue(
+      {
+        orderNumber: draft.nextOrderNumber,
+      },
+      { emitEvent: false },
+    );
+    if (
+      draft.lastPerformerId != null &&
+      this.performers.some((p) => p.id === draft.lastPerformerId)
+    ) {
+      this.form.patchValue(
+        { performerId: draft.lastPerformerId },
+        { emitEvent: false },
+      );
+    }
+    const perfId = this.form.getRawValue().performerId;
+    if (perfId != null) {
+      const pv: { driverId?: number | null; vehicleId?: number | null } = {};
+      if (
+        draft.lastDriverId != null &&
+        this.drivers.some(
+          (d) =>
+            d.id === draft.lastDriverId && d.performerId === perfId,
+        )
+      ) {
+        pv.driverId = draft.lastDriverId;
+      }
+      if (
+        draft.lastVehicleId != null &&
+        this.vehicles.some(
+          (v) =>
+            v.id === draft.lastVehicleId && v.performerId === perfId,
+        )
+      ) {
+        pv.vehicleId = draft.lastVehicleId;
+      }
+      this.form.patchValue(pv, { emitEvent: false });
+    }
   }
 
   onCatalogSaved(): void {
@@ -163,48 +227,54 @@ export class TripNewComponent implements OnInit {
     return this.form.getRawValue().vehicleId != null;
   }
 
-  customerOptions(): { label: string; value: number | null }[] {
-    return [
-      { label: 'Выберите заказчика…', value: null },
-      ...this.customers.map((c) => ({ label: c.shortName, value: c.id })),
-    ];
+  private sortOpts<T extends { label: string }>(rows: T[]): T[] {
+    return [...rows].sort((a, b) => a.label.localeCompare(b.label, 'ru'));
   }
 
-  performerOptions(): { label: string; value: number | null }[] {
-    return [
-      { label: 'Выберите исполнителя…', value: null },
-      ...this.performers.map((p) => ({ label: p.shortName, value: p.id })),
-    ];
+  customerOptions(): { label: string; value: number }[] {
+    const rows = this.customers.map((c) => ({
+      label: c.shortName,
+      value: c.id,
+    }));
+    return this.sortOpts(rows);
   }
 
-  driverOptions(): { label: string; value: number | null }[] {
+  performerOptions(): { label: string; value: number }[] {
+    const rows = this.performers.map((p) => ({
+      label: p.shortName,
+      value: p.id,
+    }));
+    return this.sortOpts(rows);
+  }
+
+  driverOptions(): { label: string; value: number }[] {
     const pid = this.form.getRawValue().performerId;
     const list =
       pid == null
         ? this.drivers
         : this.drivers.filter((d) => d.performerId === pid);
-    return [
-      { label: 'Выберите водителя…', value: null },
-      ...list.map((d) => ({
-        label: d.fullName,
-        value: d.id,
-      })),
-    ];
+    const rows = list.map((d) => ({
+      label: d.fullName,
+      value: d.id,
+    }));
+    return this.sortOpts(rows);
   }
 
-  vehicleOptions(): { label: string; value: number | null }[] {
+  vehicleOptions(): { label: string; value: number }[] {
     const pid = this.form.getRawValue().performerId;
     const list =
       pid == null
         ? this.vehicles
         : this.vehicles.filter((v) => v.performerId === pid);
-    return [
-      { label: 'Выберите ТС…', value: null },
-      ...list.map((v) => ({
-        label: `${v.plateNumber ?? ''}${v.brandModel ? ' · ' + v.brandModel : ''}`,
+    const rows = list.map((v) => {
+      const plate = v.plateNumber ?? '';
+      const bm = v.brandModel ? ` · ${v.brandModel}` : '';
+      return {
+        label: `${plate}${bm}`,
         value: v.id,
-      })),
-    ];
+      };
+    });
+    return this.sortOpts(rows);
   }
 
   private toIsoDate(d: Date | null | undefined): string | undefined {
@@ -226,11 +296,21 @@ export class TripNewComponent implements OnInit {
       unloadingContact: (v.unloadingContact ?? '').trim() || undefined,
       orderDate: this.toIsoDate(v.orderDate),
       tripCount: v.legCount ?? undefined,
-      pricePerTrip: v.ratePerLeg ?? undefined,
-      totalPrice: v.priceAmount ?? undefined,
       driverId: v.driverId ?? undefined,
       vehicleId: v.vehicleId ?? undefined,
     };
+    if (
+      v.ratePerLeg != null &&
+      Number.isFinite(Number(v.ratePerLeg))
+    ) {
+      req.pricePerTrip = Number(v.ratePerLeg);
+    }
+    if (
+      v.priceAmount != null &&
+      Number.isFinite(Number(v.priceAmount))
+    ) {
+      req.totalPrice = Number(v.priceAmount);
+    }
     const num = v.orderNumber;
     if (num != null && Number.isFinite(num) && num >= 1) {
       req.orderNumber = Math.floor(num);
@@ -253,7 +333,7 @@ export class TripNewComponent implements OnInit {
       return 'Укажите дату.';
     }
     if (v.priceAmount == null || Number(v.priceAmount) < 0) {
-      return 'Укажите итоговую сумму по заявке.';
+      return 'Укажите итоговую сумму по рейсу.';
     }
     return null;
   }
