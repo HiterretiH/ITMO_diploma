@@ -8,14 +8,14 @@ import {
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
-import { DropdownModule } from 'primeng/dropdown';
 import { InputText } from 'primeng/inputtext';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { TableModule } from 'primeng/table';
 import { CatalogApiService } from '../../../core/catalog-api.service';
-import { DriverResponse, PerformerResponse } from '../../../core/catalog.models';
+import { CustomerResponse } from '../../../core/catalog.models';
 
 @Component({
-  selector: 'app-drivers',
+  selector: 'app-customers',
   standalone: true,
   imports: [
     CommonModule,
@@ -24,67 +24,54 @@ import { DriverResponse, PerformerResponse } from '../../../core/catalog.models'
     Button,
     Dialog,
     InputText,
-    DropdownModule,
+    InputTextarea,
   ],
-  templateUrl: './drivers.component.html',
-  styleUrl: './drivers.component.css',
+  templateUrl: './customers.component.html',
+  styleUrl: './customers.component.css',
 })
-export class DriversComponent implements OnInit {
+export class CustomersComponent implements OnInit {
   private readonly api = inject(CatalogApiService);
   private readonly fb = inject(FormBuilder);
   private readonly confirm = inject(ConfirmationService);
 
-  items: DriverResponse[] = [];
-  performers: PerformerResponse[] = [];
+  items: CustomerResponse[] = [];
   dialogVisible = false;
   editingId: number | null = null;
   saving = false;
 
   readonly form = this.fb.nonNullable.group({
-    performerId: this.fb.control<number | null>(null, Validators.required),
-    fullName: ['', [Validators.required, Validators.minLength(1)]],
+    shortName: ['', [Validators.required, Validators.minLength(1)]],
+    fullName: [''],
     phone: [''],
-    isDefault: [false],
+    requisites: [''],
   });
 
   ngOnInit(): void {
     this.reload();
-    this.api.listPerformers().subscribe((p) => (this.performers = p));
   }
 
   reload(): void {
-    this.api.listDrivers().subscribe((v) => (this.items = v));
-  }
-
-  performerLabel(id: number): string {
-    return this.performers.find((p) => p.id === id)?.shortName ?? `#${id}`;
-  }
-
-  performerOptions(): { label: string; value: number | null }[] {
-    return [
-      { label: '—', value: null },
-      ...this.performers.map((p) => ({ label: p.shortName, value: p.id })),
-    ];
+    this.api.listCustomers().subscribe((v) => (this.items = v));
   }
 
   openCreate(): void {
     this.editingId = null;
     this.form.reset({
-      performerId: null,
+      shortName: '',
       fullName: '',
       phone: '',
-      isDefault: false,
+      requisites: '',
     });
     this.dialogVisible = true;
   }
 
-  openEdit(row: DriverResponse): void {
+  openEdit(row: CustomerResponse): void {
     this.editingId = row.id;
     this.form.setValue({
-      performerId: row.performerId,
-      fullName: row.fullName,
+      shortName: row.shortName,
+      fullName: row.fullName ?? '',
       phone: row.phone ?? '',
-      isDefault: row.isDefault,
+      requisites: row.requisites ?? '',
     });
     this.dialogVisible = true;
   }
@@ -95,14 +82,11 @@ export class DriversComponent implements OnInit {
       return;
     }
     const v = this.form.getRawValue();
-    if (v.performerId == null) {
-      return;
-    }
     const body = {
-      performerId: v.performerId,
-      fullName: v.fullName.trim(),
+      shortName: v.shortName.trim(),
+      fullName: v.fullName.trim() === '' ? null : v.fullName.trim(),
       phone: v.phone.trim() === '' ? null : v.phone.trim(),
-      isDefault: v.isDefault,
+      requisites: v.requisites.trim() === '' ? null : v.requisites.trim(),
     };
     this.saving = true;
     const done = {
@@ -116,24 +100,24 @@ export class DriversComponent implements OnInit {
       },
     };
     if (this.editingId != null) {
-      this.api.updateDriver(this.editingId, body).subscribe(done);
+      this.api.updateCustomer(this.editingId, body).subscribe(done);
     } else {
-      this.api.createDriver(body).subscribe(done);
+      this.api.createCustomer(body).subscribe(done);
     }
   }
 
-  confirmDelete(row: DriverResponse): void {
+  confirmDelete(row: CustomerResponse): void {
     this.confirm.confirm({
-      message: `Удалить водителя «${row.fullName}»?`,
+      message: `Удалить заказчика «${row.shortName}»?`,
       header: 'Подтверждение',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',
       accept: () =>
-        this.api.deleteDriver(row.id).subscribe(() => this.reload()),
+        this.api.deleteCustomer(row.id).subscribe(() => this.reload()),
     });
   }
 
   dialogHeader(): string {
-    return this.editingId != null ? 'Изменить водителя' : 'Новый водитель';
+    return this.editingId != null ? 'Изменить заказчика' : 'Новый заказчик';
   }
 }

@@ -34,8 +34,12 @@ export class ShellComponent {
 
   readonly catalogItems: MenuItem[] = [
     {
-      label: 'Контрагенты',
-      routerLink: ['/catalogs/counterparties'],
+      label: 'Заказчики',
+      routerLink: ['/catalogs/customers'],
+    },
+    {
+      label: 'Исполнители',
+      routerLink: ['/catalogs/performers'],
     },
     {
       label: 'Водители',
@@ -44,10 +48,6 @@ export class ShellComponent {
     {
       label: 'Транспорт',
       routerLink: ['/catalogs/vehicles'],
-    },
-    {
-      label: 'Места',
-      routerLink: ['/catalogs/places'],
     },
   ];
 

@@ -56,13 +56,20 @@ export const routes: Routes = [
       {
         path: 'catalogs',
         pathMatch: 'full',
-        redirectTo: 'catalogs/counterparties',
+        redirectTo: 'catalogs/customers',
       },
       {
-        path: 'catalogs/counterparties',
+        path: 'catalogs/customers',
         loadComponent: () =>
-          import('./pages/catalogs/counterparties/counterparties.component').then(
-            (m) => m.CounterpartiesComponent,
+          import('./pages/catalogs/customers/customers.component').then(
+            (m) => m.CustomersComponent,
+          ),
+      },
+      {
+        path: 'catalogs/performers',
+        loadComponent: () =>
+          import('./pages/catalogs/performers/performers.component').then(
+            (m) => m.PerformersComponent,
           ),
       },
       {
@@ -77,13 +84,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/catalogs/vehicles/vehicles.component').then(
             (m) => m.VehiclesComponent,
-          ),
-      },
-      {
-        path: 'catalogs/places',
-        loadComponent: () =>
-          import('./pages/catalogs/places/places.component').then(
-            (m) => m.PlacesComponent,
           ),
       },
       {

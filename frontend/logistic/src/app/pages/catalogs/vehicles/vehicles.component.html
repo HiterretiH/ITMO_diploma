@@ -3,20 +3,24 @@
   <p-button type="button" label="Добавить" icon="pi pi-plus" (onClick)="openCreate()" />
 </div>
 
-<p-table [value]="items" [tableStyle]="{ 'min-width': '40rem' }" styleClass="p-datatable-sm">
+<p-table [value]="items" [tableStyle]="{ 'min-width': '44rem' }" styleClass="p-datatable-sm">
   <ng-template pTemplate="header">
     <tr>
+      <th>Исполнитель</th>
       <th>Госномер</th>
-      <th>Модель</th>
-      <th>Грузоподъёмность, кг</th>
+      <th>Марка / модель</th>
+      <th>Тип</th>
+      <th>Основной</th>
       <th style="width: 8rem"></th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-row>
     <tr>
+      <td>{{ performerLabel(row.performerId) }}</td>
       <td>{{ row.plateNumber }}</td>
-      <td>{{ row.model || '—' }}</td>
-      <td>{{ row.loadCapacityKg ?? '—' }}</td>
+      <td>{{ row.brandModel || '—' }}</td>
+      <td>{{ row.type || '—' }}</td>
+      <td>{{ row.isDefault ? 'Да' : '—' }}</td>
       <td>
         <p-button
           label="Изменить"
@@ -37,7 +41,7 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td colspan="4">Нет данных</td>
+      <td colspan="6">Нет данных</td>
     </tr>
   </ng-template>
 </p-table>
@@ -51,6 +55,19 @@
 >
   <form [formGroup]="form" (ngSubmit)="save()">
     <div class="field">
+      <label for="v-perf">Исполнитель *</label>
+      <p-dropdown
+        inputId="v-perf"
+        formControlName="performerId"
+        [options]="performerOptions()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="—"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="field">
       <label for="v-plate">Госномер *</label>
       <input pInputText id="v-plate" formControlName="plateNumber" class="w-full" />
       @if (form.controls.plateNumber.touched && form.controls.plateNumber.hasError('required')) {
@@ -61,22 +78,18 @@
       }
     </div>
     <div class="field">
-      <label for="v-model">Модель</label>
-      <input pInputText id="v-model" formControlName="model" class="w-full" />
+      <label for="v-bm">Марка / модель</label>
+      <input pInputText id="v-bm" formControlName="brandModel" class="w-full" />
     </div>
     <div class="field">
-      <label for="v-cap">Грузоподъёмность, кг</label>
-      <p-inputNumber
-        inputId="v-cap"
-        formControlName="loadCapacityKg"
-        [min]="0"
-        [useGrouping]="false"
-        styleClass="w-full"
-        inputStyleClass="w-full"
-      />
-      @if (form.controls.loadCapacityKg.touched && form.controls.loadCapacityKg.hasError('min')) {
-        <small class="p-error">Не меньше 0</small>
-      }
+      <label for="v-type">Тип ТС</label>
+      <input pInputText id="v-type" formControlName="type" class="w-full" />
+    </div>
+    <div class="field">
+      <label class="flex gap-2 align-items-center">
+        <input type="checkbox" formControlName="isDefault" />
+        Основное для исполнителя
+      </label>
     </div>
   </form>
   <ng-template pTemplate="footer">

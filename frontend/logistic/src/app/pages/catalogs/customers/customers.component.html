@@ -1,24 +1,22 @@
 <div class="page-head">
-  <h1 class="page-title">Водители</h1>
+  <h1 class="page-title">Заказчики</h1>
   <p-button type="button" label="Добавить" icon="pi pi-plus" (onClick)="openCreate()" />
 </div>
 
 <p-table [value]="items" [tableStyle]="{ 'min-width': '44rem' }" styleClass="p-datatable-sm">
   <ng-template pTemplate="header">
     <tr>
-      <th>Исполнитель</th>
-      <th>ФИО</th>
+      <th>Краткое название</th>
+      <th>Полное название</th>
       <th>Телефон</th>
-      <th>Основной</th>
       <th style="width: 8rem"></th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-row>
     <tr>
-      <td>{{ performerLabel(row.performerId) }}</td>
-      <td>{{ row.fullName }}</td>
+      <td>{{ row.shortName }}</td>
+      <td>{{ row.fullName || '—' }}</td>
       <td>{{ row.phone || '—' }}</td>
-      <td>{{ row.isDefault ? 'Да' : '—' }}</td>
       <td>
         <p-button
           label="Изменить"
@@ -39,7 +37,7 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td colspan="5">Нет данных</td>
+      <td colspan="4">Нет данных</td>
     </tr>
   </ng-template>
 </p-table>
@@ -48,39 +46,34 @@
   [header]="dialogHeader()"
   [(visible)]="dialogVisible"
   [modal]="true"
-  [style]="{ width: '24rem' }"
+  [style]="{ width: '26rem' }"
   [draggable]="false"
 >
   <form [formGroup]="form" (ngSubmit)="save()">
     <div class="field">
-      <label for="dr-perf">Исполнитель *</label>
-      <p-dropdown
-        inputId="dr-perf"
-        formControlName="performerId"
-        [options]="performerOptions()"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="—"
-        appendTo="body"
-        styleClass="w-full"
-      />
-    </div>
-    <div class="field">
-      <label for="dr-name">ФИО *</label>
-      <input pInputText id="dr-name" formControlName="fullName" class="w-full" />
-      @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
+      <label for="cu-sn">Краткое название *</label>
+      <input pInputText id="cu-sn" formControlName="shortName" class="w-full" />
+      @if (form.controls.shortName.touched && form.controls.shortName.invalid) {
         <small class="p-error">Обязательное поле</small>
       }
     </div>
     <div class="field">
-      <label for="dr-ph">Телефон</label>
-      <input pInputText id="dr-ph" formControlName="phone" class="w-full" />
+      <label for="cu-fn">Полное название</label>
+      <input pInputText id="cu-fn" formControlName="fullName" class="w-full" />
     </div>
     <div class="field">
-      <label class="flex gap-2 align-items-center">
-        <input type="checkbox" formControlName="isDefault" />
-        Основной для исполнителя
-      </label>
+      <label for="cu-ph">Телефон</label>
+      <input pInputText id="cu-ph" formControlName="phone" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="cu-rq">Реквизиты</label>
+      <textarea
+        pInputTextarea
+        id="cu-rq"
+        formControlName="requisites"
+        rows="3"
+        class="w-full"
+      ></textarea>
     </div>
   </form>
   <ng-template pTemplate="footer">

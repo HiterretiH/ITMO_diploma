@@ -8,11 +8,11 @@ import {
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
-import { InputNumber } from 'primeng/inputnumber';
+import { DropdownModule } from 'primeng/dropdown';
 import { InputText } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { CatalogApiService } from '../../../core/catalog-api.service';
-import { VehicleResponse } from '../../../core/catalog.models';
+import { PerformerResponse, VehicleResponse } from '../../../core/catalog.models';
 import { plateValidator } from '../../../shared/forms/plate.validator';
 
 @Component({
@@ -25,7 +25,7 @@ import { plateValidator } from '../../../shared/forms/plate.validator';
     Button,
     Dialog,
     InputText,
-    InputNumber,
+    DropdownModule,
   ],
   templateUrl: './vehicles.component.html',
   styleUrl: './vehicles.component.css',
@@ -36,34 +36,49 @@ export class VehiclesComponent implements OnInit {
   private readonly confirm = inject(ConfirmationService);
 
   items: VehicleResponse[] = [];
+  performers: PerformerResponse[] = [];
   dialogVisible = false;
   editingId: number | null = null;
   saving = false;
 
   readonly form = this.fb.group({
+    performerId: this.fb.control<number | null>(null, Validators.required),
     plateNumber: this.fb.nonNullable.control('', {
       validators: [Validators.required, plateValidator],
     }),
-    model: [''],
-    loadCapacityKg: this.fb.control<number | null>(null, {
-      validators: [Validators.min(0)],
-    }),
+    brandModel: [''],
+    type: [''],
+    isDefault: [false],
   });
 
   ngOnInit(): void {
     this.reload();
+    this.api.listPerformers().subscribe((p) => (this.performers = p));
   }
 
   reload(): void {
-    this.api.vehicles().subscribe((v) => (this.items = v));
+    this.api.listVehicles().subscribe((v) => (this.items = v));
+  }
+
+  performerLabel(id: number): string {
+    return this.performers.find((p) => p.id === id)?.shortName ?? `#${id}`;
+  }
+
+  performerOptions(): { label: string; value: number | null }[] {
+    return [
+      { label: '—', value: null },
+      ...this.performers.map((p) => ({ label: p.shortName, value: p.id })),
+    ];
   }
 
   openCreate(): void {
     this.editingId = null;
     this.form.reset({
+      performerId: null,
       plateNumber: '',
-      model: '',
-      loadCapacityKg: null,
+      brandModel: '',
+      type: '',
+      isDefault: false,
     });
     this.dialogVisible = true;
   }
@@ -71,9 +86,11 @@ export class VehiclesComponent implements OnInit {
   openEdit(row: VehicleResponse): void {
     this.editingId = row.id;
     this.form.setValue({
-      plateNumber: row.plateNumber,
-      model: row.model ?? '',
-      loadCapacityKg: row.loadCapacityKg,
+      performerId: row.performerId,
+      plateNumber: row.plateNumber ?? '',
+      brandModel: row.brandModel ?? '',
+      type: row.type ?? '',
+      isDefault: row.isDefault,
     });
     this.dialogVisible = true;
   }
@@ -84,15 +101,17 @@ export class VehiclesComponent implements OnInit {
       return;
     }
     const v = this.form.getRawValue();
+    if (v.performerId == null) {
+      return;
+    }
     const plate = v.plateNumber.replace(/\s+/g, '').toUpperCase();
-    const modelTrim = (v.model ?? '').trim();
     const body = {
-      plateNumber: plate,
-      model: modelTrim === '' ? null : modelTrim,
-      loadCapacityKg:
-        v.loadCapacityKg === null || v.loadCapacityKg === undefined
-          ? null
-          : Math.floor(Number(v.loadCapacityKg)),
+      performerId: v.performerId,
+      plateNumber: plate === '' ? null : plate,
+      brandModel:
+        (v.brandModel ?? '').trim() === '' ? null : (v.brandModel ?? '').trim(),
+      type: (v.type ?? '').trim() === '' ? null : (v.type ?? '').trim(),
+      isDefault: !!v.isDefault,
     };
     this.saving = true;
     const done = {

@@ -11,7 +11,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { Password } from 'primeng/password';
 import { InputText } from 'primeng/inputtext';
 import { AdminApiService } from '../../core/admin-api.service';
-import { AppRole } from '../../core/admin.models';
+import { Role } from '../../core/user.models';
 
 @Component({
   selector: 'app-user-create-dialog',
@@ -37,16 +37,15 @@ export class UserCreateDialogComponent {
 
   saving = false;
 
-  readonly roleOptions: { label: string; value: AppRole }[] = [
-    { label: 'Сотрудник', value: 'EMPLOYEE' },
-    { label: 'Менеджер', value: 'MANAGER' },
+  readonly roleOptions: { label: string; value: Role }[] = [
+    { label: 'Пользователь', value: 'USER' },
     { label: 'Администратор', value: 'ADMIN' },
   ];
 
   readonly form = this.fb.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(1)]],
     password: ['', [Validators.required, Validators.minLength(1)]],
-    roles: this.fb.nonNullable.control<AppRole[]>(['EMPLOYEE'], {
+    roles: this.fb.nonNullable.control<Role[]>(['USER'], {
       validators: [(c) => ((c.value?.length ?? 0) > 0 ? null : { roles: true })],
     }),
   });
@@ -57,7 +56,7 @@ export class UserCreateDialogComponent {
       this.form.reset({
         username: '',
         password: '',
-        roles: ['EMPLOYEE'],
+        roles: ['USER'],
       });
     }
   }
