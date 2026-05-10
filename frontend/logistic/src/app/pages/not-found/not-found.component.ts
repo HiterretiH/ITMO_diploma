@@ -11,7 +11,7 @@ import { Card } from 'primeng/card';
     <div class="wrap">
       <p-card header="Страница не найдена">
         <p>Запрошенный адрес не существует (404).</p>
-        <p-button label="К заказам" routerLink="/orders" />
+        <p-button label="К рейсам" routerLink="/orders" />
       </p-card>
     </div>
   `,
