@@ -168,6 +168,20 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
+    void peerCannotDownloadOrderDocumentOwnedByAnotherUser() throws Exception {
+        long orderId = createOrderReadyToComplete(tokenUserA);
+        ResponseEntity<byte[]> r =
+                restTemplate.exchange(
+                        "/api/v1/orders/"
+                                + orderId
+                                + "/documents/CONTRACT_APPLICATION/file?format=PDF",
+                        HttpMethod.GET,
+                        new HttpEntity<>(bearer(tokenUserB)),
+                        byte[].class);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
     void adminCanReadOrderCreatedByAnotherUser() throws Exception {
         long orderId = createEmptyOrder(tokenUserA);
         ResponseEntity<String> r =
