@@ -32,6 +32,7 @@ import { plateValidator } from '../forms/plate.validator';
     InputTextarea,
   ],
   templateUrl: './order-catalog-dialogs.component.html',
+  styleUrl: './order-catalog-dialogs.component.css',
 })
 export class OrderCatalogDialogsComponent {
   private readonly catalog = inject(CatalogApiService);
@@ -62,6 +63,12 @@ export class OrderCatalogDialogsComponent {
     fullName: [''],
     phone: [''],
     inn: ['', [innValidator]],
+    bankName: [''],
+    bik: [''],
+    kpp: [''],
+    paymentAccount: [''],
+    corrAccount: [''],
+    requisites: [''],
   });
 
   driverDialogVisible = false;
@@ -122,6 +129,12 @@ export class OrderCatalogDialogsComponent {
       fullName: '',
       phone: '',
       inn: '',
+      bankName: '',
+      bik: '',
+      kpp: '',
+      paymentAccount: '',
+      corrAccount: '',
+      requisites: '',
     });
     this.performerDialogVisible = true;
   }
@@ -141,6 +154,12 @@ export class OrderCatalogDialogsComponent {
       fullName: p.fullName ?? '',
       phone: p.phone ?? '',
       inn: p.inn ?? '',
+      bankName: p.bankName ?? '',
+      bik: p.bik ?? '',
+      kpp: p.kpp ?? '',
+      paymentAccount: p.paymentAccount ?? '',
+      corrAccount: p.corrAccount ?? '',
+      requisites: p.requisites ?? '',
     });
     this.performerDialogVisible = true;
   }
@@ -249,11 +268,18 @@ export class OrderCatalogDialogsComponent {
       return;
     }
     const v = this.performerForm.getRawValue();
+    const emptyToNull = (s: string) => (s.trim() === '' ? null : s.trim());
     const body = {
       shortName: v.shortName.trim(),
-      fullName: v.fullName.trim() === '' ? null : v.fullName.trim(),
-      phone: v.phone.trim() === '' ? null : v.phone.trim(),
-      inn: v.inn.trim() === '' ? null : v.inn.trim(),
+      fullName: emptyToNull(v.fullName),
+      phone: emptyToNull(v.phone),
+      inn: emptyToNull(v.inn),
+      bankName: emptyToNull(v.bankName),
+      bik: emptyToNull(v.bik),
+      kpp: emptyToNull(v.kpp),
+      paymentAccount: emptyToNull(v.paymentAccount),
+      corrAccount: emptyToNull(v.corrAccount),
+      requisites: emptyToNull(v.requisites),
     };
     this.performerSaving = true;
     const obs =

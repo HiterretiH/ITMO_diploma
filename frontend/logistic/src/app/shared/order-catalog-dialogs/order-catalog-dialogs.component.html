@@ -5,10 +5,13 @@
   [style]="{ width: '26rem' }"
   [draggable]="false"
 >
-  <form [formGroup]="customerForm">
+  <form [formGroup]="customerForm" (ngSubmit)="saveCustomerDialog()">
     <div class="field">
       <label for="ocd-cn">Краткое название *</label>
       <input pInputText id="ocd-cn" formControlName="shortName" class="w-full" />
+      @if (customerForm.controls.shortName.touched && customerForm.controls.shortName.invalid) {
+        <small class="p-error">Обязательное поле</small>
+      }
     </div>
     <div class="field">
       <label for="ocd-cf">Полное название</label>
@@ -20,7 +23,13 @@
     </div>
     <div class="field">
       <label for="ocd-cr">Реквизиты</label>
-      <textarea pInputTextarea id="ocd-cr" formControlName="requisites" rows="2" class="w-full"></textarea>
+      <textarea
+        pInputTextarea
+        id="ocd-cr"
+        formControlName="requisites"
+        rows="3"
+        class="w-full"
+      ></textarea>
     </div>
   </form>
   <ng-template pTemplate="footer">
@@ -38,13 +47,16 @@
   [header]="performerEditingId != null ? 'Изменить исполнителя' : 'Новый исполнитель'"
   [(visible)]="performerDialogVisible"
   [modal]="true"
-  [style]="{ width: '26rem' }"
+  [style]="{ width: '28rem' }"
   [draggable]="false"
 >
-  <form [formGroup]="performerForm">
+  <form [formGroup]="performerForm" (ngSubmit)="savePerformerDialog()">
     <div class="field">
       <label for="ocd-pn">Краткое название *</label>
       <input pInputText id="ocd-pn" formControlName="shortName" class="w-full" />
+      @if (performerForm.controls.shortName.touched && performerForm.controls.shortName.invalid) {
+        <small class="p-error">Обязательное поле</small>
+      }
     </div>
     <div class="field">
       <label for="ocd-pf">Полное название</label>
@@ -57,6 +69,39 @@
     <div class="field">
       <label for="ocd-pin">ИНН</label>
       <input pInputText id="ocd-pin" formControlName="inn" class="w-full" />
+      @if (performerForm.controls.inn.touched && performerForm.controls.inn.hasError('inn')) {
+        <small class="p-error">10 или 12 цифр</small>
+      }
+    </div>
+    <div class="field">
+      <label for="ocd-bank">Банк</label>
+      <input pInputText id="ocd-bank" formControlName="bankName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-bik">БИК</label>
+      <input pInputText id="ocd-bik" formControlName="bik" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-kpp">КПП</label>
+      <input pInputText id="ocd-kpp" formControlName="kpp" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-rs">Расчётный счёт</label>
+      <input pInputText id="ocd-rs" formControlName="paymentAccount" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-ks">Корр. счёт</label>
+      <input pInputText id="ocd-ks" formControlName="corrAccount" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-prq">Реквизиты (текст)</label>
+      <textarea
+        pInputTextarea
+        id="ocd-prq"
+        formControlName="requisites"
+        rows="2"
+        class="w-full"
+      ></textarea>
     </div>
   </form>
   <ng-template pTemplate="footer">
@@ -77,10 +122,13 @@
   [style]="{ width: '24rem' }"
   [draggable]="false"
 >
-  <form [formGroup]="driverForm">
+  <form [formGroup]="driverForm" (ngSubmit)="saveDriverDialog()">
     <div class="field">
       <label for="ocd-d-name">ФИО *</label>
       <input pInputText id="ocd-d-name" formControlName="fullName" class="w-full" />
+      @if (driverForm.controls.fullName.touched && driverForm.controls.fullName.invalid) {
+        <small class="p-error">Обязательное поле</small>
+      }
     </div>
     <div class="field">
       <label for="ocd-d-ph">Телефон</label>
@@ -111,10 +159,16 @@
   [style]="{ width: '24rem' }"
   [draggable]="false"
 >
-  <form [formGroup]="vehicleForm">
+  <form [formGroup]="vehicleForm" (ngSubmit)="saveVehicleDialog()">
     <div class="field">
       <label for="ocd-v-plate">Госномер *</label>
       <input pInputText id="ocd-v-plate" formControlName="plateNumber" class="w-full" />
+      @if (vehicleForm.controls.plateNumber.touched && vehicleForm.controls.plateNumber.hasError('required')) {
+        <small class="p-error">Обязательное поле</small>
+      }
+      @if (vehicleForm.controls.plateNumber.touched && vehicleForm.controls.plateNumber.hasError('plate')) {
+        <small class="p-error">Некорректный номер</small>
+      }
     </div>
     <div class="field">
       <label for="ocd-v-bm">Марка / модель</label>
