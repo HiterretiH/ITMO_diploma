@@ -5,7 +5,7 @@
   [style]="{ width: '26rem' }"
   [draggable]="false"
 >
-  <form [formGroup]="customerForm" (ngSubmit)="saveCustomerDialog()">
+  <form [formGroup]="customerForm" (ngSubmit)="saveCustomerDialog()" class="ocd-form">
     <div class="field">
       <label for="ocd-cn">Краткое название *</label>
       <input pInputText id="ocd-cn" formControlName="shortName" class="w-full" />
@@ -32,15 +32,23 @@
       ></textarea>
     </div>
   </form>
-  <ng-template pTemplate="footer">
-    <p-button label="Отмена" [text]="true" (onClick)="customerDialogVisible = false" />
+  <div class="dialog-actions">
     <p-button
+      type="button"
+      label="Отмена"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="customerDialogVisible = false"
+    />
+    <p-button
+      type="button"
       label="Сохранить"
+      icon="pi pi-check"
       [loading]="customerSaving"
       [disabled]="customerForm.invalid || customerSaving"
       (onClick)="saveCustomerDialog()"
     />
-  </ng-template>
+  </div>
 </p-dialog>
 
 <p-dialog
@@ -50,7 +58,7 @@
   [style]="{ width: '28rem' }"
   [draggable]="false"
 >
-  <form [formGroup]="performerForm" (ngSubmit)="savePerformerDialog()">
+  <form [formGroup]="performerForm" (ngSubmit)="savePerformerDialog()" class="ocd-form">
     <div class="field">
       <label for="ocd-pn">Краткое название *</label>
       <input pInputText id="ocd-pn" formControlName="shortName" class="w-full" />
@@ -104,15 +112,23 @@
       ></textarea>
     </div>
   </form>
-  <ng-template pTemplate="footer">
-    <p-button label="Отмена" [text]="true" (onClick)="performerDialogVisible = false" />
+  <div class="dialog-actions">
     <p-button
+      type="button"
+      label="Отмена"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="performerDialogVisible = false"
+    />
+    <p-button
+      type="button"
       label="Сохранить"
+      icon="pi pi-check"
       [loading]="performerSaving"
       [disabled]="performerForm.invalid || performerSaving"
       (onClick)="savePerformerDialog()"
     />
-  </ng-template>
+  </div>
 </p-dialog>
 
 <p-dialog
@@ -122,7 +138,7 @@
   [style]="{ width: '24rem' }"
   [draggable]="false"
 >
-  <form [formGroup]="driverForm" (ngSubmit)="saveDriverDialog()">
+  <form [formGroup]="driverForm" (ngSubmit)="saveDriverDialog()" class="ocd-form">
     <div class="field">
       <label for="ocd-d-name">ФИО *</label>
       <input pInputText id="ocd-d-name" formControlName="fullName" class="w-full" />
@@ -141,15 +157,23 @@
       </label>
     </div>
   </form>
-  <ng-template pTemplate="footer">
-    <p-button label="Отмена" [text]="true" (onClick)="driverDialogVisible = false" />
+  <div class="dialog-actions">
     <p-button
+      type="button"
+      label="Отмена"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="driverDialogVisible = false"
+    />
+    <p-button
+      type="button"
       [label]="driverEditingId != null ? 'Сохранить' : 'Создать'"
+      icon="pi pi-check"
       [loading]="driverSaving"
       [disabled]="driverForm.invalid || driverSaving"
       (onClick)="saveDriverDialog()"
     />
-  </ng-template>
+  </div>
 </p-dialog>
 
 <p-dialog
@@ -159,7 +183,7 @@
   [style]="{ width: '24rem' }"
   [draggable]="false"
 >
-  <form [formGroup]="vehicleForm" (ngSubmit)="saveVehicleDialog()">
+  <form [formGroup]="vehicleForm" (ngSubmit)="saveVehicleDialog()" class="ocd-form">
     <div class="field">
       <label for="ocd-v-plate">Госномер *</label>
       <input pInputText id="ocd-v-plate" formControlName="plateNumber" class="w-full" />
@@ -185,13 +209,21 @@
       </label>
     </div>
   </form>
-  <ng-template pTemplate="footer">
-    <p-button label="Отмена" [text]="true" (onClick)="vehicleDialogVisible = false" />
+  <div class="dialog-actions">
     <p-button
+      type="button"
+      label="Отмена"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="vehicleDialogVisible = false"
+    />
+    <p-button
+      type="button"
       [label]="vehicleEditingId != null ? 'Сохранить' : 'Создать'"
+      icon="pi pi-check"
       [loading]="vehicleSaving"
       [disabled]="vehicleForm.invalid || vehicleSaving"
       (onClick)="saveVehicleDialog()"
     />
-  </ng-template>
+  </div>
 </p-dialog>

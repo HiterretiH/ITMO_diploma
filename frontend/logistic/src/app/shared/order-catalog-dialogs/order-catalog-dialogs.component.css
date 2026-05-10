@@ -8,3 +8,14 @@
 .w-full {
   width: 100%;
 }
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem 0.65rem;
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--p-content-border-color, #e2e8f0);
+}
