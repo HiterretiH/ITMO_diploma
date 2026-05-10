@@ -41,6 +41,15 @@ textarea::placeholder {
   opacity: 1;
 }
 
+/* Invalid+touched: red border from PrimeNG, but placeholder stays muted (not error-colored). */
+:host ::ng-deep .ng-invalid.ng-touched .p-inputtext::placeholder,
+:host ::ng-deep .ng-invalid.ng-touched .p-inputtextarea::placeholder,
+:host ::ng-deep .ng-invalid.ng-touched input.p-inputtext::placeholder,
+:host ::ng-deep .ng-invalid.ng-touched textarea::placeholder {
+  color: var(--p-text-muted-color, #94a3b8) !important;
+  opacity: 1;
+}
+
 .dialog-actions {
   display: flex;
   flex-wrap: wrap;

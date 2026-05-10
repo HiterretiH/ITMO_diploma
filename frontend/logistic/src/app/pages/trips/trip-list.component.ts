@@ -5,6 +5,7 @@ import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
+import { finalize } from 'rxjs/operators';
 import { OrderApiService } from '../../core/order-api.service';
 import { OrderResponse } from '../../core/order.models';
 import { OrderStatusBadgeComponent } from '../../shared/layout/order-status-badge.component';
@@ -34,6 +35,8 @@ export class TripListComponent implements OnInit {
 
   orders: OrderResponse[] = [];
   listTab: 'active' | 'done' = 'active';
+  /** While completing a trip, button shows spinner; other rows stay clickable after reload. */
+  completingOrderId: number | null = null;
 
   onListTabChange(value: string | number): void {
     this.listTab = value === 'done' ? 'done' : 'active';
@@ -80,7 +83,11 @@ export class TripListComponent implements OnInit {
       header: 'Подтверждение',
       icon: 'pi pi-check-circle',
       accept: () => {
-        this.api.complete(o.id).subscribe(() => this.reload());
+        this.completingOrderId = o.id;
+        this.api
+          .complete(o.id)
+          .pipe(finalize(() => (this.completingOrderId = null)))
+          .subscribe(() => this.reload());
       },
     });
   }
