@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
@@ -50,6 +51,8 @@ export class TripEditComponent implements OnInit {
   docs: OrderDocumentDescriptor[] = [];
 
   busy = false;
+  /** Tracks in-flight document download for loading spinners. */
+  downloadKey: string | null = null;
   conflictDetail: string | null = null;
 
   ngOnInit(): void {
@@ -255,33 +258,54 @@ export class TripEditComponent implements OnInit {
     if (!id) {
       return;
     }
-    this.ordersApi.downloadDocument(id, docType, format).subscribe({
-      next: ({ blob, fileName }) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-    });
+    const key = `${docType}-${format}`;
+    this.downloadKey = key;
+    this.ordersApi
+      .downloadDocument(id, docType, format)
+      .pipe(finalize(() => (this.downloadKey = null)))
+      .subscribe({
+        next: ({ blob, fileName }) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+      });
   }
 
   downloadBundle(format: FileFormatName): void {
     const id = this.orderId;
-    if (!id) {
+    if (!id || !this.order) {
       return;
     }
-    this.ordersApi.downloadDocumentsBundle(id, format).subscribe({
-      next: ({ blob, fileName }) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-    });
+    const key = `bundle-${format}`;
+    this.downloadKey = key;
+    this.ordersApi
+      .downloadDocumentsBundle(id, format, {
+        orderNumber: this.order.orderNumber,
+        orderDate: this.order.orderDate,
+      })
+      .pipe(finalize(() => (this.downloadKey = null)))
+      .subscribe({
+        next: ({ blob, fileName }) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+      });
+  }
+
+  docDownloadKey(docType: DocumentTypeName, format: FileFormatName): string {
+    return `${docType}-${format}`;
+  }
+
+  isDownloadBusy(key: string): boolean {
+    return this.downloadKey === key;
   }
 
   eventTypeLabel(t: AuditEventResponse['eventType']): string {

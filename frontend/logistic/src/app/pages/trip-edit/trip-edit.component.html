@@ -88,7 +88,8 @@
               severity="secondary"
               [outlined]="true"
               size="small"
-              [disabled]="busy"
+              [disabled]="busy || (downloadKey !== null && downloadKey !== 'bundle-DOCX')"
+              [loading]="downloadKey === 'bundle-DOCX'"
               (onClick)="downloadBundle('DOCX')"
             />
             <p-button
@@ -98,7 +99,8 @@
               severity="secondary"
               [outlined]="true"
               size="small"
-              [disabled]="busy"
+              [disabled]="busy || (downloadKey !== null && downloadKey !== 'bundle-PDF')"
+              [loading]="downloadKey === 'bundle-PDF'"
               (onClick)="downloadBundle('PDF')"
             />
           </div>
@@ -121,6 +123,8 @@
                         icon="pi pi-download"
                         [text]="true"
                         class="mr-2"
+                        [disabled]="busy || (downloadKey !== null && downloadKey !== docDownloadKey(d.documentType, fmt))"
+                        [loading]="isDownloadBusy(docDownloadKey(d.documentType, fmt))"
                         (onClick)="downloadDocument(d.documentType, fmt)"
                       />
                     }

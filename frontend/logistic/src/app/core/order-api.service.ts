@@ -18,6 +18,26 @@ export interface DocumentBlobDownload {
   fileName: string;
 }
 
+/** When Content-Disposition is missing, build a readable ZIP name without hyphen separators. */
+export interface BundleDownloadFallbackMeta {
+  orderNumber?: number;
+  orderDate?: string;
+}
+
+function bundleZipFallbackName(
+  orderId: number,
+  format: FileFormatName,
+  meta?: BundleDownloadFallbackMeta,
+): string {
+  const extFormat = format === 'PDF' ? 'pdf' : 'docx';
+  if (meta?.orderNumber != null) {
+    const dateCompact = (meta.orderDate ?? '').replace(/-/g, '');
+    const datePart = dateCompact ? `_${dateCompact}` : "";
+    return `рейс_№${meta.orderNumber}${datePart}_все_${extFormat}.zip`;
+  }
+  return `рейс_${orderId}_все_${extFormat}.zip`;
+}
+
 function fileNameFromContentDisposition(header: string | null): string | null {
   if (!header) {
     return null;
@@ -88,10 +108,11 @@ export class OrderApiService {
   downloadDocumentsBundle(
     orderId: number,
     format: FileFormatName,
+    fallbackMeta?: BundleDownloadFallbackMeta,
   ): Observable<DocumentBlobDownload> {
     const q = `format=${encodeURIComponent(format)}`;
     const url = `${this.base}/orders/${orderId}/documents/bundle?${q}`;
-    const fallbackName = 'documents.zip';
+    const fallbackName = bundleZipFallbackName(orderId, format, fallbackMeta);
     return this.http
       .get(url, { responseType: 'blob', observe: 'response' })
       .pipe(
