@@ -17,6 +17,7 @@ import com.logistic.backend.catalog.PerformerRepository;
 import com.logistic.backend.catalog.Vehicle;
 import com.logistic.backend.catalog.VehicleRepository;
 import com.logistic.backend.document.DocumentGenerationService;
+import com.logistic.backend.document.DocumentPrefetchService;
 import com.logistic.backend.document.DocumentTemplateVersion;
 import com.logistic.backend.document.DocumentType;
 import com.logistic.backend.document.FileFormat;
@@ -54,6 +55,7 @@ public class OrderService {
     private final AuditEventRepository auditEventRepository;
     private final DocumentGenerationService documentGenerationService;
     private final GeneratedDocumentCache generatedDocumentCache;
+    private final DocumentPrefetchService documentPrefetchService;
     private final UserTripDefaultsRepository userTripDefaultsRepository;
     private final UserRepository userRepository;
 
@@ -102,6 +104,9 @@ public class OrderService {
         Long ownerId = o.getOwner().getId();
         Long oid = o.getId();
         generatedDocumentCache.invalidate(ownerId, oid);
+        if (OrderTripCompleteness.readyForTripDocuments(o)) {
+            documentPrefetchService.prefetchOrderDocuments(ownerId, oid);
+        }
         return toDto(o);
     }
 
@@ -113,6 +118,7 @@ public class OrderService {
         o.setTemplateVersion(DocumentTemplateVersion.CURRENT);
         orderRepository.save(o);
         auditService.record(actor, o, AuditEventType.ORDER_COMPLETED, Map.of("orderId", id.toString()));
+        documentPrefetchService.prefetchOrderDocuments(o.getOwner().getId(), id);
         return toDto(o);
     }
 
