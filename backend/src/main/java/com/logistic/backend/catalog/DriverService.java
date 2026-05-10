@@ -105,6 +105,6 @@ public class DriverService {
     }
 
     private ResponseStatusException notFound() {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Водитель не найден.");
     }
 }

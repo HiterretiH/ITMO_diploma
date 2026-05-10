@@ -93,7 +93,7 @@ public class OrderController {
         try {
             type = DocumentType.valueOf(documentType.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown document type");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Неизвестный тип документа.");
         }
         DocumentDownload d =
                 orderService.downloadOrderDocument(

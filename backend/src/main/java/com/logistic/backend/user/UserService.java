@@ -22,7 +22,7 @@ public class UserService {
     public UserResponse create(UserCreateRequest request) {
         validateRoles(request.roles());
         if (userRepository.existsByUsername(request.username())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Такой логин уже занят");
         }
         User u = new User();
         u.setUsername(request.username());
@@ -35,11 +35,11 @@ public class UserService {
 
     private static void validateRoles(Set<Role> roles) {
         if (roles == null || roles.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one role is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Укажите хотя бы одну роль");
         }
         for (Role r : roles) {
             if (r != Role.USER && r != Role.ADMIN) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Недопустимая роль");
             }
         }
     }

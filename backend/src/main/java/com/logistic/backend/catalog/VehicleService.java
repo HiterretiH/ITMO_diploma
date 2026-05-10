@@ -108,6 +108,6 @@ public class VehicleService {
     }
 
     private ResponseStatusException notFound() {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Транспорт не найден.");
     }
 }

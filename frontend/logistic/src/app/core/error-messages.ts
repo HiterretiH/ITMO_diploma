@@ -13,6 +13,7 @@ const TITLE_EN_TO_RU: Record<string, string> = {
 };
 
 const TITLE_BY_STATUS: Record<number, string> = {
+  0: 'Нет соединения с сервером',
   400: 'Некорректный запрос',
   401: 'Требуется авторизация',
   403: 'Доступ запрещён',
@@ -22,6 +23,7 @@ const TITLE_BY_STATUS: Record<number, string> = {
   500: 'Ошибка сервера',
   502: 'Ошибка шлюза',
   503: 'Сервис недоступен',
+  504: 'Превышено время ожидания',
 };
 
 /** Точные совпадения detail/reason от backend и типичные тексты Spring Security / Handler */
@@ -183,10 +185,12 @@ export function localizeHttpClientMessage(
 ): string {
   if (/Http failure/i.test(message)) {
     const phrase = TITLE_BY_STATUS[httpStatus];
+    const codeLabel =
+      httpStatus === 0 ? 'сеть недоступна' : `код ${httpStatus}`;
     if (phrase) {
-      return `${phrase} (код ${httpStatus}).`;
+      return `${phrase} Проверьте подключение и попробуйте снова (${codeLabel}).`;
     }
-    return `Ошибка сети или сервера (код ${httpStatus}).`;
+    return `Не удалось связаться с сервером. Проверьте сеть и повторите попытку (${codeLabel}).`;
   }
   if (/^[A-Za-z]/.test(message) && !/[а-яА-ЯёЁ]/.test(message)) {
     const tr = translateBackendDetail(message);
@@ -195,4 +199,16 @@ export function localizeHttpClientMessage(
     }
   }
   return message;
+}
+
+/** Заголовок и текст тоста, когда тело ответа не Problem JSON */
+export function summaryAndDetailForPlainHttpError(
+  status: number,
+  message: string,
+): { summary: string; detail: string } {
+  const summary =
+    TITLE_BY_STATUS[status] ??
+    (status === 0 ? 'Нет соединения с сервером' : `Ошибка ${status}`);
+  const detail = localizeHttpClientMessage(message, status);
+  return { summary, detail };
 }

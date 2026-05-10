@@ -114,6 +114,6 @@ public class PerformerService {
     }
 
     private ResponseStatusException notFound() {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Исполнитель не найден.");
     }
 }

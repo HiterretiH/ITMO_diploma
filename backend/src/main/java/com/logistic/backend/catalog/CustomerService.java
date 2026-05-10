@@ -98,6 +98,6 @@ public class CustomerService {
     }
 
     private ResponseStatusException notFound() {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказчик не найден.");
     }
 }

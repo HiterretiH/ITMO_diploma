@@ -225,7 +225,8 @@ public class OrderService {
     private void syncOrderOwner(Order o) {
         if (!o.getCustomer().getOwner().getId().equals(o.getPerformer().getOwner().getId())) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Customer and performer must belong to the same owner");
+                    HttpStatus.BAD_REQUEST,
+                    "Заказчик и исполнитель должны принадлежать одному владельцу.");
         }
         o.setOwner(o.getCustomer().getOwner());
     }
@@ -233,7 +234,8 @@ public class OrderService {
     private void validateCustomerPerformerAccess(User actor, Customer customer, Performer performer) {
         if (!customer.getOwner().getId().equals(performer.getOwner().getId())) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Customer and performer must belong to the same owner");
+                    HttpStatus.BAD_REQUEST,
+                    "Заказчик и исполнитель должны принадлежать одному владельцу.");
         }
         assertCatalogRowAccessible(actor, customer.getOwner().getId());
     }
@@ -268,13 +270,15 @@ public class OrderService {
 
     private static void assertPerformerOwnsVehicle(Performer p, Vehicle v) {
         if (!v.getOwner().getId().equals(p.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vehicle belongs to another performer");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Транспорт привязан к другому исполнителю.");
         }
     }
 
     private static void assertPerformerEmploysDriver(Performer p, Driver d) {
         if (!d.getEmployer().getId().equals(p.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Driver belongs to another performer");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Водитель привязан к другому исполнителю.");
         }
     }
 
@@ -287,7 +291,8 @@ public class OrderService {
                 || o.getUnloadingPlace().isBlank()
                 || o.getOrderDate() == null
                 || o.getTotalPrice() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incomplete order data");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Заполните все обязательные поля рейса.");
         }
     }
 
@@ -311,6 +316,6 @@ public class OrderService {
     }
 
     private ResponseStatusException notFound() {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Рейс не найден.");
     }
 }

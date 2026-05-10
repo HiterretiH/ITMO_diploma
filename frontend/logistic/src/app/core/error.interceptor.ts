@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import {
   localizeHttpClientMessage,
   localizeProblemToast,
+  summaryAndDetailForPlainHttpError,
 } from './error-messages';
 import { ProblemDetail } from '../models/problem.models';
 
@@ -119,11 +120,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           detail,
           life: 6000,
         });
-      } else if (err.status >= 400) {
+      } else if (err.status >= 400 || err.status === 0) {
+        const plain = summaryAndDetailForPlainHttpError(err.status, err.message);
         messages.add({
           severity: 'error',
-          summary: 'Запрос не выполнен',
-          detail: err.message || `Код ${err.status}`,
+          summary: plain.summary,
+          detail: plain.detail,
           life: 5000,
         });
       }

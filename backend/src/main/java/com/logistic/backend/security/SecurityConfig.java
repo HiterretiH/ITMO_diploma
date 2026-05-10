@@ -34,9 +34,8 @@ public class SecurityConfig {
     AuthenticationEntryPoint problemAuthenticationEntryPoint() {
         return (request, response, authException) -> {
             String detail =
-                    authException != null && authException.getMessage() != null
-                            ? authException.getMessage()
-                            : "Authentication required";
+                    SecurityProblemMessages.unauthorized(
+                            authException != null ? authException.getMessage() : null);
             problemResponseSupport.write(response, HttpStatus.UNAUTHORIZED, detail);
         };
     }
@@ -45,9 +44,10 @@ public class SecurityConfig {
     AccessDeniedHandler problemAccessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
             String detail =
-                    accessDeniedException != null && accessDeniedException.getMessage() != null
-                            ? accessDeniedException.getMessage()
-                            : "Forbidden";
+                    SecurityProblemMessages.forbidden(
+                            accessDeniedException != null
+                                    ? accessDeniedException.getMessage()
+                                    : null);
             problemResponseSupport.write(response, HttpStatus.FORBIDDEN, detail);
         };
     }

@@ -43,13 +43,15 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(
                             request.username(), request.password()));
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Неверный логин или пароль");
         }
         User u =
                 userRepository
                         .findByUsername(request.username())
                         .orElseThrow(
-                                () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid"));
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.UNAUTHORIZED, "Неверный логин или пароль"));
         auditService.record(u, AuditEventType.LOGIN, Map.of("username", u.getUsername()));
         return new JwtResponse(jwtService.createToken(u));
     }
@@ -67,7 +69,7 @@ public class AuthController {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.INTERNAL_SERVER_ERROR,
-                                                "User not found after registration"));
+                                                "Не удалось завершить регистрацию (обратитесь к администратору)"));
         auditService.record(u, AuditEventType.REGISTER, Map.of("username", username));
         return new JwtResponse(jwtService.createToken(u));
     }

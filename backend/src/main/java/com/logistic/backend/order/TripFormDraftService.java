@@ -85,6 +85,6 @@ public class TripFormDraftService {
     }
 
     private ResponseStatusException notFound() {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Запись не найдена.");
     }
 }
