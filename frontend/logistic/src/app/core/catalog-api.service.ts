@@ -1,12 +1,15 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  CounterpartyResponse,
+  CustomerRequest,
+  CustomerResponse,
+  DriverRequest,
   DriverResponse,
-  PlaceResponse,
-  PlaceType,
+  PerformerRequest,
+  PerformerResponse,
+  VehicleRequest,
   VehicleResponse,
 } from './catalog.models';
 
@@ -15,60 +18,62 @@ export class CatalogApiService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiBase}/api/v1`;
 
-  counterparties(q?: string): Observable<CounterpartyResponse[]> {
+  listCustomers(q?: string): Observable<CustomerResponse[]> {
     const qs = q ? `?q=${encodeURIComponent(q)}` : '';
-    return this.http.get<CounterpartyResponse[]>(`${this.base}/counterparties${qs}`);
+    return this.http.get<CustomerResponse[]>(`${this.base}/customers${qs}`);
   }
 
-  createCounterparty(body: {
-    name: string;
-    inn?: string | null;
-    legalAddress?: string | null;
-    phone?: string | null;
-  }): Observable<CounterpartyResponse> {
-    return this.http.post<CounterpartyResponse>(`${this.base}/counterparties`, body);
+  getCustomer(id: number): Observable<CustomerResponse> {
+    return this.http.get<CustomerResponse>(`${this.base}/customers/${id}`);
   }
 
-  updateCounterparty(
-    id: number,
-    body: {
-      name: string;
-      inn?: string | null;
-      legalAddress?: string | null;
-      phone?: string | null;
-    },
-  ): Observable<CounterpartyResponse> {
-    return this.http.put<CounterpartyResponse>(
-      `${this.base}/counterparties/${id}`,
-      body,
-    );
+  createCustomer(body: CustomerRequest): Observable<CustomerResponse> {
+    return this.http.post<CustomerResponse>(`${this.base}/customers`, body);
   }
 
-  deleteCounterparty(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/counterparties/${id}`);
+  updateCustomer(id: number, body: CustomerRequest): Observable<CustomerResponse> {
+    return this.http.put<CustomerResponse>(`${this.base}/customers/${id}`, body);
   }
 
-  drivers(q?: string): Observable<DriverResponse[]> {
+  deleteCustomer(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/customers/${id}`);
+  }
+
+  listPerformers(q?: string): Observable<PerformerResponse[]> {
+    const qs = q ? `?q=${encodeURIComponent(q)}` : '';
+    return this.http.get<PerformerResponse[]>(`${this.base}/performers${qs}`);
+  }
+
+  getPerformer(id: number): Observable<PerformerResponse> {
+    return this.http.get<PerformerResponse>(`${this.base}/performers/${id}`);
+  }
+
+  createPerformer(body: PerformerRequest): Observable<PerformerResponse> {
+    return this.http.post<PerformerResponse>(`${this.base}/performers`, body);
+  }
+
+  updatePerformer(id: number, body: PerformerRequest): Observable<PerformerResponse> {
+    return this.http.put<PerformerResponse>(`${this.base}/performers/${id}`, body);
+  }
+
+  deletePerformer(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/performers/${id}`);
+  }
+
+  listDrivers(q?: string): Observable<DriverResponse[]> {
     const qs = q ? `?q=${encodeURIComponent(q)}` : '';
     return this.http.get<DriverResponse[]>(`${this.base}/drivers${qs}`);
   }
 
-  createDriver(body: {
-    fullName: string;
-    licenseNumber: string;
-    licenseCategory?: string | null;
-  }): Observable<DriverResponse> {
+  getDriver(id: number): Observable<DriverResponse> {
+    return this.http.get<DriverResponse>(`${this.base}/drivers/${id}`);
+  }
+
+  createDriver(body: DriverRequest): Observable<DriverResponse> {
     return this.http.post<DriverResponse>(`${this.base}/drivers`, body);
   }
 
-  updateDriver(
-    id: number,
-    body: {
-      fullName: string;
-      licenseNumber: string;
-      licenseCategory?: string | null;
-    },
-  ): Observable<DriverResponse> {
+  updateDriver(id: number, body: DriverRequest): Observable<DriverResponse> {
     return this.http.put<DriverResponse>(`${this.base}/drivers/${id}`, body);
   }
 
@@ -76,65 +81,24 @@ export class CatalogApiService {
     return this.http.delete<void>(`${this.base}/drivers/${id}`);
   }
 
-  vehicles(q?: string): Observable<VehicleResponse[]> {
+  listVehicles(q?: string): Observable<VehicleResponse[]> {
     const qs = q ? `?q=${encodeURIComponent(q)}` : '';
     return this.http.get<VehicleResponse[]>(`${this.base}/vehicles${qs}`);
   }
 
-  createVehicle(body: {
-    plateNumber: string;
-    model?: string | null;
-    loadCapacityKg?: number | null;
-  }): Observable<VehicleResponse> {
+  getVehicle(id: number): Observable<VehicleResponse> {
+    return this.http.get<VehicleResponse>(`${this.base}/vehicles/${id}`);
+  }
+
+  createVehicle(body: VehicleRequest): Observable<VehicleResponse> {
     return this.http.post<VehicleResponse>(`${this.base}/vehicles`, body);
   }
 
-  updateVehicle(
-    id: number,
-    body: {
-      plateNumber: string;
-      model?: string | null;
-      loadCapacityKg?: number | null;
-    },
-  ): Observable<VehicleResponse> {
+  updateVehicle(id: number, body: VehicleRequest): Observable<VehicleResponse> {
     return this.http.put<VehicleResponse>(`${this.base}/vehicles/${id}`, body);
   }
 
   deleteVehicle(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/vehicles/${id}`);
-  }
-
-  places(type?: PlaceType, q?: string): Observable<PlaceResponse[]> {
-    let params = new HttpParams();
-    if (type) {
-      params = params.set('type', type);
-    }
-    if (q) {
-      params = params.set('q', q);
-    }
-    return this.http.get<PlaceResponse[]>(`${this.base}/places`, { params });
-  }
-
-  createPlace(body: {
-    address: string;
-    contact?: string | null;
-    placeType: PlaceType;
-  }): Observable<PlaceResponse> {
-    return this.http.post<PlaceResponse>(`${this.base}/places`, body);
-  }
-
-  updatePlace(
-    id: number,
-    body: {
-      address: string;
-      contact?: string | null;
-      placeType: PlaceType;
-    },
-  ): Observable<PlaceResponse> {
-    return this.http.put<PlaceResponse>(`${this.base}/places/${id}`, body);
-  }
-
-  deletePlace(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/places/${id}`);
   }
 }
