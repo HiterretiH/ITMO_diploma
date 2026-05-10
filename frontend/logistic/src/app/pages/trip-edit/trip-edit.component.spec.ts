@@ -31,6 +31,9 @@ describe('TripEditComponent', () => {
     pricePerTrip: null,
     totalPrice: 100,
     templateVersion: 1,
+    completed: false,
+    customerShortName: 'Cust',
+    performerShortName: 'Perf',
   };
 
   beforeEach(async () => {

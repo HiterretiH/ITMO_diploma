@@ -5,6 +5,7 @@ import com.logistic.backend.api.dto.OrderCreateRequest;
 import com.logistic.backend.api.dto.OrderDocumentDescriptor;
 import com.logistic.backend.api.dto.OrderResponse;
 import com.logistic.backend.api.dto.OrderUpdateRequest;
+import com.logistic.backend.audit.AuditEventRepository;
 import com.logistic.backend.audit.AuditEventType;
 import com.logistic.backend.audit.AuditService;
 import com.logistic.backend.catalog.Customer;
@@ -30,6 +31,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
@@ -47,6 +49,7 @@ public class OrderService {
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
     private final AuditService auditService;
+    private final AuditEventRepository auditEventRepository;
     private final DocumentGenerationService documentGenerationService;
     private final UserTripDefaultsRepository userTripDefaultsRepository;
     private final UserRepository userRepository;
@@ -121,14 +124,17 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public List<OrderResponse> list(User actor) {
-        if (UserAccess.isAdmin(actor)) {
-            return orderRepository.findAllDetailedOrderByOrderDateDesc().stream()
-                    .map(this::toDto)
-                    .toList();
-        }
-        return orderRepository.findAllDetailedByOwner_IdOrderByOrderDateDesc(actor.getId()).stream()
-                .map(this::toDto)
-                .toList();
+        List<Order> orders =
+                UserAccess.isAdmin(actor)
+                        ? orderRepository.findAllDetailedOrderByOrderDateDesc()
+                        : orderRepository.findAllDetailedByOwner_IdOrderByOrderDateDesc(actor.getId());
+        List<Long> ids = orders.stream().map(Order::getId).toList();
+        Set<Long> completedIds =
+                ids.isEmpty()
+                        ? Set.of()
+                        : auditEventRepository.findOrderIdsByOrder_IdInAndEventType(
+                                ids, AuditEventType.ORDER_COMPLETED);
+        return orders.stream().map(o -> toDto(o, completedIds.contains(o.getId()))).toList();
     }
 
     @Transactional(readOnly = true)
@@ -297,6 +303,12 @@ public class OrderService {
     }
 
     private OrderResponse toDto(Order o) {
+        boolean completed =
+                auditEventRepository.existsByOrder_IdAndEventType(o.getId(), AuditEventType.ORDER_COMPLETED);
+        return toDto(o, completed);
+    }
+
+    private OrderResponse toDto(Order o, boolean completed) {
         return new OrderResponse(
                 o.getId(),
                 o.getCustomer().getId(),
@@ -312,7 +324,10 @@ public class OrderService {
                 o.getTripCount(),
                 o.getPricePerTrip(),
                 o.getTotalPrice(),
-                o.getTemplateVersion());
+                o.getTemplateVersion(),
+                completed,
+                o.getCustomer().getShortName(),
+                o.getPerformer().getShortName());
     }
 
     private ResponseStatusException notFound() {

@@ -1378,6 +1378,15 @@ components:
         templateVersion:
           type: integer
           format: int32
+        completed:
+          type: boolean
+          description: True if an ORDER_COMPLETED audit event exists for this order
+        customerShortName:
+          type: string
+          description: Short name of the customer for display lists
+        performerShortName:
+          type: string
+          description: Short name of the performer for display lists
 
     TripFormDraftResponse:
       type: object

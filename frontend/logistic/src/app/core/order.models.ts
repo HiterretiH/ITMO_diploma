@@ -39,6 +39,9 @@ export interface OrderResponse {
   pricePerTrip: number | null;
   totalPrice: number | null;
   templateVersion: number;
+  completed: boolean;
+  customerShortName: string;
+  performerShortName: string;
 }
 
 export type DocumentTypeName =

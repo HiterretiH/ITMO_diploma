@@ -53,6 +53,9 @@ describe('TripNewComponent', () => {
                 pricePerTrip: 100,
                 totalPrice: 200,
                 templateVersion: 1,
+                completed: false,
+                customerShortName: 'C',
+                performerShortName: 'P',
               }),
             update: (_id: number, body: OrderUpdateRequest) => {
               lastUpdatePayload = body;
@@ -72,6 +75,9 @@ describe('TripNewComponent', () => {
                 pricePerTrip: 100,
                 totalPrice: 200,
                 templateVersion: 1,
+                completed: false,
+                customerShortName: 'C',
+                performerShortName: 'P',
               });
             },
             complete: () =>
@@ -91,6 +97,9 @@ describe('TripNewComponent', () => {
                 pricePerTrip: 100,
                 totalPrice: 200,
                 templateVersion: 1,
+                completed: true,
+                customerShortName: 'C',
+                performerShortName: 'P',
               }),
           },
         },

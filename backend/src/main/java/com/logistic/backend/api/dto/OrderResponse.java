@@ -18,4 +18,7 @@ public record OrderResponse(
         int tripCount,
         BigDecimal pricePerTrip,
         BigDecimal totalPrice,
-        int templateVersion) {}
+        int templateVersion,
+        boolean completed,
+        String customerShortName,
+        String performerShortName) {}
