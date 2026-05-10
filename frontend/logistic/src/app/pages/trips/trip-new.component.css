@@ -35,13 +35,6 @@
   color: var(--p-text-muted-color, #64748b);
 }
 
-.block-hint {
-  margin: -0.15rem 0 0.85rem;
-  font-size: 0.82rem;
-  color: var(--p-text-muted-color, #64748b);
-  line-height: 1.45;
-}
-
 .block-actions {
   display: flex;
   flex-wrap: wrap;
