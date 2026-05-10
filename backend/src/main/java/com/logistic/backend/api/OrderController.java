@@ -11,6 +11,7 @@ import com.logistic.backend.order.OrderService;
 import com.logistic.backend.security.CurrentUserService;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -105,7 +106,9 @@ public class OrderController {
                 orderService.downloadOrderDocument(
                         orderId, type, format, currentUserService.requireUser());
         ContentDisposition disposition =
-                ContentDisposition.attachment().filename(d.filename()).build();
+                ContentDisposition.attachment()
+                        .filename(d.filename(), StandardCharsets.UTF_8)
+                        .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
                 .header(HttpHeaders.CONTENT_TYPE, d.contentType())
