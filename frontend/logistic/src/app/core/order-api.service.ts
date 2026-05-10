@@ -85,6 +85,26 @@ export class OrderApiService {
     );
   }
 
+  downloadDocumentsBundle(
+    orderId: number,
+    format: FileFormatName,
+  ): Observable<DocumentBlobDownload> {
+    const q = `format=${encodeURIComponent(format)}`;
+    const url = `${this.base}/orders/${orderId}/documents/bundle?${q}`;
+    const fallbackName = 'documents.zip';
+    return this.http
+      .get(url, { responseType: 'blob', observe: 'response' })
+      .pipe(
+        map((res) => ({
+          blob: res.body as Blob,
+          fileName:
+            fileNameFromContentDisposition(
+              res.headers.get('content-disposition'),
+            ) ?? fallbackName,
+        })),
+      );
+  }
+
   downloadDocument(
     orderId: number,
     documentType: DocumentTypeName,

@@ -82,6 +82,21 @@ public class OrderController {
         return orderService.listDocuments(id, currentUserService.requireUser());
     }
 
+    @GetMapping("/{orderId}/documents/bundle")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    public ResponseEntity<Resource> downloadOrderDocumentsBundle(
+            @PathVariable Long orderId, @RequestParam FileFormat format) throws IOException {
+        DocumentDownload d =
+                orderService.downloadOrderDocumentsBundle(
+                        orderId, format, currentUserService.requireUser());
+        ContentDisposition disposition =
+                ContentDisposition.attachment().filename(d.filename()).build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .header(HttpHeaders.CONTENT_TYPE, d.contentType())
+                .body(d.resource());
+    }
+
     @GetMapping("/{orderId}/documents/{documentType}/file")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<Resource> downloadOrderDocument(

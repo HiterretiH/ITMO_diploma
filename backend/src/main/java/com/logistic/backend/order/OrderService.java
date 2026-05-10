@@ -20,11 +20,14 @@ import com.logistic.backend.document.DocumentGenerationService;
 import com.logistic.backend.document.DocumentTemplateVersion;
 import com.logistic.backend.document.DocumentType;
 import com.logistic.backend.document.FileFormat;
+import com.logistic.backend.document.OrderPrintSnapshot;
+import com.logistic.backend.document.OrderSnapshotMapper;
 import com.logistic.backend.user.User;
 import com.logistic.backend.user.UserAccess;
 import com.logistic.backend.user.UserRepository;
 import com.logistic.backend.user.UserTripDefaults;
 import com.logistic.backend.user.UserTripDefaultsRepository;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,6 +35,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
@@ -51,6 +56,7 @@ public class OrderService {
     private final AuditService auditService;
     private final AuditEventRepository auditEventRepository;
     private final DocumentGenerationService documentGenerationService;
+    private final OrderSnapshotMapper orderSnapshotMapper;
     private final UserTripDefaultsRepository userTripDefaultsRepository;
     private final UserRepository userRepository;
 
@@ -157,6 +163,27 @@ public class OrderService {
         String filename = documentGenerationService.downloadFileName(o, documentType, format);
         String contentType = DocumentGenerationService.contentTypeFor(format);
         return new DocumentDownload(new ByteArrayResource(bytes), filename, contentType);
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentDownload downloadOrderDocumentsBundle(
+            Long orderId, FileFormat format, User actor) throws IOException {
+        Order o = loadDetailed(actor, orderId);
+        validateReadyForComplete(o);
+        OrderPrintSnapshot snap = orderSnapshotMapper.fromOrder(o);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(bos)) {
+            for (DocumentType dt : DocumentType.values()) {
+                byte[] bytes = documentGenerationService.generateDocument(o, dt, format);
+                String entryName = DocumentGenerationService.downloadFileName(dt, format, snap);
+                zos.putNextEntry(new ZipEntry(entryName));
+                zos.write(bytes);
+                zos.closeEntry();
+            }
+        }
+        String zipName = DocumentGenerationService.bundleZipFileName(snap);
+        return new DocumentDownload(
+                new ByteArrayResource(bos.toByteArray()), zipName, "application/zip");
     }
 
     public Order requireAccessibleOrder(Long id, User actor) {
