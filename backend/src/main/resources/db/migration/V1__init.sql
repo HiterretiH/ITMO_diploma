@@ -66,6 +66,14 @@ CREATE UNIQUE INDEX uq_drivers_default_per_employer ON drivers (employer_id)
 
 CREATE INDEX idx_drivers_employer ON drivers (employer_id);
 
+CREATE TABLE user_trip_defaults (
+    user_id BIGINT PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
+    last_performer_id BIGINT REFERENCES performers (id) ON DELETE SET NULL,
+    last_driver_id BIGINT REFERENCES drivers (id) ON DELETE SET NULL,
+    last_vehicle_id BIGINT REFERENCES vehicles (id) ON DELETE SET NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE orders (
     id BIGSERIAL PRIMARY KEY,
     owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
