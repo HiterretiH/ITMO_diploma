@@ -20,6 +20,7 @@ import com.logistic.backend.document.DocumentGenerationService;
 import com.logistic.backend.document.DocumentTemplateVersion;
 import com.logistic.backend.document.DocumentType;
 import com.logistic.backend.document.FileFormat;
+import com.logistic.backend.document.GeneratedDocumentCache;
 import com.logistic.backend.user.User;
 import com.logistic.backend.user.UserAccess;
 import com.logistic.backend.user.UserRepository;
@@ -31,6 +32,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
@@ -51,6 +53,7 @@ public class OrderService {
     private final AuditService auditService;
     private final AuditEventRepository auditEventRepository;
     private final DocumentGenerationService documentGenerationService;
+    private final GeneratedDocumentCache generatedDocumentCache;
     private final UserTripDefaultsRepository userTripDefaultsRepository;
     private final UserRepository userRepository;
 
@@ -96,6 +99,9 @@ public class OrderService {
         upsertUserTripDefaults(actor, o);
         auditService.record(
                 actor, o, AuditEventType.ORDER_UPDATED, Map.of("orderId", o.getId().toString()));
+        Long ownerId = o.getOwner().getId();
+        Long oid = o.getId();
+        generatedDocumentCache.invalidate(ownerId, oid);
         return toDto(o);
     }
 
@@ -103,6 +109,7 @@ public class OrderService {
     public OrderResponse complete(Long id, User actor) {
         Order o = loadDetailed(actor, id);
         validateReadyForComplete(o);
+        generatedDocumentCache.invalidate(o.getOwner().getId(), o.getId());
         o.setTemplateVersion(DocumentTemplateVersion.CURRENT);
         orderRepository.save(o);
         auditService.record(actor, o, AuditEventType.ORDER_COMPLETED, Map.of("orderId", id.toString()));
@@ -113,6 +120,7 @@ public class OrderService {
     public void delete(Long id, User actor) {
         Order o = loadDetailed(actor, id);
         Long orderId = o.getId();
+        generatedDocumentCache.invalidate(o.getOwner().getId(), orderId);
         orderRepository.delete(o);
         auditService.record(actor, AuditEventType.ORDER_DELETED, Map.of("orderId", orderId.toString()));
     }
@@ -153,7 +161,16 @@ public class OrderService {
             Long orderId, DocumentType documentType, FileFormat format, User actor) throws IOException {
         Order o = loadDetailed(actor, orderId);
         validateReadyForComplete(o);
-        byte[] bytes = documentGenerationService.generateDocument(o, documentType, format);
+        long ownerId = o.getOwner().getId();
+        Optional<byte[]> fromCache =
+                generatedDocumentCache.get(ownerId, orderId, documentType, format);
+        byte[] bytes;
+        if (fromCache.isPresent()) {
+            bytes = fromCache.get();
+        } else {
+            bytes = documentGenerationService.generateDocument(o, documentType, format);
+            generatedDocumentCache.put(ownerId, orderId, documentType, format, bytes);
+        }
         String filename = documentGenerationService.downloadFileName(o, documentType, format);
         String contentType = DocumentGenerationService.contentTypeFor(format);
         return new DocumentDownload(new ByteArrayResource(bytes), filename, contentType);
@@ -289,14 +306,7 @@ public class OrderService {
     }
 
     private static void validateReadyForComplete(Order o) {
-        if (o.getVehicle() == null
-                || o.getDriver() == null
-                || o.getLoadingPlace() == null
-                || o.getLoadingPlace().isBlank()
-                || o.getUnloadingPlace() == null
-                || o.getUnloadingPlace().isBlank()
-                || o.getOrderDate() == null
-                || o.getTotalPrice() == null) {
+        if (!OrderTripCompleteness.readyForTripDocuments(o)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Заполните все обязательные поля рейса.");
         }
