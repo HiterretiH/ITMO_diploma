@@ -80,27 +80,6 @@ describe('TripNewComponent', () => {
                 performerShortName: 'P',
               });
             },
-            complete: () =>
-              of({
-                id: 99,
-                customerId: 1,
-                performerId: 1,
-                vehicleId: 1,
-                driverId: 1,
-                orderNumber: 1,
-                orderDate: '2026-05-15',
-                loadingPlace: 'A',
-                loadingContact: null,
-                unloadingPlace: 'B',
-                unloadingContact: null,
-                tripCount: 2,
-                pricePerTrip: 100,
-                totalPrice: 200,
-                templateVersion: 1,
-                completed: true,
-                customerShortName: 'C',
-                performerShortName: 'P',
-              }),
           },
         },
         {
@@ -160,7 +139,7 @@ describe('TripNewComponent', () => {
       ratePerLeg: 100,
     });
     expect(cmp.form.controls.priceAmount.value).toBe(200);
-    cmp.saveAndComplete();
+    cmp.saveDraft();
     expect(lastUpdatePayload).toBeDefined();
     expect(lastUpdatePayload!.tripCount).toBe(2);
     expect(lastUpdatePayload!.totalPrice).toBe(200);
@@ -184,7 +163,7 @@ describe('TripNewComponent', () => {
       ratePerLeg: 100,
       orderNumber: 42,
     });
-    cmp.saveAndComplete();
+    cmp.saveDraft();
     expect(lastUpdatePayload?.orderNumber).toBe(42);
   });
 });

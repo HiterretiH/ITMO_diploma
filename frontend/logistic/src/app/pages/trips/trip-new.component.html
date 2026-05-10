@@ -28,7 +28,7 @@
       (catalogHint)="errorMessage = $event"
     />
 
-    <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveAndComplete()">
+    <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveDraft()">
       <section class="block" aria-labelledby="sec-customer">
         <h2 id="sec-customer" class="block-heading">Заказчик и исполнитель</h2>
         <div class="field">
@@ -41,6 +41,8 @@
             optionValue="value"
             [filter]="true"
             filterBy="label"
+            emptyFilterMessage="Ничего не найдено"
+            emptyMessage="Нет записей"
             [showClear]="true"
             [placeholder]="customers.length ? '—' : 'Нет заказчиков'"
             appendTo="body"
@@ -75,6 +77,8 @@
             optionValue="value"
             [filter]="true"
             filterBy="label"
+            emptyFilterMessage="Ничего не найдено"
+            emptyMessage="Нет записей"
             [showClear]="true"
             [placeholder]="performers.length ? '—' : 'Нет исполнителей'"
             appendTo="body"
@@ -116,6 +120,8 @@
               optionValue="value"
               [filter]="true"
               filterBy="label"
+              emptyFilterMessage="Ничего не найдено"
+              emptyMessage="Нет записей"
               [showClear]="true"
               [placeholder]="driverOptions().length ? '—' : 'Нет водителей'"
               appendTo="body"
@@ -150,6 +156,8 @@
               optionValue="value"
               [filter]="true"
               filterBy="label"
+              emptyFilterMessage="Ничего не найдено"
+              emptyMessage="Нет записей"
               [showClear]="true"
               [placeholder]="vehicleOptions().length ? '—' : 'Нет ТС'"
               appendTo="body"
@@ -301,18 +309,10 @@
           routerLink="/orders"
         />
         <p-button
-          type="button"
-          label="Создать рейс"
-          icon="pi pi-file"
-          severity="secondary"
-          [loading]="busy"
-          [disabled]="busy"
-          (onClick)="saveDraft()"
-        />
-        <p-button
           type="submit"
-          label="Создать и завершить рейс"
+          label="Создать рейс"
           icon="pi pi-check"
+          severity="success"
           [loading]="busy"
           [disabled]="busy"
         />

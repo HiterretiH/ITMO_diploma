@@ -142,3 +142,11 @@ label {
 .w-full {
   width: 100%;
 }
+
+/* Same as catalog dialogs: invalid state must not turn placeholder red. */
+:host ::ng-deep .trip-new-form .ng-invalid.ng-touched .p-inputtext::placeholder,
+:host ::ng-deep .trip-new-form .ng-invalid.ng-touched .p-inputtextarea::placeholder,
+:host ::ng-deep .trip-new-form .ng-invalid.ng-touched textarea::placeholder {
+  color: var(--p-text-muted-color, #94a3b8) !important;
+  opacity: 1;
+}
