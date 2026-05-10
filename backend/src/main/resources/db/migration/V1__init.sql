@@ -82,7 +82,8 @@ CREATE TABLE orders (
     trip_count INTEGER NOT NULL DEFAULT 1,
     price_per_trip NUMERIC(10, 2),
     total_price NUMERIC(10, 2),
-    template_version INTEGER NOT NULL DEFAULT 1
+    template_version INTEGER NOT NULL DEFAULT 1,
+    completed BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX idx_orders_owner ON orders (owner_id);

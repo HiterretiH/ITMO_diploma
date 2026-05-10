@@ -85,31 +85,39 @@ class OrderLifecycleIntegrationTest extends AbstractPostgresIntegrationTest {
                         employeeToken,
                         new VehicleRequest(performerId, "GAZelle", "A123BC77", "фургон"));
 
-        String createBody =
-                objectMapper.writeValueAsString(new OrderCreateRequest(customerId, performerId, null, null));
-        ResponseEntity<String> createOrder =
+        String minimalBody =
+                objectMapper.writeValueAsString(OrderCreateRequest.minimal(customerId, performerId));
+        ResponseEntity<String> minimalOrder =
                 restTemplate.postForEntity(
                         "/api/v1/orders",
-                        new HttpEntity<>(createBody, authorizedHeaders(employeeToken)),
+                        new HttpEntity<>(minimalBody, authorizedHeaders(employeeToken)),
                         String.class);
-        assertThat(createOrder.getStatusCode()).isEqualTo(HttpStatus.OK);
-        JsonNode created = objectMapper.readTree(createOrder.getBody());
-        long orderId = created.get("id").asLong();
+        assertThat(minimalOrder.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode minimalCreated = objectMapper.readTree(minimalOrder.getBody());
+        long sparseOrderId = minimalCreated.get("id").asLong();
 
         ResponseEntity<byte[]> downloadIncomplete =
                 restTemplate.exchange(
                         "/api/v1/orders/"
-                                + orderId
+                                + sparseOrderId
                                 + "/documents/CONTRACT_APPLICATION/file?format=PDF",
                         HttpMethod.GET,
                         new HttpEntity<>(authorizedHeaders(employeeToken)),
                         byte[].class);
         assertThat(downloadIncomplete.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
-        OrderUpdateRequest full =
-                new OrderUpdateRequest(
-                        null,
-                        null,
+        ResponseEntity<Void> deleteSparse =
+                restTemplate.exchange(
+                        "/api/v1/orders/" + sparseOrderId,
+                        HttpMethod.DELETE,
+                        new HttpEntity<>(authorizedHeaders(employeeToken)),
+                        Void.class);
+        assertThat(deleteSparse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        OrderCreateRequest fullCreate =
+                new OrderCreateRequest(
+                        customerId,
+                        performerId,
                         vehicleId,
                         driverId,
                         LocalDate.of(2026, 6, 1),
@@ -122,14 +130,16 @@ class OrderLifecycleIntegrationTest extends AbstractPostgresIntegrationTest {
                         new BigDecimal("22500.00"),
                         new BigDecimal("45000.00"));
 
-        ResponseEntity<String> updateOrder =
-                restTemplate.exchange(
-                        "/api/v1/orders/" + orderId,
-                        HttpMethod.PUT,
+        ResponseEntity<String> createOrder =
+                restTemplate.postForEntity(
+                        "/api/v1/orders",
                         new HttpEntity<>(
-                                objectMapper.writeValueAsString(full), authorizedHeaders(employeeToken)),
+                                objectMapper.writeValueAsString(fullCreate), authorizedHeaders(employeeToken)),
                         String.class);
-        assertThat(updateOrder.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(createOrder.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode created = objectMapper.readTree(createOrder.getBody());
+        long orderId = created.get("id").asLong();
+        assertThat(created.get("completed").asBoolean()).isFalse();
 
         ResponseEntity<String> docs =
                 restTemplate.exchange(
@@ -162,6 +172,24 @@ class OrderLifecycleIntegrationTest extends AbstractPostgresIntegrationTest {
                         new HttpEntity<>(authorizedHeaders(employeeToken)),
                         String.class);
         assertThat(complete.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(objectMapper.readTree(complete.getBody()).get("completed").asBoolean()).isTrue();
+
+        ResponseEntity<String> reopen =
+                restTemplate.postForEntity(
+                        "/api/v1/orders/" + orderId + "/reopen",
+                        new HttpEntity<>(authorizedHeaders(employeeToken)),
+                        String.class);
+        assertThat(reopen.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(objectMapper.readTree(reopen.getBody()).get("completed").asBoolean()).isFalse();
+
+        ResponseEntity<String> completeAgainAfterReopen =
+                restTemplate.postForEntity(
+                        "/api/v1/orders/" + orderId + "/complete",
+                        new HttpEntity<>(authorizedHeaders(employeeToken)),
+                        String.class);
+        assertThat(completeAgainAfterReopen.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(objectMapper.readTree(completeAgainAfterReopen.getBody()).get("completed").asBoolean())
+                .isTrue();
 
         ResponseEntity<byte[]> pdfAfterComplete =
                 restTemplate.exchange(

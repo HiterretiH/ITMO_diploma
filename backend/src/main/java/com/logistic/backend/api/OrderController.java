@@ -69,6 +69,12 @@ public class OrderController {
         return orderService.complete(id, currentUserService.requireUser());
     }
 
+    @PostMapping("/{id}/reopen")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    public OrderResponse reopen(@PathVariable Long id) {
+        return orderService.reopen(id, currentUserService.requireUser());
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('USER','ADMIN')")

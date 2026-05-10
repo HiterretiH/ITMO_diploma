@@ -78,4 +78,7 @@ public class Order {
 
     @Column(name = "template_version", nullable = false)
     private int templateVersion = 1;
+
+    @Column(name = "completed", nullable = false)
+    private boolean completed = false;
 }

@@ -835,6 +835,32 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /api/v1/orders/{id}/reopen:
+    post:
+      tags: [Orders]
+      summary: Reopen a completed order (mark not completed)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Order is no longer marked complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/v1/orders/{id}/documents:
     get:
       tags: [Documents]
@@ -1288,6 +1314,29 @@ components:
           type: integer
           format: int64
           nullable: true
+        orderDate:
+          type: string
+          format: date
+        orderNumber:
+          type: integer
+          format: int32
+        loadingPlace:
+          type: string
+        loadingContact:
+          type: string
+        unloadingPlace:
+          type: string
+        unloadingContact:
+          type: string
+        tripCount:
+          type: integer
+          format: int32
+        pricePerTrip:
+          type: number
+          format: decimal
+        totalPrice:
+          type: number
+          format: decimal
 
     OrderUpdateRequest:
       type: object
@@ -1380,7 +1429,7 @@ components:
           format: int32
         completed:
           type: boolean
-          description: True if an ORDER_COMPLETED audit event exists for this order
+          description: True when the trip has been marked complete (persisted on the order)
         customerShortName:
           type: string
           description: Short name of the customer for display lists

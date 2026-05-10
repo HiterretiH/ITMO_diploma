@@ -5,7 +5,6 @@ import com.logistic.backend.api.dto.OrderCreateRequest;
 import com.logistic.backend.api.dto.OrderDocumentDescriptor;
 import com.logistic.backend.api.dto.OrderResponse;
 import com.logistic.backend.api.dto.OrderUpdateRequest;
-import com.logistic.backend.audit.AuditEventRepository;
 import com.logistic.backend.audit.AuditEventType;
 import com.logistic.backend.audit.AuditService;
 import com.logistic.backend.catalog.Customer;
@@ -34,7 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
@@ -52,7 +50,6 @@ public class OrderService {
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
     private final AuditService auditService;
-    private final AuditEventRepository auditEventRepository;
     private final DocumentGenerationService documentGenerationService;
     private final GeneratedDocumentCache generatedDocumentCache;
     private final DocumentPrefetchService documentPrefetchService;
@@ -69,10 +66,12 @@ public class OrderService {
         o.setOwner(orderOwner);
         o.setCustomer(customer);
         o.setPerformer(performer);
-        o.setOrderNumber(orderRepository.maxOrderNumberForOwner(orderOwner.getId()) + 1);
-        o.setOrderDate(LocalDate.now());
+        int nextNumber = orderRepository.maxOrderNumberForOwner(orderOwner.getId()) + 1;
+        o.setOrderNumber(req.orderNumber() != null ? req.orderNumber() : nextNumber);
+        o.setOrderDate(req.orderDate() != null ? req.orderDate() : LocalDate.now());
         o.setLoadingPlace("");
         o.setUnloadingPlace("");
+        o.setCompleted(false);
         if (req.vehicleId() != null) {
             Vehicle v = vehicleRepository.findById(req.vehicleId()).orElseThrow(this::notFound);
             assertPerformerOwnsVehicle(performer, v);
@@ -85,11 +84,19 @@ public class OrderService {
             assertDriverVisible(actor, d);
             o.setDriver(d);
         }
+        apply(o, req.toUpdateMask(), actor);
+        syncOrderOwner(o);
         orderRepository.save(o);
         upsertUserTripDefaults(actor, o);
         auditService.record(
                 actor, o, AuditEventType.ORDER_CREATED, Map.of("orderId", o.getId().toString()));
-        return toDto(o);
+        Long ownerId = o.getOwner().getId();
+        Long oid = o.getId();
+        generatedDocumentCache.invalidate(ownerId, oid);
+        if (OrderTripCompleteness.readyForTripDocuments(o)) {
+            documentPrefetchService.prefetchOrderDocuments(ownerId, oid);
+        }
+        return toDto(loadDetailed(actor, oid));
     }
 
     @Transactional
@@ -113,12 +120,33 @@ public class OrderService {
     @Transactional
     public OrderResponse complete(Long id, User actor) {
         Order o = loadDetailed(actor, id);
+        if (o.isCompleted()) {
+            return toDto(o);
+        }
         validateReadyForComplete(o);
         generatedDocumentCache.invalidate(o.getOwner().getId(), o.getId());
         o.setTemplateVersion(DocumentTemplateVersion.CURRENT);
+        o.setCompleted(true);
         orderRepository.save(o);
         auditService.record(actor, o, AuditEventType.ORDER_COMPLETED, Map.of("orderId", id.toString()));
         documentPrefetchService.prefetchOrderDocuments(o.getOwner().getId(), id);
+        return toDto(o);
+    }
+
+    @Transactional
+    public OrderResponse reopen(Long id, User actor) {
+        Order o = loadDetailed(actor, id);
+        if (!o.isCompleted()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Рейс не завершён.");
+        }
+        generatedDocumentCache.invalidate(o.getOwner().getId(), o.getId());
+        o.setCompleted(false);
+        orderRepository.save(o);
+        auditService.record(actor, o, AuditEventType.ORDER_REOPENED, Map.of("orderId", id.toString()));
+        Long ownerId = o.getOwner().getId();
+        if (OrderTripCompleteness.readyForTripDocuments(o)) {
+            documentPrefetchService.prefetchOrderDocuments(ownerId, id);
+        }
         return toDto(o);
     }
 
@@ -142,13 +170,7 @@ public class OrderService {
                 UserAccess.isAdmin(actor)
                         ? orderRepository.findAllDetailedOrderByOrderDateDesc()
                         : orderRepository.findAllDetailedByOwner_IdOrderByOrderDateDesc(actor.getId());
-        List<Long> ids = orders.stream().map(Order::getId).toList();
-        Set<Long> completedIds =
-                ids.isEmpty()
-                        ? Set.of()
-                        : auditEventRepository.findOrderIdsByOrder_IdInAndEventType(
-                                ids, AuditEventType.ORDER_COMPLETED);
-        return orders.stream().map(o -> toDto(o, completedIds.contains(o.getId()))).toList();
+        return orders.stream().map(this::toDto).toList();
     }
 
     @Transactional(readOnly = true)
@@ -319,12 +341,6 @@ public class OrderService {
     }
 
     private OrderResponse toDto(Order o) {
-        boolean completed =
-                auditEventRepository.existsByOrder_IdAndEventType(o.getId(), AuditEventType.ORDER_COMPLETED);
-        return toDto(o, completed);
-    }
-
-    private OrderResponse toDto(Order o, boolean completed) {
         return new OrderResponse(
                 o.getId(),
                 o.getCustomer().getId(),
@@ -341,7 +357,7 @@ public class OrderService {
                 o.getPricePerTrip(),
                 o.getTotalPrice(),
                 o.getTemplateVersion(),
-                completed,
+                o.isCompleted(),
                 o.getCustomer().getShortName(),
                 o.getPerformer().getShortName());
     }

@@ -220,7 +220,7 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
                         token,
                         new PerformerRequest("P", "PFull", null, null, null, null, null, null, null, null));
         String body =
-                objectMapper.writeValueAsString(new OrderCreateRequest(customerId, performerId, null, null));
+                objectMapper.writeValueAsString(OrderCreateRequest.minimal(customerId, performerId));
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
                         "/api/v1/orders", new HttpEntity<>(body, bearer(token)), String.class);
@@ -247,7 +247,7 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
         Long driverId = postDriver(token, new DriverRequest(performerId, "D", null));
         Long vehicleId = postVehicle(token, new VehicleRequest(performerId, "M", "A111AA77", null));
         String create =
-                objectMapper.writeValueAsString(new OrderCreateRequest(customerId, performerId, null, null));
+                objectMapper.writeValueAsString(OrderCreateRequest.minimal(customerId, performerId));
         ResponseEntity<String> createR =
                 restTemplate.postForEntity(
                         "/api/v1/orders", new HttpEntity<>(create, bearer(token)), String.class);

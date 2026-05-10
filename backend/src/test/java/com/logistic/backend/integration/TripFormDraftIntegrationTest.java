@@ -92,7 +92,7 @@ class TripFormDraftIntegrationTest extends AbstractPostgresIntegrationTest {
                         "/api/v1/orders",
                         new HttpEntity<>(
                                 objectMapper.writeValueAsString(
-                                        new OrderCreateRequest(customerId, performerId, null, null)),
+                                        OrderCreateRequest.minimal(customerId, performerId)),
                                 bearer(token)),
                         String.class);
         assertThat(createOrder.getStatusCode()).isEqualTo(HttpStatus.OK);
