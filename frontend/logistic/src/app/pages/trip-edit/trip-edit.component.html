@@ -36,8 +36,8 @@
           <p-stepper [value]="stepperValue" (valueChange)="stepperValue = $event">
             <p-step-list>
               <p-step [value]="1">Стороны</p-step>
-              <p-step [value]="2">Маршрут</p-step>
-              <p-step [value]="3">Транспорт и водитель</p-step>
+              <p-step [value]="2">Транспорт и водитель</p-step>
+              <p-step [value]="3">Маршрут</p-step>
               <p-step [value]="4">Итого и действия</p-step>
             </p-step-list>
             <p-step-panels>
@@ -127,68 +127,6 @@
                 <ng-template #content let-activateCallback="activateCallback">
                   <div class="step-body">
                     <div class="field">
-                      <label for="loadPl">Погрузка (адрес) *</label>
-                      <textarea
-                        pInputTextarea
-                        id="loadPl"
-                        formControlName="loadingPlace"
-                        rows="3"
-                        class="w-full"
-                      ></textarea>
-                    </div>
-                    <div class="field">
-                      <label for="loadCt">Контакт на погрузке</label>
-                      <input pInputText id="loadCt" formControlName="loadingContact" class="w-full" />
-                    </div>
-                    <div class="field">
-                      <label for="unlPl">Выгрузка (адрес) *</label>
-                      <textarea
-                        pInputTextarea
-                        id="unlPl"
-                        formControlName="unloadingPlace"
-                        rows="3"
-                        class="w-full"
-                      ></textarea>
-                    </div>
-                    <div class="field">
-                      <label for="unlCt">Контакт на выгрузке</label>
-                      <input pInputText id="unlCt" formControlName="unloadingContact" class="w-full" />
-                    </div>
-                    <div class="field">
-                      <label for="od">Дата заявки *</label>
-                      <p-datepicker
-                        inputId="od"
-                        formControlName="orderDate"
-                        dateFormat="yy-mm-dd"
-                        [showIcon]="true"
-                        appendTo="body"
-                        styleClass="w-full"
-                      />
-                    </div>
-                    <div class="step-nav">
-                      <p-button
-                        type="button"
-                        label="Назад"
-                        severity="secondary"
-                        icon="pi pi-arrow-left"
-                        (onClick)="activateCallback(1)"
-                      />
-                      <p-button
-                        type="button"
-                        label="Далее"
-                        icon="pi pi-arrow-right"
-                        iconPos="right"
-                        (onClick)="activateCallback(3)"
-                      />
-                    </div>
-                  </div>
-                </ng-template>
-              </p-step-panel>
-
-              <p-step-panel [value]="3">
-                <ng-template #content let-activateCallback="activateCallback">
-                  <div class="step-body">
-                    <div class="field">
                       <label for="driver">Водитель</label>
                       <p-dropdown
                         inputId="driver"
@@ -260,6 +198,68 @@
                         label="Назад"
                         severity="secondary"
                         icon="pi pi-arrow-left"
+                        (onClick)="activateCallback(1)"
+                      />
+                      <p-button
+                        type="button"
+                        label="Далее"
+                        icon="pi pi-arrow-right"
+                        iconPos="right"
+                        (onClick)="activateCallback(3)"
+                      />
+                    </div>
+                  </div>
+                </ng-template>
+              </p-step-panel>
+
+              <p-step-panel [value]="3">
+                <ng-template #content let-activateCallback="activateCallback">
+                  <div class="step-body">
+                    <div class="field">
+                      <label for="loadPl">Погрузка (адрес) *</label>
+                      <textarea
+                        pInputTextarea
+                        id="loadPl"
+                        formControlName="loadingPlace"
+                        rows="3"
+                        class="w-full"
+                      ></textarea>
+                    </div>
+                    <div class="field">
+                      <label for="loadCt">Контакт на погрузке</label>
+                      <input pInputText id="loadCt" formControlName="loadingContact" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label for="unlPl">Выгрузка (адрес) *</label>
+                      <textarea
+                        pInputTextarea
+                        id="unlPl"
+                        formControlName="unloadingPlace"
+                        rows="3"
+                        class="w-full"
+                      ></textarea>
+                    </div>
+                    <div class="field">
+                      <label for="unlCt">Контакт на выгрузке</label>
+                      <input pInputText id="unlCt" formControlName="unloadingContact" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label for="od">Дата заявки *</label>
+                      <p-datepicker
+                        inputId="od"
+                        formControlName="orderDate"
+                        dateFormat="yy-mm-dd"
+                        [showIcon]="true"
+                        appendTo="body"
+                        styleClass="w-full"
+                      />
+                    </div>
+                    <div class="step-nav">
+                      <p-button
+                        type="button"
+                        label="Назад"
+                        severity="secondary"
+                        icon="pi pi-arrow-left"
                         (onClick)="activateCallback(2)"
                       />
                       <p-button
@@ -277,6 +277,16 @@
               <p-step-panel [value]="4">
                 <ng-template #content let-activateCallback="activateCallback">
                   <div class="step-body">
+                    <div class="field">
+                      <label for="ordNum">Номер заявки *</label>
+                      <p-inputNumber
+                        inputId="ordNum"
+                        formControlName="orderNumber"
+                        [min]="1"
+                        [useGrouping]="false"
+                        styleClass="w-full"
+                      />
+                    </div>
                     <div class="field">
                       <label for="tc">Количество рейсов</label>
                       <p-inputNumber

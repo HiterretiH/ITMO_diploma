@@ -151,4 +151,24 @@ describe('TripNewComponent', () => {
     expect(lastUpdatePayload!.loadingPlace).toBe('A');
     expect(lastUpdatePayload!.orderDate).toBe('2026-05-15');
   });
+
+  it('includes orderNumber in update when set', () => {
+    fixture.detectChanges();
+    const cmp = fixture.componentInstance;
+    const d = new Date(2026, 4, 15, 12, 0, 0, 0);
+    cmp.form.patchValue({
+      customerId: 1,
+      performerId: 2,
+      driverId: 1,
+      vehicleId: 2,
+      loadingPlace: 'A',
+      unloadingPlace: 'B',
+      orderDate: d,
+      legCount: 2,
+      ratePerLeg: 100,
+      orderNumber: 42,
+    });
+    cmp.saveAndComplete();
+    expect(lastUpdatePayload?.orderNumber).toBe(42);
+  });
 });

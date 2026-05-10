@@ -95,6 +95,7 @@ describe('TripEditComponent', () => {
     expect(cmp.order?.id).toBe(1);
     expect(cmp.form.controls.loadingPlace.value).toBe('A');
     expect(cmp.form.controls.unloadingPlace.value).toBe('B');
+    expect(cmp.form.controls.orderNumber.value).toBe(1);
   });
 
   it('inProgress when audit has no ORDER_COMPLETED', () => {

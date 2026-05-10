@@ -71,6 +71,7 @@ export class TripNewComponent implements OnInit {
     performerId: this.fb.control<number | null>(null, Validators.required),
     driverId: this.fb.control<number | null>(null),
     vehicleId: this.fb.control<number | null>(null),
+    orderNumber: this.fb.control<number | null>(null),
     loadingPlace: ['', Validators.required],
     loadingContact: [''],
     unloadingPlace: ['', Validators.required],
@@ -218,7 +219,7 @@ export class TripNewComponent implements OnInit {
 
   private buildUpdateRequest(): OrderUpdateRequest {
     const v = this.form.getRawValue();
-    return {
+    const req: OrderUpdateRequest = {
       loadingPlace: (v.loadingPlace ?? '').trim(),
       loadingContact: (v.loadingContact ?? '').trim() || undefined,
       unloadingPlace: (v.unloadingPlace ?? '').trim(),
@@ -230,6 +231,11 @@ export class TripNewComponent implements OnInit {
       driverId: v.driverId ?? undefined,
       vehicleId: v.vehicleId ?? undefined,
     };
+    const num = v.orderNumber;
+    if (num != null && Number.isFinite(num) && num >= 1) {
+      req.orderNumber = Math.floor(num);
+    }
+    return req;
   }
 
   private incompleteHint(): string | null {

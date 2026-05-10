@@ -95,57 +95,6 @@
 
       <p-divider />
 
-      <section class="block" aria-labelledby="sec-route">
-        <h2 id="sec-route" class="block-heading">Маршрут</h2>
-        <div class="field">
-          <label for="loadPl">Погрузка (адрес)</label>
-          <textarea
-            pInputTextarea
-            id="loadPl"
-            formControlName="loadingPlace"
-            rows="3"
-            class="w-full"
-          ></textarea>
-        </div>
-        <div class="field">
-          <label for="loadCt">Контакт на погрузке</label>
-          <input pInputText id="loadCt" formControlName="loadingContact" class="w-full" />
-        </div>
-        <div class="field">
-          <label for="unlPl">Выгрузка (адрес)</label>
-          <textarea
-            pInputTextarea
-            id="unlPl"
-            formControlName="unloadingPlace"
-            rows="3"
-            class="w-full"
-          ></textarea>
-        </div>
-        <div class="field">
-          <label for="unlCt">Контакт на выгрузке</label>
-          <input pInputText id="unlCt" formControlName="unloadingContact" class="w-full" />
-        </div>
-      </section>
-
-      <p-divider />
-
-      <section class="block" aria-labelledby="sec-date">
-        <h2 id="sec-date" class="block-heading">Дата</h2>
-        <div class="field">
-          <label for="loadD">Дата заявки</label>
-          <p-datepicker
-            inputId="loadD"
-            formControlName="orderDate"
-            dateFormat="yy-mm-dd"
-            [showIcon]="true"
-            appendTo="body"
-            styleClass="w-full"
-          />
-        </div>
-      </section>
-
-      <p-divider />
-
       <section class="block" aria-labelledby="sec-performer">
         <h2 id="sec-performer" class="block-heading">Транспорт</h2>
         <div class="grid-2">
@@ -209,6 +158,70 @@
               />
             </div>
           </div>
+        </div>
+      </section>
+
+      <p-divider />
+
+      <section class="block" aria-labelledby="sec-route">
+        <h2 id="sec-route" class="block-heading">Маршрут</h2>
+        <div class="field">
+          <label for="loadPl">Погрузка (адрес)</label>
+          <textarea
+            pInputTextarea
+            id="loadPl"
+            formControlName="loadingPlace"
+            rows="3"
+            class="w-full"
+          ></textarea>
+        </div>
+        <div class="field">
+          <label for="loadCt">Контакт на погрузке</label>
+          <input pInputText id="loadCt" formControlName="loadingContact" class="w-full" />
+        </div>
+        <div class="field">
+          <label for="unlPl">Выгрузка (адрес)</label>
+          <textarea
+            pInputTextarea
+            id="unlPl"
+            formControlName="unloadingPlace"
+            rows="3"
+            class="w-full"
+          ></textarea>
+        </div>
+        <div class="field">
+          <label for="unlCt">Контакт на выгрузке</label>
+          <input pInputText id="unlCt" formControlName="unloadingContact" class="w-full" />
+        </div>
+      </section>
+
+      <p-divider />
+
+      <section class="block" aria-labelledby="sec-date">
+        <h2 id="sec-date" class="block-heading">Дата и номер</h2>
+        <div class="field">
+          <label for="loadD">Дата заявки</label>
+          <p-datepicker
+            inputId="loadD"
+            formControlName="orderDate"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            appendTo="body"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="field">
+          <label for="ordNumNew">Номер заявки</label>
+          <p-inputNumber
+            inputId="ordNumNew"
+            formControlName="orderNumber"
+            [min]="1"
+            [useGrouping]="false"
+            styleClass="w-full"
+          />
+          <p class="field-hint">
+            Необязательно: если не указать, останется номер, назначенный при создании.
+          </p>
         </div>
       </section>
 
