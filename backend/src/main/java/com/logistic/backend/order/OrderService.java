@@ -21,7 +21,11 @@ import com.logistic.backend.document.DocumentType;
 import com.logistic.backend.document.FileFormat;
 import com.logistic.backend.user.User;
 import com.logistic.backend.user.UserAccess;
+import com.logistic.backend.user.UserRepository;
+import com.logistic.backend.user.UserTripDefaults;
+import com.logistic.backend.user.UserTripDefaultsRepository;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +48,8 @@ public class OrderService {
     private final DriverRepository driverRepository;
     private final AuditService auditService;
     private final DocumentGenerationService documentGenerationService;
+    private final UserTripDefaultsRepository userTripDefaultsRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public OrderResponse create(OrderCreateRequest req, User actor) {
@@ -73,6 +79,7 @@ public class OrderService {
         }
         applyPerformerDefaults(o);
         orderRepository.save(o);
+        upsertUserTripDefaults(actor, o);
         auditService.record(
                 actor, o, AuditEventType.ORDER_CREATED, Map.of("orderId", o.getId().toString()));
         return toDto(o);
@@ -84,6 +91,7 @@ public class OrderService {
         apply(o, req, actor);
         syncOrderOwner(o);
         orderRepository.save(o);
+        upsertUserTripDefaults(actor, o);
         auditService.record(
                 actor, o, AuditEventType.ORDER_UPDATED, Map.of("orderId", o.getId().toString()));
         return toDto(o);
@@ -236,6 +244,20 @@ public class OrderService {
         if (!UserAccess.isAdmin(actor) && !actor.getId().equals(dataOwnerId)) {
             throw notFound();
         }
+    }
+
+    private void upsertUserTripDefaults(User actor, Order o) {
+        UserTripDefaults row =
+                userTripDefaultsRepository.findByUser_Id(actor.getId()).orElseGet(() -> {
+                    UserTripDefaults d = new UserTripDefaults();
+                    d.setUser(userRepository.getReferenceById(actor.getId()));
+                    return d;
+                });
+        row.setLastPerformer(o.getPerformer());
+        row.setLastDriver(o.getDriver());
+        row.setLastVehicle(o.getVehicle());
+        row.setUpdatedAt(Instant.now());
+        userTripDefaultsRepository.save(row);
     }
 
     private void assertVehicleVisible(User actor, Vehicle v) {

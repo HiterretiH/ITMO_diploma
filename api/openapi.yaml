@@ -20,8 +20,43 @@ tags:
   - name: Orders
   - name: Documents
   - name: Audit
+  - name: Session
 
 paths:
+  /api/v1/me/trip-form-draft:
+    get:
+      tags: [Session]
+      summary: Defaults for new trip form (next order number, last catalog picks)
+      description: >
+        nextOrderNumber is max(order_number)+1 for the order owner: when customerId is set,
+        that customer's owner; otherwise the authenticated user's id is used as owner scope.
+        Last IDs are sanitized (wrong performer pairing yields nulls).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Optional customer scope for previewing the next order number
+      responses:
+        '200':
+          description: Draft hints for trip creation form
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripFormDraftResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/v1/auth/login:
     post:
       tags: [Auth]
@@ -1298,6 +1333,27 @@ components:
         templateVersion:
           type: integer
           format: int32
+
+    TripFormDraftResponse:
+      type: object
+      required: [nextOrderNumber, lastPerformerId, lastDriverId, lastVehicleId]
+      properties:
+        nextOrderNumber:
+          type: integer
+          format: int32
+          description: Next order number for the scoped owner (always set)
+        lastPerformerId:
+          type: integer
+          format: int64
+          nullable: true
+        lastDriverId:
+          type: integer
+          format: int64
+          nullable: true
+        lastVehicleId:
+          type: integer
+          format: int64
+          nullable: true
 
     OrderDocumentDescriptor:
       type: object
