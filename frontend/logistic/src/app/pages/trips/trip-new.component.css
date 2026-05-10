@@ -135,16 +135,3 @@ label {
 .w-full {
   width: 100%;
 }
-
-/*
- * Invalid: keep PrimeNG red border on the control; only the placeholder glyph stays muted
- * (otherwise it inherits error color and looks like «red hint text»).
- */
-:host ::ng-deep .trip-new-form .ng-invalid.ng-touched .p-inputtext::placeholder,
-:host ::ng-deep .trip-new-form .ng-invalid.ng-touched .p-inputtextarea::placeholder,
-:host ::ng-deep .trip-new-form .ng-invalid.ng-touched textarea::placeholder,
-:host ::ng-deep .trip-new-form .ng-invalid.ng-touched .p-inputnumber .p-inputtext::placeholder,
-:host ::ng-deep .trip-new-form .ng-invalid.ng-touched .p-inputnumber input::placeholder {
-  color: var(--p-text-muted-color, #94a3b8) !important;
-  opacity: 1;
-}

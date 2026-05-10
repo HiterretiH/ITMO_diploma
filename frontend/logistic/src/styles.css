@@ -54,3 +54,8 @@ h1.page-title {
 .page-card-area {
   border-radius: var(--p-border-radius, 8px);
 }
+
+/* Validation message under inputs (class kept from PrimeNG conventions). */
+small.p-error {
+  color: var(--p-red-500, #ef4444);
+}
