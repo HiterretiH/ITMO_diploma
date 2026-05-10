@@ -21,6 +21,13 @@
       />
     }
 
+    <app-order-catalog-dialogs
+      #catalogDialogs
+      [form]="form"
+      (catalogSaved)="onCatalogSaved()"
+      (catalogHint)="errorMessage = $event"
+    />
+
     <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveAndComplete()">
       <section class="block" aria-labelledby="sec-customer">
         <h2 id="sec-customer" class="block-heading">Заказчик и исполнитель</h2>
@@ -36,6 +43,23 @@
             appendTo="body"
             styleClass="w-full"
           />
+          <div class="catalog-row-actions">
+            <p-button
+              type="button"
+              label="+ Добавить"
+              [text]="true"
+              styleClass="p-0"
+              (onClick)="catalogDialogs.openCustomerCreate()"
+            />
+            <p-button
+              type="button"
+              label="Изменить"
+              [text]="true"
+              styleClass="p-0"
+              [disabled]="!customerSelected()"
+              (onClick)="catalogDialogs.openCustomerEdit(customers)"
+            />
+          </div>
         </div>
         <div class="field">
           <label for="perf">Исполнитель</label>
@@ -49,6 +73,23 @@
             appendTo="body"
             styleClass="w-full"
           />
+          <div class="catalog-row-actions">
+            <p-button
+              type="button"
+              label="+ Добавить"
+              [text]="true"
+              styleClass="p-0"
+              (onClick)="catalogDialogs.openPerformerCreate()"
+            />
+            <p-button
+              type="button"
+              label="Изменить"
+              [text]="true"
+              styleClass="p-0"
+              [disabled]="!performerSelected()"
+              (onClick)="catalogDialogs.openPerformerEdit(performers)"
+            />
+          </div>
         </div>
       </section>
 
@@ -120,6 +161,23 @@
               appendTo="body"
               styleClass="w-full"
             />
+            <div class="catalog-row-actions">
+              <p-button
+                type="button"
+                label="+ Добавить водителя"
+                [text]="true"
+                styleClass="p-0"
+                (onClick)="catalogDialogs.openDriverCreate()"
+              />
+              <p-button
+                type="button"
+                label="Изменить"
+                [text]="true"
+                styleClass="p-0"
+                [disabled]="!driverSelected()"
+                (onClick)="catalogDialogs.openDriverEdit(drivers)"
+              />
+            </div>
           </div>
           <div class="field">
             <label for="vehicle">Транспорт</label>
@@ -133,6 +191,23 @@
               appendTo="body"
               styleClass="w-full"
             />
+            <div class="catalog-row-actions">
+              <p-button
+                type="button"
+                label="+ Добавить ТС"
+                [text]="true"
+                styleClass="p-0"
+                (onClick)="catalogDialogs.openVehicleCreate()"
+              />
+              <p-button
+                type="button"
+                label="Изменить"
+                [text]="true"
+                styleClass="p-0"
+                [disabled]="!vehicleSelected()"
+                (onClick)="catalogDialogs.openVehicleEdit(vehicles)"
+              />
+            </div>
           </div>
         </div>
       </section>

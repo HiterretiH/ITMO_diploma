@@ -11,7 +11,6 @@ import { concatMap, forkJoin } from 'rxjs';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
-import { Dialog } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
@@ -40,8 +39,7 @@ import {
 } from '../../core/order.models';
 import { ProblemDetail } from '../../models/problem.models';
 import { OrderStatusBadgeComponent } from '../../shared/layout/order-status-badge.component';
-import { innValidator } from '../../shared/forms/inn.validator';
-import { plateValidator } from '../../shared/forms/plate.validator';
+import { OrderCatalogDialogsComponent } from '../../shared/order-catalog-dialogs/order-catalog-dialogs.component';
 import { orderMarkedCompleted } from '../../shared/order-ui';
 
 @Component({
@@ -57,8 +55,8 @@ import { orderMarkedCompleted } from '../../shared/order-ui';
     InputTextarea,
     InputNumber,
     Button,
-    Dialog,
     Message,
+    OrderCatalogDialogsComponent,
     TableModule,
     TabsModule,
     OrderStatusBadgeComponent,
@@ -87,47 +85,6 @@ export class TripEditComponent implements OnInit {
   busy = false;
   stepperValue: number | undefined = 1;
   conflictDetail: string | null = null;
-
-  customerDialogVisible = false;
-  customerSaving = false;
-  customerEditingId: number | null = null;
-  readonly customerForm = this.fb.nonNullable.group({
-    shortName: ['', [Validators.required, Validators.minLength(1)]],
-    fullName: [''],
-    phone: [''],
-    requisites: [''],
-  });
-
-  performerDialogVisible = false;
-  performerSaving = false;
-  performerEditingId: number | null = null;
-  readonly performerForm = this.fb.nonNullable.group({
-    shortName: ['', [Validators.required, Validators.minLength(1)]],
-    fullName: [''],
-    phone: [''],
-    inn: ['', [innValidator]],
-  });
-
-  driverDialogVisible = false;
-  driverEditingId: number | null = null;
-  driverSaving = false;
-  readonly driverForm = this.fb.nonNullable.group({
-    fullName: ['', [Validators.required, Validators.minLength(1)]],
-    phone: [''],
-    isDefault: [false],
-  });
-
-  vehicleDialogVisible = false;
-  vehicleEditingId: number | null = null;
-  vehicleSaving = false;
-  readonly vehicleForm = this.fb.group({
-    plateNumber: this.fb.nonNullable.control('', {
-      validators: [Validators.required, plateValidator],
-    }),
-    brandModel: [''],
-    type: [''],
-    isDefault: this.fb.control(false),
-  });
 
   readonly form = this.fb.group({
     customerId: this.fb.control<number | null>(null, Validators.required),
@@ -190,6 +147,23 @@ export class TripEditComponent implements OnInit {
       error: () => {
         this.busy = false;
         void this.router.navigateByUrl('/orders');
+      },
+    });
+  }
+
+  /** Обновить справочники после создания/изменения записи в модалке. */
+  onCatalogSaved(): void {
+    forkJoin({
+      customers: this.catalog.listCustomers(),
+      performers: this.catalog.listPerformers(),
+      drivers: this.catalog.listDrivers(),
+      vehicles: this.catalog.listVehicles(),
+    }).subscribe({
+      next: ({ customers, performers, drivers, vehicles }) => {
+        this.customers = customers;
+        this.performers = performers;
+        this.drivers = drivers;
+        this.vehicles = vehicles;
       },
     });
   }
@@ -487,291 +461,6 @@ export class TripEditComponent implements OnInit {
 
   vehicleSelected(): boolean {
     return this.form.getRawValue().vehicleId != null;
-  }
-
-  openCustomerCreate(): void {
-    this.customerEditingId = null;
-    this.customerForm.reset({
-      shortName: '',
-      fullName: '',
-      phone: '',
-      requisites: '',
-    });
-    this.customerDialogVisible = true;
-  }
-
-  openCustomerEdit(): void {
-    const id = this.form.getRawValue().customerId;
-    if (id == null) {
-      return;
-    }
-    const c = this.customers.find((x) => x.id === id);
-    if (!c) {
-      return;
-    }
-    this.customerEditingId = c.id;
-    this.customerForm.setValue({
-      shortName: c.shortName,
-      fullName: c.fullName ?? '',
-      phone: c.phone ?? '',
-      requisites: c.requisites ?? '',
-    });
-    this.customerDialogVisible = true;
-  }
-
-  openPerformerCreate(): void {
-    this.performerEditingId = null;
-    this.performerForm.reset({
-      shortName: '',
-      fullName: '',
-      phone: '',
-      inn: '',
-    });
-    this.performerDialogVisible = true;
-  }
-
-  openPerformerEdit(): void {
-    const id = this.form.getRawValue().performerId;
-    if (id == null) {
-      return;
-    }
-    const p = this.performers.find((x) => x.id === id);
-    if (!p) {
-      return;
-    }
-    this.performerEditingId = p.id;
-    this.performerForm.setValue({
-      shortName: p.shortName,
-      fullName: p.fullName ?? '',
-      phone: p.phone ?? '',
-      inn: p.inn ?? '',
-    });
-    this.performerDialogVisible = true;
-  }
-
-  openDriverCreate(): void {
-    if (this.form.getRawValue().performerId == null) {
-      this.conflictDetail = 'Сначала выберите исполнителя.';
-      return;
-    }
-    this.driverEditingId = null;
-    this.driverForm.reset({
-      fullName: '',
-      phone: '',
-      isDefault: false,
-    });
-    this.driverDialogVisible = true;
-  }
-
-  openDriverEdit(): void {
-    const id = this.form.getRawValue().driverId;
-    if (id == null) {
-      return;
-    }
-    const d = this.drivers.find((x) => x.id === id);
-    if (!d) {
-      return;
-    }
-    this.driverEditingId = d.id;
-    this.driverForm.setValue({
-      fullName: d.fullName,
-      phone: d.phone ?? '',
-      isDefault: d.isDefault,
-    });
-    this.driverDialogVisible = true;
-  }
-
-  openVehicleCreate(): void {
-    if (this.form.getRawValue().performerId == null) {
-      this.conflictDetail = 'Сначала выберите исполнителя.';
-      return;
-    }
-    this.vehicleEditingId = null;
-    this.vehicleForm.reset({
-      plateNumber: '',
-      brandModel: '',
-      type: '',
-      isDefault: false,
-    });
-    this.vehicleDialogVisible = true;
-  }
-
-  openVehicleEdit(): void {
-    const id = this.form.getRawValue().vehicleId;
-    if (id == null) {
-      return;
-    }
-    const v = this.vehicles.find((x) => x.id === id);
-    if (!v) {
-      return;
-    }
-    this.vehicleEditingId = v.id;
-    this.vehicleForm.setValue({
-      plateNumber: v.plateNumber ?? '',
-      brandModel: v.brandModel ?? '',
-      type: v.type ?? '',
-      isDefault: v.isDefault,
-    });
-    this.vehicleDialogVisible = true;
-  }
-
-  saveCustomerDialog(): void {
-    if (this.customerForm.invalid || this.customerSaving) {
-      this.customerForm.markAllAsTouched();
-      return;
-    }
-    const v = this.customerForm.getRawValue();
-    const body = {
-      shortName: v.shortName.trim(),
-      fullName: v.fullName.trim() === '' ? null : v.fullName.trim(),
-      phone: v.phone.trim() === '' ? null : v.phone.trim(),
-      requisites: v.requisites.trim() === '' ? null : v.requisites.trim(),
-    };
-    this.customerSaving = true;
-    const obs =
-      this.customerEditingId != null
-        ? this.catalog.updateCustomer(this.customerEditingId, body)
-        : this.catalog.createCustomer(body);
-    obs.subscribe({
-      next: (c) => {
-        if (this.customerEditingId != null) {
-          this.customers = this.customers
-            .map((x) => (x.id === c.id ? c : x))
-            .sort((a, b) => a.shortName.localeCompare(b.shortName));
-        } else {
-          this.customers = [...this.customers, c].sort((a, b) =>
-            a.shortName.localeCompare(b.shortName),
-          );
-          this.form.patchValue({ customerId: c.id });
-        }
-        this.customerSaving = false;
-        this.customerDialogVisible = false;
-      },
-      error: () => {
-        this.customerSaving = false;
-      },
-    });
-  }
-
-  savePerformerDialog(): void {
-    if (this.performerForm.invalid || this.performerSaving) {
-      this.performerForm.markAllAsTouched();
-      return;
-    }
-    const v = this.performerForm.getRawValue();
-    const body = {
-      shortName: v.shortName.trim(),
-      fullName: v.fullName.trim() === '' ? null : v.fullName.trim(),
-      phone: v.phone.trim() === '' ? null : v.phone.trim(),
-      inn: v.inn.trim() === '' ? null : v.inn.trim(),
-    };
-    this.performerSaving = true;
-    const obs =
-      this.performerEditingId != null
-        ? this.catalog.updatePerformer(this.performerEditingId, body)
-        : this.catalog.createPerformer(body);
-    obs.subscribe({
-      next: (p) => {
-        if (this.performerEditingId != null) {
-          this.performers = this.performers
-            .map((x) => (x.id === p.id ? p : x))
-            .sort((a, b) => a.shortName.localeCompare(b.shortName));
-        } else {
-          this.performers = [...this.performers, p].sort((a, b) =>
-            a.shortName.localeCompare(b.shortName),
-          );
-          this.form.patchValue({ performerId: p.id });
-        }
-        this.performerSaving = false;
-        this.performerDialogVisible = false;
-      },
-      error: () => {
-        this.performerSaving = false;
-      },
-    });
-  }
-
-  saveDriverDialog(): void {
-    const performerId = this.form.getRawValue().performerId;
-    if (performerId == null || this.driverForm.invalid || this.driverSaving) {
-      this.driverForm.markAllAsTouched();
-      return;
-    }
-    const v = this.driverForm.getRawValue();
-    const body = {
-      performerId,
-      fullName: v.fullName.trim(),
-      phone: v.phone.trim() === '' ? null : v.phone.trim(),
-      isDefault: v.isDefault,
-    };
-    this.driverSaving = true;
-    const obs =
-      this.driverEditingId != null
-        ? this.catalog.updateDriver(this.driverEditingId, body)
-        : this.catalog.createDriver(body);
-    obs.subscribe({
-      next: (d) => {
-        if (this.driverEditingId != null) {
-          this.drivers = this.drivers
-            .map((x) => (x.id === d.id ? d : x))
-            .sort((a, b) => a.fullName.localeCompare(b.fullName));
-        } else {
-          this.drivers = [...this.drivers, d].sort((a, b) =>
-            a.fullName.localeCompare(b.fullName),
-          );
-          this.form.patchValue({ driverId: d.id });
-        }
-        this.driverSaving = false;
-        this.driverDialogVisible = false;
-      },
-      error: () => {
-        this.driverSaving = false;
-      },
-    });
-  }
-
-  saveVehicleDialog(): void {
-    const performerId = this.form.getRawValue().performerId;
-    if (performerId == null || this.vehicleForm.invalid || this.vehicleSaving) {
-      this.vehicleForm.markAllAsTouched();
-      return;
-    }
-    const v = this.vehicleForm.getRawValue();
-    const plate = v.plateNumber.replace(/\s+/g, '').toUpperCase();
-    const body = {
-      performerId,
-      plateNumber: plate === '' ? null : plate,
-      brandModel:
-        (v.brandModel ?? '').trim() === '' ? null : (v.brandModel ?? '').trim(),
-      type: (v.type ?? '').trim() === '' ? null : (v.type ?? '').trim(),
-      isDefault: !!v.isDefault,
-    };
-    this.vehicleSaving = true;
-    const obs =
-      this.vehicleEditingId != null
-        ? this.catalog.updateVehicle(this.vehicleEditingId, body)
-        : this.catalog.createVehicle(body);
-    obs.subscribe({
-      next: (ve) => {
-        if (this.vehicleEditingId != null) {
-          this.vehicles = this.vehicles
-            .map((x) => (x.id === ve.id ? ve : x))
-            .sort((a, b) =>
-              (a.plateNumber ?? '').localeCompare(b.plateNumber ?? ''),
-            );
-        } else {
-          this.vehicles = [...this.vehicles, ve].sort((a, b) =>
-            (a.plateNumber ?? '').localeCompare(b.plateNumber ?? ''),
-          );
-          this.form.patchValue({ vehicleId: ve.id });
-        }
-        this.vehicleSaving = false;
-        this.vehicleDialogVisible = false;
-      },
-      error: () => {
-        this.vehicleSaving = false;
-      },
-    });
   }
 
   eventTypeLabel(t: AuditEventResponse['eventType']): string {

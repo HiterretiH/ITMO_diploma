@@ -1,0 +1,143 @@
+<p-dialog
+  [header]="customerEditingId != null ? 'Изменить заказчика' : 'Новый заказчик'"
+  [(visible)]="customerDialogVisible"
+  [modal]="true"
+  [style]="{ width: '26rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="customerForm">
+    <div class="field">
+      <label for="ocd-cn">Краткое название *</label>
+      <input pInputText id="ocd-cn" formControlName="shortName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-cf">Полное название</label>
+      <input pInputText id="ocd-cf" formControlName="fullName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-cph">Телефон</label>
+      <input pInputText id="ocd-cph" formControlName="phone" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-cr">Реквизиты</label>
+      <textarea pInputTextarea id="ocd-cr" formControlName="requisites" rows="2" class="w-full"></textarea>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Отмена" [text]="true" (onClick)="customerDialogVisible = false" />
+    <p-button
+      label="Сохранить"
+      [loading]="customerSaving"
+      [disabled]="customerForm.invalid || customerSaving"
+      (onClick)="saveCustomerDialog()"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [header]="performerEditingId != null ? 'Изменить исполнителя' : 'Новый исполнитель'"
+  [(visible)]="performerDialogVisible"
+  [modal]="true"
+  [style]="{ width: '26rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="performerForm">
+    <div class="field">
+      <label for="ocd-pn">Краткое название *</label>
+      <input pInputText id="ocd-pn" formControlName="shortName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-pf">Полное название</label>
+      <input pInputText id="ocd-pf" formControlName="fullName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-pph">Телефон</label>
+      <input pInputText id="ocd-pph" formControlName="phone" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-pin">ИНН</label>
+      <input pInputText id="ocd-pin" formControlName="inn" class="w-full" />
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Отмена" [text]="true" (onClick)="performerDialogVisible = false" />
+    <p-button
+      label="Сохранить"
+      [loading]="performerSaving"
+      [disabled]="performerForm.invalid || performerSaving"
+      (onClick)="savePerformerDialog()"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [header]="driverEditingId != null ? 'Изменить водителя' : 'Новый водитель'"
+  [(visible)]="driverDialogVisible"
+  [modal]="true"
+  [style]="{ width: '24rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="driverForm">
+    <div class="field">
+      <label for="ocd-d-name">ФИО *</label>
+      <input pInputText id="ocd-d-name" formControlName="fullName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-d-ph">Телефон</label>
+      <input pInputText id="ocd-d-ph" formControlName="phone" class="w-full" />
+    </div>
+    <div class="field">
+      <label class="flex gap-2 align-items-center">
+        <input type="checkbox" formControlName="isDefault" />
+        Основной для исполнителя
+      </label>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Отмена" [text]="true" (onClick)="driverDialogVisible = false" />
+    <p-button
+      [label]="driverEditingId != null ? 'Сохранить' : 'Создать'"
+      [loading]="driverSaving"
+      [disabled]="driverForm.invalid || driverSaving"
+      (onClick)="saveDriverDialog()"
+    />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [header]="vehicleEditingId != null ? 'Изменить ТС' : 'Новое ТС'"
+  [(visible)]="vehicleDialogVisible"
+  [modal]="true"
+  [style]="{ width: '24rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="vehicleForm">
+    <div class="field">
+      <label for="ocd-v-plate">Госномер *</label>
+      <input pInputText id="ocd-v-plate" formControlName="plateNumber" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-v-bm">Марка / модель</label>
+      <input pInputText id="ocd-v-bm" formControlName="brandModel" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="ocd-v-type">Тип ТС</label>
+      <input pInputText id="ocd-v-type" formControlName="type" class="w-full" />
+    </div>
+    <div class="field">
+      <label class="flex gap-2 align-items-center">
+        <input type="checkbox" formControlName="isDefault" />
+        Основное для исполнителя
+      </label>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Отмена" [text]="true" (onClick)="vehicleDialogVisible = false" />
+    <p-button
+      [label]="vehicleEditingId != null ? 'Сохранить' : 'Создать'"
+      [loading]="vehicleSaving"
+      [disabled]="vehicleForm.invalid || vehicleSaving"
+      (onClick)="saveVehicleDialog()"
+    />
+  </ng-template>
+</p-dialog>

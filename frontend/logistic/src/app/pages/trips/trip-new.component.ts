@@ -29,6 +29,7 @@ import { localizeProblemToast } from '../../core/error-messages';
 import { OrderApiService } from '../../core/order-api.service';
 import { OrderUpdateRequest } from '../../core/order.models';
 import { ProblemDetail } from '../../models/problem.models';
+import { OrderCatalogDialogsComponent } from '../../shared/order-catalog-dialogs/order-catalog-dialogs.component';
 
 @Component({
   selector: 'app-trip-new',
@@ -46,6 +47,7 @@ import { ProblemDetail } from '../../models/problem.models';
     InputTextarea,
     Button,
     Message,
+    OrderCatalogDialogsComponent,
   ],
   templateUrl: './trip-new.component.html',
   styleUrl: './trip-new.component.css',
@@ -122,6 +124,42 @@ export class TripNewComponent implements OnInit {
           'Не удалось загрузить справочники. Проверьте доступ к API и обновите страницу.';
       },
     });
+  }
+
+  onCatalogSaved(): void {
+    forkJoin({
+      customers: this.catalog.listCustomers(),
+      performers: this.catalog.listPerformers(),
+      drivers: this.catalog.listDrivers(),
+      vehicles: this.catalog.listVehicles(),
+    }).subscribe({
+      next: ({ customers, performers, drivers, vehicles }) => {
+        this.customers = customers;
+        this.performers = performers;
+        this.drivers = drivers;
+        this.vehicles = vehicles;
+      },
+      error: () => {
+        this.errorMessage =
+          'Не удалось обновить справочники. Обновите страницу.';
+      },
+    });
+  }
+
+  customerSelected(): boolean {
+    return this.form.getRawValue().customerId != null;
+  }
+
+  performerSelected(): boolean {
+    return this.form.getRawValue().performerId != null;
+  }
+
+  driverSelected(): boolean {
+    return this.form.getRawValue().driverId != null;
+  }
+
+  vehicleSelected(): boolean {
+    return this.form.getRawValue().vehicleId != null;
   }
 
   customerOptions(): { label: string; value: number | null }[] {

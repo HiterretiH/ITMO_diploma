@@ -25,6 +25,13 @@
           />
         }
 
+        <app-order-catalog-dialogs
+          #catalogDialogs
+          [form]="form"
+          (catalogSaved)="onCatalogSaved()"
+          (catalogHint)="conflictDetail = $event"
+        />
+
         <form [formGroup]="form">
           <p-stepper [value]="stepperValue" (valueChange)="stepperValue = $event">
             <p-step-list>
@@ -57,7 +64,7 @@
                             label="+ Добавить"
                             [text]="true"
                             styleClass="p-0"
-                            (onClick)="openCustomerCreate()"
+                            (onClick)="catalogDialogs.openCustomerCreate()"
                           />
                           <p-button
                             type="button"
@@ -65,7 +72,7 @@
                             [text]="true"
                             styleClass="p-0"
                             [disabled]="!customerSelected()"
-                            (onClick)="openCustomerEdit()"
+                            (onClick)="catalogDialogs.openCustomerEdit(customers)"
                           />
                         </div>
                       }
@@ -90,7 +97,7 @@
                             label="+ Добавить"
                             [text]="true"
                             styleClass="p-0"
-                            (onClick)="openPerformerCreate()"
+                            (onClick)="catalogDialogs.openPerformerCreate()"
                           />
                           <p-button
                             type="button"
@@ -98,7 +105,7 @@
                             [text]="true"
                             styleClass="p-0"
                             [disabled]="!performerSelected()"
-                            (onClick)="openPerformerEdit()"
+                            (onClick)="catalogDialogs.openPerformerEdit(performers)"
                           />
                         </div>
                       }
@@ -201,7 +208,7 @@
                             label="+ Добавить водителя"
                             [text]="true"
                             styleClass="p-0"
-                            (onClick)="openDriverCreate()"
+                            (onClick)="catalogDialogs.openDriverCreate()"
                           />
                           <p-button
                             type="button"
@@ -209,7 +216,7 @@
                             [text]="true"
                             styleClass="p-0"
                             [disabled]="!driverSelected()"
-                            (onClick)="openDriverEdit()"
+                            (onClick)="catalogDialogs.openDriverEdit(drivers)"
                           />
                         </div>
                       }
@@ -234,7 +241,7 @@
                             label="+ Добавить ТС"
                             [text]="true"
                             styleClass="p-0"
-                            (onClick)="openVehicleCreate()"
+                            (onClick)="catalogDialogs.openVehicleCreate()"
                           />
                           <p-button
                             type="button"
@@ -242,7 +249,7 @@
                             [text]="true"
                             styleClass="p-0"
                             [disabled]="!vehicleSelected()"
-                            (onClick)="openVehicleEdit()"
+                            (onClick)="catalogDialogs.openVehicleEdit(vehicles)"
                           />
                         </div>
                       }
@@ -421,148 +428,4 @@
       </p-tabpanel>
     </p-tabpanels>
   </p-tabs>
-
-  <p-dialog
-    [header]="customerEditingId != null ? 'Изменить заказчика' : 'Новый заказчик'"
-    [(visible)]="customerDialogVisible"
-    [modal]="true"
-    [style]="{ width: '26rem' }"
-    [draggable]="false"
-  >
-    <form [formGroup]="customerForm">
-      <div class="field">
-        <label for="cn">Краткое название *</label>
-        <input pInputText id="cn" formControlName="shortName" class="w-full" />
-      </div>
-      <div class="field">
-        <label for="cf">Полное название</label>
-        <input pInputText id="cf" formControlName="fullName" class="w-full" />
-      </div>
-      <div class="field">
-        <label for="cph">Телефон</label>
-        <input pInputText id="cph" formControlName="phone" class="w-full" />
-      </div>
-      <div class="field">
-        <label for="cr">Реквизиты</label>
-        <textarea pInputTextarea id="cr" formControlName="requisites" rows="2" class="w-full"></textarea>
-      </div>
-    </form>
-    <ng-template pTemplate="footer">
-      <p-button label="Отмена" [text]="true" (onClick)="customerDialogVisible = false" />
-      <p-button
-        label="Сохранить"
-        [loading]="customerSaving"
-        [disabled]="customerForm.invalid || customerSaving"
-        (onClick)="saveCustomerDialog()"
-      />
-    </ng-template>
-  </p-dialog>
-
-  <p-dialog
-    [header]="performerEditingId != null ? 'Изменить исполнителя' : 'Новый исполнитель'"
-    [(visible)]="performerDialogVisible"
-    [modal]="true"
-    [style]="{ width: '26rem' }"
-    [draggable]="false"
-  >
-    <form [formGroup]="performerForm">
-      <div class="field">
-        <label for="pn">Краткое название *</label>
-        <input pInputText id="pn" formControlName="shortName" class="w-full" />
-      </div>
-      <div class="field">
-        <label for="pf">Полное название</label>
-        <input pInputText id="pf" formControlName="fullName" class="w-full" />
-      </div>
-      <div class="field">
-        <label for="pph">Телефон</label>
-        <input pInputText id="pph" formControlName="phone" class="w-full" />
-      </div>
-      <div class="field">
-        <label for="pin">ИНН</label>
-        <input pInputText id="pin" formControlName="inn" class="w-full" />
-      </div>
-    </form>
-    <ng-template pTemplate="footer">
-      <p-button label="Отмена" [text]="true" (onClick)="performerDialogVisible = false" />
-      <p-button
-        label="Сохранить"
-        [loading]="performerSaving"
-        [disabled]="performerForm.invalid || performerSaving"
-        (onClick)="savePerformerDialog()"
-      />
-    </ng-template>
-  </p-dialog>
-
-  <p-dialog
-    [header]="driverEditingId != null ? 'Изменить водителя' : 'Новый водитель'"
-    [(visible)]="driverDialogVisible"
-    [modal]="true"
-    [style]="{ width: '24rem' }"
-    [draggable]="false"
-  >
-    <form [formGroup]="driverForm">
-      <div class="field">
-        <label for="qd-name">ФИО *</label>
-        <input pInputText id="qd-name" formControlName="fullName" class="w-full" />
-      </div>
-      <div class="field">
-        <label for="qd-ph">Телефон</label>
-        <input pInputText id="qd-ph" formControlName="phone" class="w-full" />
-      </div>
-      <div class="field">
-        <label class="flex gap-2 align-items-center">
-          <input type="checkbox" formControlName="isDefault" />
-          Основной для исполнителя
-        </label>
-      </div>
-    </form>
-    <ng-template pTemplate="footer">
-      <p-button label="Отмена" [text]="true" (onClick)="driverDialogVisible = false" />
-      <p-button
-        [label]="driverEditingId != null ? 'Сохранить' : 'Создать'"
-        [loading]="driverSaving"
-        [disabled]="driverForm.invalid || driverSaving"
-        (onClick)="saveDriverDialog()"
-      />
-    </ng-template>
-  </p-dialog>
-
-  <p-dialog
-    [header]="vehicleEditingId != null ? 'Изменить ТС' : 'Новое ТС'"
-    [(visible)]="vehicleDialogVisible"
-    [modal]="true"
-    [style]="{ width: '24rem' }"
-    [draggable]="false"
-  >
-    <form [formGroup]="vehicleForm">
-      <div class="field">
-        <label for="qv-plate">Госномер *</label>
-        <input pInputText id="qv-plate" formControlName="plateNumber" class="w-full" />
-      </div>
-      <div class="field">
-        <label for="qv-bm">Марка / модель</label>
-        <input pInputText id="qv-bm" formControlName="brandModel" class="w-full" />
-      </div>
-      <div class="field">
-        <label for="qv-type">Тип ТС</label>
-        <input pInputText id="qv-type" formControlName="type" class="w-full" />
-      </div>
-      <div class="field">
-        <label class="flex gap-2 align-items-center">
-          <input type="checkbox" formControlName="isDefault" />
-          Основное для исполнителя
-        </label>
-      </div>
-    </form>
-    <ng-template pTemplate="footer">
-      <p-button label="Отмена" [text]="true" (onClick)="vehicleDialogVisible = false" />
-      <p-button
-        [label]="vehicleEditingId != null ? 'Сохранить' : 'Создать'"
-        [loading]="vehicleSaving"
-        [disabled]="vehicleForm.invalid || vehicleSaving"
-        (onClick)="saveVehicleDialog()"
-      />
-    </ng-template>
-  </p-dialog>
 }
