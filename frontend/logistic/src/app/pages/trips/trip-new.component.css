@@ -135,3 +135,27 @@ label {
 .w-full {
   width: 100%;
 }
+
+/* Keep textual hints (small.p-error); avoid loud red outlines on touched invalid controls */
+:host ::ng-deep .trip-new-form input.ng-invalid.ng-touched,
+:host ::ng-deep .trip-new-form textarea.ng-invalid.ng-touched {
+  border-color: var(--p-input-border-color, #cbd5e1);
+  box-shadow: none;
+}
+
+:host ::ng-deep .trip-new-form p-dropdown.ng-invalid.ng-touched .p-dropdown,
+:host ::ng-deep .trip-new-form p-dropdown.ng-invalid.ng-touched .p-select {
+  border-color: var(--p-input-border-color, #cbd5e1);
+  box-shadow: none;
+}
+
+:host ::ng-deep .trip-new-form p-datepicker.ng-invalid.ng-touched .p-datepicker-input,
+:host ::ng-deep .trip-new-form p-datepicker.ng-invalid.ng-touched .p-inputtext {
+  border-color: var(--p-input-border-color, #cbd5e1);
+  box-shadow: none;
+}
+
+:host ::ng-deep .trip-new-form p-inputnumber.ng-invalid.ng-touched .p-inputnumber-input {
+  border-color: var(--p-input-border-color, #cbd5e1);
+  box-shadow: none;
+}
