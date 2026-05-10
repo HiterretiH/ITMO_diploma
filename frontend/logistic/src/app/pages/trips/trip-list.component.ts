@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
@@ -28,6 +29,7 @@ import {
 export class TripListComponent implements OnInit {
   private readonly api = inject(OrderApiService);
   private readonly router = inject(Router);
+  private readonly confirm = inject(ConfirmationService);
 
   orders: OrderResponse[] = [];
   listTab: 'active' | 'done' = 'active';
@@ -74,11 +76,18 @@ export class TripListComponent implements OnInit {
     if (!orderReadyForBackendComplete(o)) {
       return;
     }
-    this.completingOrderId = o.id;
-    this.api
-      .complete(o.id)
-      .pipe(finalize(() => (this.completingOrderId = null)))
-      .subscribe(() => this.reload());
+    this.confirm.confirm({
+      message: 'Завершить рейс? Будут сгенерированы документы.',
+      header: 'Подтверждение',
+      icon: 'pi pi-check-circle',
+      accept: () => {
+        this.completingOrderId = o.id;
+        this.api
+          .complete(o.id)
+          .pipe(finalize(() => (this.completingOrderId = null)))
+          .subscribe(() => this.reload());
+      },
+    });
   }
 
   routeSnippet(o: OrderResponse): string {
