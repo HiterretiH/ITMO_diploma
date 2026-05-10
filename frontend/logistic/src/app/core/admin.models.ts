@@ -1,13 +1,2 @@
-export type AppRole = 'EMPLOYEE' | 'MANAGER' | 'ADMIN';
-
-export interface UserCreateRequest {
-  username: string;
-  password: string;
-  roles: AppRole[];
-}
-
-export interface UserResponse {
-  id: number;
-  username: string;
-  roles: AppRole[];
-}
+/** @deprecated import from ./user.models — kept for gradual migration */
+export type { Role, UserCreateRequest, UserResponse } from './user.models';
