@@ -4,12 +4,30 @@
   min-height: 100%;
 }
 
+:host ::ng-deep .shell-toolbar.p-toolbar {
+  padding: 0.6rem clamp(0.75rem, 2vw, 1.25rem);
+  flex-wrap: wrap;
+  row-gap: 0.35rem;
+  border-bottom: 1px solid var(--p-content-border-color, #e2e8f0);
+}
+
+:host ::ng-deep .shell-toolbar .p-toolbar-start,
+:host ::ng-deep .shell-toolbar .p-toolbar-end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.35rem;
+}
+
 .brand {
   font-weight: 700;
-  margin-right: 0.75rem;
+  margin-right: 0.5rem;
+  padding-right: 0.35rem;
+  border-right: 1px solid var(--p-content-border-color, #e2e8f0);
   color: var(--p-text-color, #0f172a);
   text-decoration: none;
   align-self: center;
+  letter-spacing: -0.02em;
 }
 
 .brand:focus-visible {
@@ -34,9 +52,17 @@
 
 .shell-main {
   flex: 1 1 auto;
-  padding: 1rem 1.25rem;
-  max-width: 1200px;
+  padding: clamp(0.85rem, 2vw, 1.35rem) clamp(0.85rem, 3vw, 1.75rem);
+  max-width: 1320px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .brand {
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0.35rem;
+  }
 }

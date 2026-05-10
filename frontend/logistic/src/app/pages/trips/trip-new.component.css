@@ -1,20 +1,11 @@
 .trip-new-wrap {
-  max-width: 46rem;
+  max-width: 52rem;
   margin: 0 auto;
-  padding: 1.25rem 1rem 2.5rem;
+  padding: 0.25rem 0 2.5rem;
 }
 
-.page-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
-  margin-bottom: 1rem;
-}
-
-.page-head .page-title {
-  margin-bottom: 0;
+.trip-new-wrap .page-head {
+  margin-bottom: 1.15rem;
 }
 
 :host ::ng-deep .trip-new-wrap .p-card-body {
