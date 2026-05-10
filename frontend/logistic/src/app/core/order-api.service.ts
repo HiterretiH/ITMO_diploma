@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   DocumentTypeName,
@@ -11,6 +12,34 @@ import {
   OrderUpdateRequest,
   TripFormDraftResponse,
 } from './order.models';
+
+export interface DocumentBlobDownload {
+  blob: Blob;
+  fileName: string;
+}
+
+function fileNameFromContentDisposition(header: string | null): string | null {
+  if (!header) {
+    return null;
+  }
+  const star = /filename\*=(?:UTF-8'')?([^;]+)/i.exec(header);
+  if (star?.[1]) {
+    try {
+      return decodeURIComponent(star[1].trim().replace(/^"+|"+$/g, ''));
+    } catch {
+      return star[1].trim().replace(/^"+|"+$/g, '');
+    }
+  }
+  const quoted = /filename="([^"]+)"/i.exec(header);
+  if (quoted?.[1]) {
+    return quoted[1];
+  }
+  const plain = /filename=([^;]+)/i.exec(header);
+  if (plain?.[1]) {
+    return plain[1].trim().replace(/^"+|"+$/g, '');
+  }
+  return null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class OrderApiService {
@@ -60,12 +89,23 @@ export class OrderApiService {
     orderId: number,
     documentType: DocumentTypeName,
     format: FileFormatName,
-  ): Observable<Blob> {
+  ): Observable<DocumentBlobDownload> {
     const q = `format=${encodeURIComponent(format)}`;
-    return this.http.get(
-      `${this.base}/orders/${orderId}/documents/${documentType}/file?${q}`,
-      { responseType: 'blob' },
-    );
+    const url = `${this.base}/orders/${orderId}/documents/${documentType}/file?${q}`;
+    const fallbackName = `${documentType.toLowerCase()}.${
+      format === 'PDF' ? 'pdf' : 'docx'
+    }`;
+    return this.http
+      .get(url, { responseType: 'blob', observe: 'response' })
+      .pipe(
+        map((res) => ({
+          blob: res.body as Blob,
+          fileName:
+            fileNameFromContentDisposition(
+              res.headers.get('content-disposition'),
+            ) ?? fallbackName,
+        })),
+      );
   }
 
   /** Absolute URL for tools that need a string (caller must attach Authorization separately). */

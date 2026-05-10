@@ -154,7 +154,7 @@ public class OrderService {
         Order o = loadDetailed(actor, orderId);
         validateReadyForComplete(o);
         byte[] bytes = documentGenerationService.generateDocument(o, documentType, format);
-        String filename = DocumentGenerationService.downloadFileName(documentType, format);
+        String filename = documentGenerationService.downloadFileName(o, documentType, format);
         String contentType = DocumentGenerationService.contentTypeFor(format);
         return new DocumentDownload(new ByteArrayResource(bytes), filename, contentType);
     }

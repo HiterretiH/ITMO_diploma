@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -29,9 +30,41 @@ public class DocumentGenerationService {
         return format == FileFormat.DOCX ? renderedDocx : docxPdfConverter.convert(renderedDocx);
     }
 
-    public static String downloadFileName(DocumentType type, FileFormat format) {
+    /** Human-readable filename for Content-Disposition (Cyrillic allowed; unsafe chars stripped). */
+    public String downloadFileName(Order order, DocumentType type, FileFormat format) {
+        return downloadFileName(type, format, orderSnapshotMapper.fromOrder(order));
+    }
+
+    public static String downloadFileName(
+            DocumentType type, FileFormat format, OrderPrintSnapshot snapshot) {
         String ext = format == FileFormat.PDF ? ".pdf" : ".docx";
-        return type.name().toLowerCase() + ext;
+        String num = snapshot.orderNumber() != null ? snapshot.orderNumber().toString() : "0";
+        String datePart = snapshot.orderDate() != null ? snapshot.orderDate().toString() : "";
+        String cust = sanitizeFileSegment(snapshot.customerShortName(), "заказчик");
+        String perf = sanitizeFileSegment(snapshot.performerShortName(), "исполнитель");
+        String core =
+                String.format("%s №%s %s %s — %s", type.fileStemRu(), num, datePart, cust, perf);
+        core = truncateUtf(core, 140);
+        return core + ext;
+    }
+
+    private static final Pattern INVALID_WINDOWS_FILE_CHARS =
+            Pattern.compile("[\\\\/:*?\"<>|\\x00-\\x1F]");
+
+    private static String sanitizeFileSegment(String raw, String fallbackIfBlank) {
+        if (raw == null || raw.isBlank()) {
+            return fallbackIfBlank;
+        }
+        String t = INVALID_WINDOWS_FILE_CHARS.matcher(raw.trim()).replaceAll("_");
+        t = t.replaceAll("\\s+", " ").strip();
+        return t.isEmpty() ? fallbackIfBlank : t;
+    }
+
+    private static String truncateUtf(String s, int maxChars) {
+        if (s.length() <= maxChars) {
+            return s;
+        }
+        return s.substring(0, Math.max(1, maxChars - 1)) + "…";
     }
 
     public static String contentTypeFor(FileFormat format) {

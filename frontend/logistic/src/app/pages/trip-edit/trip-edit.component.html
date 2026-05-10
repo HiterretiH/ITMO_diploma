@@ -376,7 +376,7 @@
                         </ng-template>
                         <ng-template pTemplate="body" let-d>
                           <tr>
-                            <td>{{ d.documentType }}</td>
+                            <td>{{ docTypeLabel(d.documentType) }}</td>
                             <td>
                               @for (fmt of d.formats; track fmt) {
                                 <p-button

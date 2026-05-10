@@ -38,6 +38,7 @@ import {
   OrderUpdateRequest,
 } from '../../core/order.models';
 import { ProblemDetail } from '../../models/problem.models';
+import { documentTypeLabelRu } from '../../shared/document-type-ui';
 import { OrderStatusBadgeComponent } from '../../shared/layout/order-status-badge.component';
 import { OrderCatalogDialogsComponent } from '../../shared/order-catalog-dialogs/order-catalog-dialogs.component';
 import { orderMarkedCompleted } from '../../shared/order-ui';
@@ -319,6 +320,10 @@ export class TripEditComponent implements OnInit {
     return this.orderCompleted;
   }
 
+  docTypeLabel(t: DocumentTypeName): string {
+    return documentTypeLabelRu(t);
+  }
+
   get orderId(): number | null {
     return this.order?.id ?? null;
   }
@@ -434,13 +439,11 @@ export class TripEditComponent implements OnInit {
       return;
     }
     this.ordersApi.downloadDocument(id, docType, format).subscribe({
-      next: (blob) => {
-        const ext = format === 'PDF' ? 'pdf' : 'docx';
-        const name = `${docType.toLowerCase()}.${ext}`;
+      next: ({ blob, fileName }) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = name;
+        a.download = fileName;
         a.click();
         URL.revokeObjectURL(url);
       },
