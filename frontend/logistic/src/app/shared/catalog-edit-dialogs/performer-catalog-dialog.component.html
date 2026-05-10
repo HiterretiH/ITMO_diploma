@@ -7,55 +7,148 @@
 >
   <form [formGroup]="form" (ngSubmit)="save()" class="ccd-form">
     <div class="field">
-      <label for="ccd-pf-sn">Краткое название *</label>
-      <input pInputText id="ccd-pf-sn" formControlName="shortName" class="w-full" />
+      <div class="label-row">
+        <label for="ccd-pf-sn">Краткое название *</label>
+        <p-button
+          type="button"
+          icon="pi pi-question-circle"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          styleClass="help-q-btn"
+          ariaLabel="Справка по полю «Краткое название»"
+          (onClick)="pfSnHelp.toggle($event)"
+        />
+      </div>
+      <p-overlayPanel #pfSnHelp>
+        <p class="help-popover">
+          Короткое имя исполнителя для таблиц и списков — перевозчика как вы его называете в работе.
+          Например: ИП Петров П.П., ООО «АвтоТранс».
+        </p>
+      </p-overlayPanel>
+      <input
+        pInputText
+        id="ccd-pf-sn"
+        formControlName="shortName"
+        class="w-full"
+        placeholder="Например: ИП Петров П.П."
+      />
       @if (form.controls.shortName.touched && form.controls.shortName.invalid) {
         <small class="p-error">Обязательное поле</small>
       }
     </div>
     <div class="field">
       <label for="ccd-pf-fn">Полное название</label>
-      <input pInputText id="ccd-pf-fn" formControlName="fullName" class="w-full" />
+      <input
+        pInputText
+        id="ccd-pf-fn"
+        formControlName="fullName"
+        class="w-full"
+        placeholder="Пример: Индивидуальный предприниматель Петров Петр Петрович"
+      />
     </div>
     <div class="field">
       <label for="ccd-pf-ph">Телефон</label>
-      <input pInputText id="ccd-pf-ph" formControlName="phone" class="w-full" />
+      <input
+        pInputText
+        id="ccd-pf-ph"
+        formControlName="phone"
+        class="w-full"
+        placeholder="Например: +7 905 111-22-33"
+      />
     </div>
     <div class="field">
       <label for="ccd-pf-inn">ИНН</label>
-      <input pInputText id="ccd-pf-inn" formControlName="inn" class="w-full" />
+      <input
+        pInputText
+        id="ccd-pf-inn"
+        formControlName="inn"
+        class="w-full"
+        placeholder="Например: 7707083893 (10 или 12 цифр)"
+      />
       @if (form.controls.inn.touched && form.controls.inn.hasError('inn')) {
         <small class="p-error">10 или 12 цифр</small>
       }
     </div>
     <div class="field">
       <label for="ccd-pf-bank">Банк</label>
-      <input pInputText id="ccd-pf-bank" formControlName="bankName" class="w-full" />
+      <input
+        pInputText
+        id="ccd-pf-bank"
+        formControlName="bankName"
+        class="w-full"
+        placeholder="Например: ПАО Сбербанк"
+      />
     </div>
     <div class="field">
       <label for="ccd-pf-bik">БИК</label>
-      <input pInputText id="ccd-pf-bik" formControlName="bik" class="w-full" />
+      <input
+        pInputText
+        id="ccd-pf-bik"
+        formControlName="bik"
+        class="w-full"
+        placeholder="Например: 044525225"
+      />
     </div>
     <div class="field">
       <label for="ccd-pf-kpp">КПП</label>
-      <input pInputText id="ccd-pf-kpp" formControlName="kpp" class="w-full" />
+      <input
+        pInputText
+        id="ccd-pf-kpp"
+        formControlName="kpp"
+        class="w-full"
+        placeholder="При наличии (юрлицо)"
+      />
     </div>
     <div class="field">
       <label for="ccd-pf-rs">Расчётный счёт</label>
-      <input pInputText id="ccd-pf-rs" formControlName="paymentAccount" class="w-full" />
+      <input
+        pInputText
+        id="ccd-pf-rs"
+        formControlName="paymentAccount"
+        class="w-full"
+        placeholder="Например: 40702810000000000001"
+      />
     </div>
     <div class="field">
       <label for="ccd-pf-ks">Корр. счёт</label>
-      <input pInputText id="ccd-pf-ks" formControlName="corrAccount" class="w-full" />
+      <input
+        pInputText
+        id="ccd-pf-ks"
+        formControlName="corrAccount"
+        class="w-full"
+        placeholder="Например: 30101810400000000225"
+      />
     </div>
     <div class="field">
-      <label for="ccd-pf-rq">Реквизиты (текст)</label>
+      <div class="label-row">
+        <label for="ccd-pf-rq">Реквизиты (текст)</label>
+        <p-button
+          type="button"
+          icon="pi pi-question-circle"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          styleClass="help-q-btn"
+          ariaLabel="Справка по полю «Реквизиты»"
+          (onClick)="pfRqHelp.toggle($event)"
+        />
+      </div>
+      <p-overlayPanel #pfRqHelp [style]="{ maxWidth: '26rem' }">
+        <p class="help-popover">
+          Именно этот текст подставляется в печатные документы как юридический блок исполнителя.
+          Введите полный блок одним полем (переносы строк сохраняются): наименование, ИНН, адрес, банк,
+          БИК, р/с, к/с и т.д. Отдельные поля выше можно заполнять для учёта в системе, но в шаблоны
+          уходит значение из этого текстового поля.
+        </p>
+      </p-overlayPanel>
       <textarea
         pInputTextarea
         id="ccd-pf-rq"
         formControlName="requisites"
-        rows="2"
+        rows="6"
         class="w-full"
+        placeholder="Например:&#10;ИП Петров П.П.&#10;ИНН 770708389301&#10;р/с 40802810… в ПАО Сбербанк, БИК 044525225…"
       ></textarea>
     </div>
   </form>

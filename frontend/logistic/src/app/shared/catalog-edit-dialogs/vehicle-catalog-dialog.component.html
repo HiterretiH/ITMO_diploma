@@ -23,7 +23,13 @@
     }
     <div class="field">
       <label for="ccd-v-plate">Госномер *</label>
-      <input pInputText id="ccd-v-plate" formControlName="plateNumber" class="w-full" />
+      <input
+        pInputText
+        id="ccd-v-plate"
+        formControlName="plateNumber"
+        class="w-full"
+        placeholder="Например: А123ВС178"
+      />
       @if (form.controls.plateNumber.touched && form.controls.plateNumber.hasError('required')) {
         <small class="p-error">Обязательное поле</small>
       }
@@ -33,11 +39,23 @@
     </div>
     <div class="field">
       <label for="ccd-v-bm">Марка / модель</label>
-      <input pInputText id="ccd-v-bm" formControlName="brandModel" class="w-full" />
+      <input
+        pInputText
+        id="ccd-v-bm"
+        formControlName="brandModel"
+        class="w-full"
+        placeholder="Например: Volvo FH"
+      />
     </div>
     <div class="field">
       <label for="ccd-v-type">Тип ТС</label>
-      <input pInputText id="ccd-v-type" formControlName="type" class="w-full" />
+      <input
+        pInputText
+        id="ccd-v-type"
+        formControlName="type"
+        class="w-full"
+        placeholder="Например: тягач с полуприцепом"
+      />
     </div>
   </form>
   <div class="dialog-actions">

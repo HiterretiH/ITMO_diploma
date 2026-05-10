@@ -9,6 +9,7 @@ import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { InputTextarea } from 'primeng/inputtextarea';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import { CustomerResponse } from '../../core/catalog.models';
 import { CustomerCatalogSaveEvent } from './catalog-save.models';
@@ -23,6 +24,7 @@ import { CustomerCatalogSaveEvent } from './catalog-save.models';
     Button,
     InputText,
     InputTextarea,
+    OverlayPanelModule,
   ],
   templateUrl: './customer-catalog-dialog.component.html',
   styleUrl: './catalog-dialog-form.css',

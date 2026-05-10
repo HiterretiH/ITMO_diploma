@@ -7,28 +7,120 @@
 >
   <form [formGroup]="form" (ngSubmit)="save()" class="ccd-form">
     <div class="field">
-      <label for="ccd-cu-sn">Краткое название *</label>
-      <input pInputText id="ccd-cu-sn" formControlName="shortName" class="w-full" />
+      <div class="label-row">
+        <label for="ccd-cu-sn">Краткое название *</label>
+        <p-button
+          type="button"
+          icon="pi pi-question-circle"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          styleClass="help-q-btn"
+          ariaLabel="Справка по полю «Краткое название»"
+          (onClick)="cuSnHelp.toggle($event)"
+        />
+      </div>
+      <p-overlayPanel #cuSnHelp [style]="{ maxWidth: '24rem' }">
+        <p class="help-popover">
+          Короткое имя заказчика для таблиц и списков — как вы его обычно называете в работе. Пример:
+          ООО «Логистик», ИП Иванов И.И.
+        </p>
+      </p-overlayPanel>
+      <input
+        pInputText
+        id="ccd-cu-sn"
+        formControlName="shortName"
+        class="w-full"
+        placeholder="Например: ООО «ТрансЛог»"
+      />
       @if (form.controls.shortName.touched && form.controls.shortName.invalid) {
         <small class="p-error">Обязательное поле</small>
       }
     </div>
     <div class="field">
-      <label for="ccd-cu-fn">Полное название</label>
-      <input pInputText id="ccd-cu-fn" formControlName="fullName" class="w-full" />
+      <div class="label-row">
+        <label for="ccd-cu-fn">Полное название</label>
+        <p-button
+          type="button"
+          icon="pi pi-question-circle"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          styleClass="help-q-btn"
+          ariaLabel="Справка по полю «Полное название»"
+          (onClick)="cuFnHelp.toggle($event)"
+        />
+      </div>
+      <p-overlayPanel #cuFnHelp>
+        <p class="help-popover">
+          Юридическое или полное фирменное наименование, если отличается от краткого. Используется в
+          подписи к документам там, где нужно полное имя организации.
+        </p>
+      </p-overlayPanel>
+      <input
+        pInputText
+        id="ccd-cu-fn"
+        formControlName="fullName"
+        class="w-full"
+        placeholder="Пример: Общество с ограниченной ответственностью «ТрансЛог»"
+      />
     </div>
     <div class="field">
-      <label for="ccd-cu-ph">Телефон</label>
-      <input pInputText id="ccd-cu-ph" formControlName="phone" class="w-full" />
+      <div class="label-row">
+        <label for="ccd-cu-ph">Телефон</label>
+        <p-button
+          type="button"
+          icon="pi pi-question-circle"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          styleClass="help-q-btn"
+          ariaLabel="Справка по полю «Телефон»"
+          (onClick)="cuPhHelp.toggle($event)"
+        />
+      </div>
+      <p-overlayPanel #cuPhHelp>
+        <p class="help-popover">
+          Контакт для связи по этому заказчику (как удобно записать: городской или мобильный).
+        </p>
+      </p-overlayPanel>
+      <input
+        pInputText
+        id="ccd-cu-ph"
+        formControlName="phone"
+        class="w-full"
+        placeholder="Например: +7 900 123-45-67"
+      />
     </div>
     <div class="field">
-      <label for="ccd-cu-rq">Реквизиты</label>
+      <div class="label-row">
+        <label for="ccd-cu-rq">Реквизиты</label>
+        <p-button
+          type="button"
+          icon="pi pi-question-circle"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          styleClass="help-q-btn"
+          ariaLabel="Справка по полю «Реквизиты»"
+          (onClick)="cuRqHelp.toggle($event)"
+        />
+      </div>
+      <p-overlayPanel #cuRqHelp [style]="{ maxWidth: '26rem' }">
+        <p class="help-popover">
+          Впишите полный блок реквизитов одним текстом — так же, как он должен попасть в печатные
+          формы (переносы строк сохраняются). Обычно: полное наименование, ИНН/КПП, юр. адрес, банк,
+          БИК, р/с и к/с.
+          Пример строки в начале: ООО «Пример», ИНН 7707083893, КПП 770701001…
+        </p>
+      </p-overlayPanel>
       <textarea
         pInputTextarea
         id="ccd-cu-rq"
         formControlName="requisites"
-        rows="3"
+        rows="6"
         class="w-full"
+        placeholder="Например:&#10;ООО «Пример»&#10;ИНН 7707083893, КПП 770701001&#10;р/с 40702810… в АО «Банк», БИК 044525225, к/с 30101…"
       ></textarea>
     </div>
   </form>

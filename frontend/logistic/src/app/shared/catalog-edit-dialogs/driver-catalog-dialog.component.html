@@ -23,14 +23,26 @@
     }
     <div class="field">
       <label for="ccd-dr-name">ФИО *</label>
-      <input pInputText id="ccd-dr-name" formControlName="fullName" class="w-full" />
+      <input
+        pInputText
+        id="ccd-dr-name"
+        formControlName="fullName"
+        class="w-full"
+        placeholder="Например: Иванов Иван Иванович"
+      />
       @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
         <small class="p-error">Обязательное поле</small>
       }
     </div>
     <div class="field">
       <label for="ccd-dr-ph">Телефон</label>
-      <input pInputText id="ccd-dr-ph" formControlName="phone" class="w-full" />
+      <input
+        pInputText
+        id="ccd-dr-ph"
+        formControlName="phone"
+        class="w-full"
+        placeholder="Например: +7 900 555-44-33"
+      />
     </div>
   </form>
   <div class="dialog-actions">

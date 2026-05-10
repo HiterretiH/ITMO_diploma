@@ -5,8 +5,40 @@
   margin-bottom: 0.85rem;
 }
 
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.label-row label {
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.help-popover {
+  margin: 0;
+  max-width: min(22rem, 92vw);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+:host ::ng-deep .help-q-btn.p-button {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
 .w-full {
   width: 100%;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--p-text-muted-color, #94a3b8);
+  opacity: 1;
 }
 
 .dialog-actions {
