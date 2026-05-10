@@ -9,9 +9,14 @@ export class AuditApiService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiBase}/api/v1`;
 
-  listByTrip(tripId: number): Observable<AuditEventResponse[]> {
+  listByOrder(orderId: number): Observable<AuditEventResponse[]> {
     return this.http.get<AuditEventResponse[]>(
-      `${this.base}/trips/${tripId}/audit-events`,
+      `${this.base}/orders/${orderId}/audit-events`,
     );
+  }
+
+  /** @deprecated use listByOrder */
+  listByTrip(tripId: number): Observable<AuditEventResponse[]> {
+    return this.listByOrder(tripId);
   }
 }

@@ -3,33 +3,29 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-
-export interface JwtLoginResponse {
-  token: string;
-}
+import { JwtResponse, LoginRequest, RegisterRequest } from './auth.models';
 
 const STORAGE_KEY = 'access_token';
+
+/** @deprecated use JwtResponse from auth.models */
+export type JwtLoginResponse = JwtResponse;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
-  login(username: string, password: string): Observable<JwtLoginResponse> {
+  login(username: string, password: string): Observable<JwtResponse> {
+    const body: LoginRequest = { username, password };
     return this.http
-      .post<JwtLoginResponse>(`${environment.apiBase}/api/v1/auth/login`, {
-        username,
-        password,
-      })
+      .post<JwtResponse>(`${environment.apiBase}/api/v1/auth/login`, body)
       .pipe(tap((r) => sessionStorage.setItem(STORAGE_KEY, r.token)));
   }
 
-  register(username: string, password: string): Observable<JwtLoginResponse> {
+  register(username: string, password: string): Observable<JwtResponse> {
+    const body: RegisterRequest = { username, password };
     return this.http
-      .post<JwtLoginResponse>(`${environment.apiBase}/api/v1/auth/register`, {
-        username,
-        password,
-      })
+      .post<JwtResponse>(`${environment.apiBase}/api/v1/auth/register`, body)
       .pipe(tap((r) => sessionStorage.setItem(STORAGE_KEY, r.token)));
   }
 

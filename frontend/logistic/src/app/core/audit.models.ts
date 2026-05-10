@@ -1,11 +1,13 @@
+/** api/openapi.yaml AuditEventResponse.eventType */
+
 export type AuditEventType =
-  | 'TRIP_CREATED'
-  | 'TRIP_UPDATED'
-  | 'TRIP_COMPLETED'
-  | 'TRIP_DELETED'
+  | 'REGISTER'
+  | 'ORDER_CREATED'
+  | 'ORDER_UPDATED'
+  | 'ORDER_COMPLETED'
+  | 'ORDER_DELETED'
   | 'DOCUMENTS_GENERATED'
-  | 'LOGIN'
-  | 'REGISTER';
+  | 'LOGIN';
 
 export interface AuditEventResponse {
   id: number;
