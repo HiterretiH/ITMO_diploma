@@ -3,6 +3,7 @@ package com.logistic.backend.api;
 import com.logistic.backend.api.dto.DriverRequest;
 import com.logistic.backend.api.dto.DriverResponse;
 import com.logistic.backend.catalog.DriverService;
+import com.logistic.backend.security.CurrentUserService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,34 +24,35 @@ import org.springframework.web.bind.annotation.RestController;
 public class DriverController {
 
     private final DriverService driverService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public List<DriverResponse> list(@RequestParam(required = false) String q) {
-        return driverService.list(q);
+        return driverService.list(q, currentUserService.requireUser());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public DriverResponse get(@PathVariable Long id) {
-        return driverService.get(id);
+        return driverService.get(id, currentUserService.requireUser());
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public DriverResponse create(@Valid @RequestBody DriverRequest request) {
-        return driverService.create(request);
+        return driverService.create(request, currentUserService.requireUser());
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public DriverResponse update(@PathVariable Long id, @Valid @RequestBody DriverRequest request) {
-        return driverService.update(id, request);
+        return driverService.update(id, request, currentUserService.requireUser());
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public void delete(@PathVariable Long id) {
-        driverService.delete(id);
+        driverService.delete(id, currentUserService.requireUser());
     }
 }

@@ -30,42 +30,45 @@ public class OrderController {
     private final CurrentUserService currentUserService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public List<OrderResponse> list() {
-        return orderService.list();
+        return orderService.list(currentUserService.requireUser());
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public OrderResponse create(@Valid @RequestBody OrderCreateRequest request) {
         return orderService.create(request, currentUserService.requireUser());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public OrderResponse get(@PathVariable Long id) {
-        return orderService.get(id);
+        return orderService.get(id, currentUserService.requireUser());
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public OrderResponse update(@PathVariable Long id, @RequestBody OrderUpdateRequest request) {
         return orderService.update(id, request, currentUserService.requireUser());
     }
 
     @PostMapping("/{id}/complete")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public OrderResponse complete(@PathVariable Long id) {
         return orderService.complete(id, currentUserService.requireUser());
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public void delete(@PathVariable Long id) {
         orderService.delete(id, currentUserService.requireUser());
     }
 
     @GetMapping("/{id}/documents")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public List<GeneratedDocumentResponse> listDocuments(@PathVariable Long id) {
-        return orderService.listDocuments(id);
+        return orderService.listDocuments(id, currentUserService.requireUser());
     }
 }

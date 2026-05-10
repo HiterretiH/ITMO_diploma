@@ -2,6 +2,8 @@ package com.logistic.backend.catalog;
 
 import com.logistic.backend.api.dto.CustomerRequest;
 import com.logistic.backend.api.dto.CustomerResponse;
+import com.logistic.backend.user.User;
+import com.logistic.backend.user.UserAccess;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,43 +18,67 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
 
     @Transactional
-    public CustomerResponse create(CustomerRequest req) {
+    public CustomerResponse create(CustomerRequest req, User current) {
         Customer c = new Customer();
+        c.setOwner(current);
         apply(c, req);
         customerRepository.save(c);
         return toDto(c);
     }
 
     @Transactional
-    public CustomerResponse update(Long id, CustomerRequest req) {
-        Customer c = customerRepository.findById(id).orElseThrow(this::notFound);
+    public CustomerResponse update(Long id, CustomerRequest req, User current) {
+        Customer c = loadForMutation(current, id);
         apply(c, req);
         customerRepository.save(c);
         return toDto(c);
     }
 
     @Transactional(readOnly = true)
-    public CustomerResponse get(Long id) {
-        Customer c = customerRepository.findById(id).orElseThrow(this::notFound);
+    public CustomerResponse get(Long id, User current) {
+        Customer c = loadForRead(current, id);
         return toDto(c);
     }
 
     @Transactional(readOnly = true)
-    public List<CustomerResponse> list(String q) {
-        if (q == null || q.isBlank()) {
-            return customerRepository.findAllByOrderByShortNameAsc().stream()
+    public List<CustomerResponse> list(String q, User current) {
+        if (UserAccess.isAdmin(current)) {
+            if (q == null || q.isBlank()) {
+                return customerRepository.findAllByOrderByShortNameAsc().stream()
+                        .map(this::toDto)
+                        .toList();
+            }
+            return customerRepository.findByShortNameContainingIgnoreCaseOrderByShortNameAsc(q).stream()
                     .map(this::toDto)
                     .toList();
         }
-        return customerRepository.findByShortNameContainingIgnoreCaseOrderByShortNameAsc(q).stream()
+        Long uid = current.getId();
+        if (q == null || q.isBlank()) {
+            return customerRepository.findByOwner_IdOrderByShortNameAsc(uid).stream()
+                    .map(this::toDto)
+                    .toList();
+        }
+        return customerRepository.findByOwner_IdAndShortNameContainingIgnoreCaseOrderByShortNameAsc(uid, q)
+                .stream()
                 .map(this::toDto)
                 .toList();
     }
 
     @Transactional
-    public void delete(Long id) {
-        Customer c = customerRepository.findById(id).orElseThrow(this::notFound);
+    public void delete(Long id, User current) {
+        Customer c = loadForMutation(current, id);
         customerRepository.delete(c);
+    }
+
+    private Customer loadForRead(User current, Long id) {
+        if (UserAccess.isAdmin(current)) {
+            return customerRepository.findById(id).orElseThrow(this::notFound);
+        }
+        return customerRepository.findByIdAndOwner_Id(id, current.getId()).orElseThrow(this::notFound);
+    }
+
+    private Customer loadForMutation(User current, Long id) {
+        return loadForRead(current, id);
     }
 
     private void apply(Customer c, CustomerRequest req) {

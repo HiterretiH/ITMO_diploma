@@ -59,7 +59,7 @@ public class AuthController {
     public JwtResponse register(@Valid @RequestBody RegisterRequest request) {
         String username = request.username().trim();
         userService.create(
-                new UserCreateRequest(username, request.password(), Set.of(Role.EMPLOYEE)));
+                new UserCreateRequest(username, request.password(), Set.of(Role.USER)));
         User u =
                 userRepository
                         .findByUsername(username)

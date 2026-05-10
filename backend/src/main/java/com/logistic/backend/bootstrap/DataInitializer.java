@@ -28,7 +28,7 @@ public class DataInitializer implements ApplicationRunner {
         admin.setUsername("admin");
         admin.setPasswordHash(passwordEncoder.encode("admin123"));
         admin.setEnabled(true);
-        admin.setRoles(EnumSet.of(Role.ADMIN, Role.MANAGER, Role.EMPLOYEE));
+        admin.setRoles(EnumSet.of(Role.ADMIN));
         userRepository.save(admin);
     }
 }

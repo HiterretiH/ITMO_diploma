@@ -2,6 +2,8 @@ package com.logistic.backend.catalog;
 
 import com.logistic.backend.api.dto.DriverRequest;
 import com.logistic.backend.api.dto.DriverResponse;
+import com.logistic.backend.user.User;
+import com.logistic.backend.user.UserAccess;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,8 +19,8 @@ public class DriverService {
     private final PerformerRepository performerRepository;
 
     @Transactional
-    public DriverResponse create(DriverRequest req) {
-        Performer p = performerRepository.findById(req.performerId()).orElseThrow(this::notFound);
+    public DriverResponse create(DriverRequest req, User current) {
+        Performer p = loadPerformerForMutation(current, req.performerId());
         if (Boolean.TRUE.equals(req.isDefault())) {
             driverRepository.clearDefaultForEmployer(p.getId());
             driverRepository.flush();
@@ -33,9 +35,9 @@ public class DriverService {
     }
 
     @Transactional
-    public DriverResponse update(Long id, DriverRequest req) {
-        Driver d = driverRepository.findById(id).orElseThrow(this::notFound);
-        Performer p = performerRepository.findById(req.performerId()).orElseThrow(this::notFound);
+    public DriverResponse update(Long id, DriverRequest req, User current) {
+        Driver d = loadDriver(current, id);
+        Performer p = loadPerformerForMutation(current, req.performerId());
         if (Boolean.TRUE.equals(req.isDefault())) {
             driverRepository.clearDefaultForEmployer(p.getId());
             driverRepository.flush();
@@ -49,27 +51,55 @@ public class DriverService {
     }
 
     @Transactional(readOnly = true)
-    public DriverResponse get(Long id) {
-        Driver d = driverRepository.findById(id).orElseThrow(this::notFound);
+    public DriverResponse get(Long id, User current) {
+        Driver d = loadDriver(current, id);
         return toDto(d);
     }
 
     @Transactional(readOnly = true)
-    public List<DriverResponse> list(String q) {
-        if (q == null || q.isBlank()) {
-            return driverRepository.findAllByOrderByFullNameAsc().stream()
+    public List<DriverResponse> list(String q, User current) {
+        if (UserAccess.isAdmin(current)) {
+            if (q == null || q.isBlank()) {
+                return driverRepository.findAllByOrderByFullNameAsc().stream()
+                        .map(this::toDto)
+                        .toList();
+            }
+            return driverRepository.findByFullNameContainingIgnoreCaseOrderByFullNameAsc(q).stream()
                     .map(this::toDto)
                     .toList();
         }
-        return driverRepository.findByFullNameContainingIgnoreCaseOrderByFullNameAsc(q).stream()
+        Long uid = current.getId();
+        if (q == null || q.isBlank()) {
+            return driverRepository.findByEmployer_Owner_IdOrderByFullNameAsc(uid).stream()
+                    .map(this::toDto)
+                    .toList();
+        }
+        return driverRepository
+                .findByEmployer_Owner_IdAndFullNameContainingIgnoreCaseOrderByFullNameAsc(uid, q)
+                .stream()
                 .map(this::toDto)
                 .toList();
     }
 
     @Transactional
-    public void delete(Long id) {
-        Driver d = driverRepository.findById(id).orElseThrow(this::notFound);
+    public void delete(Long id, User current) {
+        Driver d = loadDriver(current, id);
         driverRepository.delete(d);
+    }
+
+    private Performer loadPerformerForMutation(User current, Long performerId) {
+        Performer p = performerRepository.findById(performerId).orElseThrow(this::notFound);
+        if (!UserAccess.isAdmin(current) && !p.getOwner().getId().equals(current.getId())) {
+            throw notFound();
+        }
+        return p;
+    }
+
+    private Driver loadDriver(User current, Long id) {
+        if (UserAccess.isAdmin(current)) {
+            return driverRepository.findById(id).orElseThrow(this::notFound);
+        }
+        return driverRepository.findByIdAndEmployer_Owner_Id(id, current.getId()).orElseThrow(this::notFound);
     }
 
     private static String emptyToNull(String s) {

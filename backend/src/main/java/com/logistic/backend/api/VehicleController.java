@@ -3,6 +3,7 @@ package com.logistic.backend.api;
 import com.logistic.backend.api.dto.VehicleRequest;
 import com.logistic.backend.api.dto.VehicleResponse;
 import com.logistic.backend.catalog.VehicleService;
+import com.logistic.backend.security.CurrentUserService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,35 +24,36 @@ import org.springframework.web.bind.annotation.RestController;
 public class VehicleController {
 
     private final VehicleService vehicleService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public List<VehicleResponse> list(@RequestParam(required = false) String q) {
-        return vehicleService.list(q);
+        return vehicleService.list(q, currentUserService.requireUser());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public VehicleResponse get(@PathVariable Long id) {
-        return vehicleService.get(id);
+        return vehicleService.get(id, currentUserService.requireUser());
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public VehicleResponse create(@Valid @RequestBody VehicleRequest request) {
-        return vehicleService.create(request);
+        return vehicleService.create(request, currentUserService.requireUser());
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public VehicleResponse update(
             @PathVariable Long id, @Valid @RequestBody VehicleRequest request) {
-        return vehicleService.update(id, request);
+        return vehicleService.update(id, request, currentUserService.requireUser());
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public void delete(@PathVariable Long id) {
-        vehicleService.delete(id);
+        vehicleService.delete(id, currentUserService.requireUser());
     }
 }

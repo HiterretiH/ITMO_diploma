@@ -49,7 +49,7 @@ class OrderLifecycleIntegrationTest extends AbstractPostgresIntegrationTest {
         emp.setUsername(empName);
         emp.setPasswordHash(passwordEncoder.encode("emp-pass"));
         emp.setEnabled(true);
-        emp.setRoles(EnumSet.of(Role.EMPLOYEE));
+        emp.setRoles(EnumSet.of(Role.USER));
         userRepository.save(emp);
 
         employeeToken = loginTokenAssertOk(empName, "emp-pass");

@@ -3,6 +3,7 @@ package com.logistic.backend.api;
 import com.logistic.backend.api.dto.PerformerRequest;
 import com.logistic.backend.api.dto.PerformerResponse;
 import com.logistic.backend.catalog.PerformerService;
+import com.logistic.backend.security.CurrentUserService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,35 +24,36 @@ import org.springframework.web.bind.annotation.RestController;
 public class PerformerController {
 
     private final PerformerService performerService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public List<PerformerResponse> list(@RequestParam(required = false) String q) {
-        return performerService.list(q);
+        return performerService.list(q, currentUserService.requireUser());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public PerformerResponse get(@PathVariable Long id) {
-        return performerService.get(id);
+        return performerService.get(id, currentUserService.requireUser());
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public PerformerResponse create(@Valid @RequestBody PerformerRequest request) {
-        return performerService.create(request);
+        return performerService.create(request, currentUserService.requireUser());
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public PerformerResponse update(
             @PathVariable Long id, @Valid @RequestBody PerformerRequest request) {
-        return performerService.update(id, request);
+        return performerService.update(id, request, currentUserService.requireUser());
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public void delete(@PathVariable Long id) {
-        performerService.delete(id);
+        performerService.delete(id, currentUserService.requireUser());
     }
 }

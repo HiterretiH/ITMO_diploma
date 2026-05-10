@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,10 +23,11 @@ public class DocumentDownloadController {
     private final CurrentUserService currentUserService;
 
     @GetMapping("/{id}/file")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable Long id)
             throws IOException {
-        currentUserService.requireUser();
-        DocumentDownload d = orderService.prepareDocumentDownload(id);
+        DocumentDownload d =
+                orderService.prepareDocumentDownload(id, currentUserService.requireUser());
         ContentDisposition disposition =
                 ContentDisposition.attachment().filename(d.filename()).build();
         return ResponseEntity.ok()

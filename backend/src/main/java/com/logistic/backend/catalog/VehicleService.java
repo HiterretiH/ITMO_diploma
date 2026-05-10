@@ -2,6 +2,8 @@ package com.logistic.backend.catalog;
 
 import com.logistic.backend.api.dto.VehicleRequest;
 import com.logistic.backend.api.dto.VehicleResponse;
+import com.logistic.backend.user.User;
+import com.logistic.backend.user.UserAccess;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,8 +19,8 @@ public class VehicleService {
     private final PerformerRepository performerRepository;
 
     @Transactional
-    public VehicleResponse create(VehicleRequest req) {
-        Performer p = performerRepository.findById(req.performerId()).orElseThrow(this::notFound);
+    public VehicleResponse create(VehicleRequest req, User current) {
+        Performer p = loadPerformerForMutation(current, req.performerId());
         if (Boolean.TRUE.equals(req.isDefault())) {
             vehicleRepository.clearDefaultForOwner(p.getId());
             vehicleRepository.flush();
@@ -34,9 +36,9 @@ public class VehicleService {
     }
 
     @Transactional
-    public VehicleResponse update(Long id, VehicleRequest req) {
-        Vehicle v = vehicleRepository.findById(id).orElseThrow(this::notFound);
-        Performer p = performerRepository.findById(req.performerId()).orElseThrow(this::notFound);
+    public VehicleResponse update(Long id, VehicleRequest req, User current) {
+        Vehicle v = loadVehicle(current, id);
+        Performer p = loadPerformerForMutation(current, req.performerId());
         if (Boolean.TRUE.equals(req.isDefault())) {
             vehicleRepository.clearDefaultForOwner(p.getId());
             vehicleRepository.flush();
@@ -51,27 +53,55 @@ public class VehicleService {
     }
 
     @Transactional(readOnly = true)
-    public VehicleResponse get(Long id) {
-        Vehicle v = vehicleRepository.findById(id).orElseThrow(this::notFound);
+    public VehicleResponse get(Long id, User current) {
+        Vehicle v = loadVehicle(current, id);
         return toDto(v);
     }
 
     @Transactional(readOnly = true)
-    public List<VehicleResponse> list(String q) {
-        if (q == null || q.isBlank()) {
-            return vehicleRepository.findAllByOrderByPlateNumberAsc().stream()
+    public List<VehicleResponse> list(String q, User current) {
+        if (UserAccess.isAdmin(current)) {
+            if (q == null || q.isBlank()) {
+                return vehicleRepository.findAllByOrderByPlateNumberAsc().stream()
+                        .map(this::toDto)
+                        .toList();
+            }
+            return vehicleRepository.findByPlateNumberContainingIgnoreCaseOrderByPlateNumberAsc(q).stream()
                     .map(this::toDto)
                     .toList();
         }
-        return vehicleRepository.findByPlateNumberContainingIgnoreCaseOrderByPlateNumberAsc(q).stream()
+        Long uid = current.getId();
+        if (q == null || q.isBlank()) {
+            return vehicleRepository.findByOwner_Owner_IdOrderByPlateNumberAsc(uid).stream()
+                    .map(this::toDto)
+                    .toList();
+        }
+        return vehicleRepository
+                .findByOwner_Owner_IdAndPlateNumberContainingIgnoreCaseOrderByPlateNumberAsc(uid, q)
+                .stream()
                 .map(this::toDto)
                 .toList();
     }
 
     @Transactional
-    public void delete(Long id) {
-        Vehicle v = vehicleRepository.findById(id).orElseThrow(this::notFound);
+    public void delete(Long id, User current) {
+        Vehicle v = loadVehicle(current, id);
         vehicleRepository.delete(v);
+    }
+
+    private Performer loadPerformerForMutation(User current, Long performerId) {
+        Performer p = performerRepository.findById(performerId).orElseThrow(this::notFound);
+        if (!UserAccess.isAdmin(current) && !p.getOwner().getId().equals(current.getId())) {
+            throw notFound();
+        }
+        return p;
+    }
+
+    private Vehicle loadVehicle(User current, Long id) {
+        if (UserAccess.isAdmin(current)) {
+            return vehicleRepository.findById(id).orElseThrow(this::notFound);
+        }
+        return vehicleRepository.findByIdAndOwner_Owner_Id(id, current.getId()).orElseThrow(this::notFound);
     }
 
     private static String emptyToNull(String s) {

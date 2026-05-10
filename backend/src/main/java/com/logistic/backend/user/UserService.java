@@ -3,6 +3,7 @@ package com.logistic.backend.user;
 import com.logistic.backend.api.dto.UserCreateRequest;
 import com.logistic.backend.api.dto.UserResponse;
 import java.util.HashSet;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ public class UserService {
 
     @Transactional
     public UserResponse create(UserCreateRequest request) {
+        validateRoles(request.roles());
         if (userRepository.existsByUsername(request.username())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
         }
@@ -29,5 +31,16 @@ public class UserService {
         u.setRoles(new HashSet<>(request.roles()));
         userRepository.save(u);
         return new UserResponse(u.getId(), u.getUsername(), u.getRoles());
+    }
+
+    private static void validateRoles(Set<Role> roles) {
+        if (roles == null || roles.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one role is required");
+        }
+        for (Role r : roles) {
+            if (r != Role.USER && r != Role.ADMIN) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role");
+            }
+        }
     }
 }

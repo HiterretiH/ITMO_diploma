@@ -41,14 +41,16 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     @Autowired UserRepository userRepository;
     @Autowired PasswordEncoder passwordEncoder;
 
-    private String tokenEmpA;
-    private String tokenEmpB;
+    private String tokenUserA;
+    private String tokenUserB;
+    private String tokenAdmin;
 
     @BeforeEach
     void seedUsers() throws Exception {
         String id = UUID.randomUUID().toString().substring(0, 8);
-        tokenEmpA = saveUser("emp_a_" + id, "p1", EnumSet.of(Role.EMPLOYEE));
-        tokenEmpB = saveUser("emp_b_" + id, "p2", EnumSet.of(Role.EMPLOYEE));
+        tokenUserA = saveUser("user_a_" + id, "p1", EnumSet.of(Role.USER));
+        tokenUserB = saveUser("user_b_" + id, "p2", EnumSet.of(Role.USER));
+        tokenAdmin = saveUser("admin_" + id, "p3", EnumSet.of(Role.ADMIN));
     }
 
     private String saveUser(String username, String password, Set<Role> roles) throws Exception {
@@ -70,37 +72,38 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void employeeCanCompleteOrder() throws Exception {
-        long orderId = createOrderReadyToComplete(tokenEmpA);
+    void userCanCompleteOrder() throws Exception {
+        long orderId = createOrderReadyToComplete(tokenUserA);
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
                         "/api/v1/orders/" + orderId + "/complete",
-                        new HttpEntity<>(bearer(tokenEmpA)),
+                        new HttpEntity<>(bearer(tokenUserA)),
                         String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(objectMapper.readTree(r.getBody()).get("templateVersion").asInt()).isGreaterThan(0);
     }
 
     @Test
-    void peerCanDeleteOrderCreatedByAnotherEmployee() throws Exception {
-        long orderId = createEmptyOrder(tokenEmpA);
+    void peerCannotDeleteOrderOwnedByAnotherUser() throws Exception {
+        long orderId = createEmptyOrder(tokenUserA);
         ResponseEntity<String> r =
                 restTemplate.exchange(
                         "/api/v1/orders/" + orderId,
                         HttpMethod.DELETE,
-                        new HttpEntity<>(bearer(tokenEmpB)),
+                        new HttpEntity<>(bearer(tokenUserB)),
                         String.class);
-        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertProblemJson(r, HttpStatus.NOT_FOUND);
     }
 
     @Test
-    void employeeCannotCreateAdminUser() throws Exception {
+    void userCannotCreateUserViaAdminEndpoint() throws Exception {
         String body =
                 objectMapper.writeValueAsString(
-                        new UserCreateRequest("x_" + UUID.randomUUID(), "pw", Set.of(Role.EMPLOYEE)));
+                        new UserCreateRequest("x_" + UUID.randomUUID(), "pw", Set.of(Role.USER)));
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
-                        "/api/v1/admin/users", new HttpEntity<>(body, bearer(tokenEmpA)), String.class);
+                        "/api/v1/admin/users", new HttpEntity<>(body, bearer(tokenUserA)), String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertProblemJson(r, HttpStatus.FORBIDDEN);
     }
@@ -111,7 +114,7 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
                 restTemplate.exchange(
                         "/api/v1/orders/999999",
                         HttpMethod.GET,
-                        new HttpEntity<>(bearer(tokenEmpA)),
+                        new HttpEntity<>(bearer(tokenUserA)),
                         String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertProblemJson(r, HttpStatus.NOT_FOUND);
@@ -123,7 +126,7 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
                 restTemplate.exchange(
                         "/api/v1/customers/999999",
                         HttpMethod.GET,
-                        new HttpEntity<>(bearer(tokenEmpA)),
+                        new HttpEntity<>(bearer(tokenUserA)),
                         String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertProblemJson(r, HttpStatus.NOT_FOUND);
@@ -131,11 +134,11 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void completeIncompleteOrderReturns400() throws Exception {
-        long orderId = createEmptyOrder(tokenEmpA);
+        long orderId = createEmptyOrder(tokenUserA);
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
                         "/api/v1/orders/" + orderId + "/complete",
-                        new HttpEntity<>(bearer(tokenEmpA)),
+                        new HttpEntity<>(bearer(tokenUserA)),
                         String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertProblemJson(r, HttpStatus.BAD_REQUEST);
@@ -146,21 +149,35 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
         String body = objectMapper.writeValueAsString(new CustomerRequest("", null, null, null));
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
-                        "/api/v1/customers", new HttpEntity<>(body, bearer(tokenEmpA)), String.class);
+                        "/api/v1/customers", new HttpEntity<>(body, bearer(tokenUserA)), String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertProblemJson(r, HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void peerEmployeeCanReadOrderCreatedByAnother() throws Exception {
-        long orderId = createEmptyOrder(tokenEmpA);
+    void peerCannotReadOrderOwnedByAnotherUser() throws Exception {
+        long orderId = createEmptyOrder(tokenUserA);
         ResponseEntity<String> r =
                 restTemplate.exchange(
                         "/api/v1/orders/" + orderId,
                         HttpMethod.GET,
-                        new HttpEntity<>(bearer(tokenEmpB)),
+                        new HttpEntity<>(bearer(tokenUserB)),
+                        String.class);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertProblemJson(r, HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void adminCanReadOrderCreatedByAnotherUser() throws Exception {
+        long orderId = createEmptyOrder(tokenUserA);
+        ResponseEntity<String> r =
+                restTemplate.exchange(
+                        "/api/v1/orders/" + orderId,
+                        HttpMethod.GET,
+                        new HttpEntity<>(bearer(tokenAdmin)),
                         String.class);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(objectMapper.readTree(r.getBody()).get("id").asLong()).isEqualTo(orderId);
     }
 
     @Test

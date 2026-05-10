@@ -4,6 +4,7 @@ import com.logistic.backend.catalog.Customer;
 import com.logistic.backend.catalog.Driver;
 import com.logistic.backend.catalog.Performer;
 import com.logistic.backend.catalog.Vehicle;
+import com.logistic.backend.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,6 +28,10 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_id")
+    private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id")

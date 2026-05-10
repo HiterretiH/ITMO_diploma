@@ -42,7 +42,7 @@ class ErrorContractIntegrationTest extends AbstractPostgresIntegrationTest {
         u.setUsername(name);
         u.setPasswordHash(passwordEncoder.encode("p"));
         u.setEnabled(true);
-        u.setRoles(EnumSet.of(Role.EMPLOYEE));
+        u.setRoles(EnumSet.of(Role.USER));
         userRepository.save(u);
         ResponseEntity<String> r =
                 restTemplate.postForEntity(
