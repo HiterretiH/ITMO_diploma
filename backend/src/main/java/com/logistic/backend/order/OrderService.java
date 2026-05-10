@@ -16,7 +16,6 @@ import com.logistic.backend.catalog.PerformerRepository;
 import com.logistic.backend.catalog.Vehicle;
 import com.logistic.backend.catalog.VehicleRepository;
 import com.logistic.backend.config.StorageProperties;
-import com.logistic.backend.document.DocumentGenerationService;
 import com.logistic.backend.document.DocumentTemplateVersion;
 import com.logistic.backend.document.FileFormat;
 import com.logistic.backend.document.GeneratedDocument;
@@ -49,7 +48,6 @@ public class OrderService {
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
     private final AuditService auditService;
-    private final DocumentGenerationService documentGenerationService;
     private final GeneratedDocumentRepository generatedDocumentRepository;
     private final StorageProperties storageProperties;
 
@@ -101,17 +99,9 @@ public class OrderService {
     public OrderResponse complete(Long id, User actor) {
         Order o = loadDetailed(actor, id);
         validateReadyForComplete(o);
-        try {
-            documentGenerationService.generateAndPersist(o);
-        } catch (Exception e) {
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Document generation failed", e);
-        }
         o.setTemplateVersion(DocumentTemplateVersion.CURRENT);
         orderRepository.save(o);
         auditService.record(actor, o, AuditEventType.ORDER_COMPLETED, Map.of("orderId", id.toString()));
-        auditService.record(
-                actor, o, AuditEventType.DOCUMENTS_GENERATED, Map.of("orderId", id.toString()));
         return toDto(o);
     }
 

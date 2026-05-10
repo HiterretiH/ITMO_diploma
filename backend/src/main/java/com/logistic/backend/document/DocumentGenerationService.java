@@ -1,64 +1,47 @@
 package com.logistic.backend.document;
 
-import com.logistic.backend.config.StorageProperties;
 import com.logistic.backend.order.Order;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class DocumentGenerationService {
 
-    private final StorageProperties storageProperties;
-    private final GeneratedDocumentRepository generatedDocumentRepository;
     private final DocxTemplateRenderer templateRenderer;
     private final DocxPdfConverter docxPdfConverter;
     private final OrderSnapshotMapper orderSnapshotMapper;
 
-    @Transactional
-    public void generateAndPersist(Order order) throws IOException {
+    /**
+     * Renders a single document in memory (no disk, no DB). Caller must ensure order data is complete
+     * if required for the template.
+     */
+    public byte[] generateDocument(Order order, DocumentType type, FileFormat format) throws IOException {
         OrderPrintSnapshot snap = orderSnapshotMapper.fromOrder(order);
-        Path base =
-                Path.of(storageProperties.getRoot()).resolve("orders").resolve(order.getId().toString());
-        Files.createDirectories(base);
-        generatedDocumentRepository.deleteByOrder(order);
-
-        for (DocumentType dt : DocumentType.values()) {
-            byte[] renderedDocx = renderDocxFromTemplate(dt, snap);
-            for (FileFormat ff : FileFormat.values()) {
-                byte[] body =
-                        ff == FileFormat.DOCX ? renderedDocx : docxPdfConverter.convert(renderedDocx);
-                String ext = ff == FileFormat.PDF ? "pdf" : "docx";
-                String fileName = dt.name().toLowerCase() + "_" + ff.name().toLowerCase() + "." + ext;
-                Path path = base.resolve(fileName);
-                Files.write(path, body);
-
-                GeneratedDocument gd = new GeneratedDocument();
-                gd.setOrder(order);
-                gd.setDocumentType(dt);
-                gd.setFileFormat(ff);
-                gd.setStoragePath(path.toAbsolutePath().toString());
-                gd.setContentSha256(sha256Hex(body));
-                generatedDocumentRepository.save(gd);
-            }
-        }
+        byte[] renderedDocx = renderDocxFromTemplate(type, snap);
+        return format == FileFormat.DOCX ? renderedDocx : docxPdfConverter.convert(renderedDocx);
     }
 
-    private byte[] renderDocxFromTemplate(DocumentType type, OrderPrintSnapshot snapshot)
-            throws IOException {
+    public static String downloadFileName(DocumentType type, FileFormat format) {
+        String ext = format == FileFormat.PDF ? ".pdf" : ".docx";
+        return type.name().toLowerCase() + ext;
+    }
+
+    public static String contentTypeFor(FileFormat format) {
+        return format == FileFormat.PDF
+                ? MediaType.APPLICATION_PDF_VALUE
+                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    }
+
+    private byte[] renderDocxFromTemplate(DocumentType type, OrderPrintSnapshot snapshot) throws IOException {
         String resourcePath = "templates/documents/" + templateName(type);
         try (InputStream in = new ClassPathResource(resourcePath).getInputStream()) {
             return templateRenderer.render(in.readAllBytes(), snapshotToContext(snapshot));
@@ -214,14 +197,5 @@ public class DocumentGenerationService {
             return "";
         }
         return Character.toUpperCase(value.charAt(0)) + value.substring(1);
-    }
-
-    private static String sha256Hex(byte[] data) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(md.digest(data));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
     }
 }
