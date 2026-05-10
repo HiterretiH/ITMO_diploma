@@ -5,9 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { DropdownModule } from 'primeng/dropdown';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { TripApiService } from '../../core/trip-api.service';
-import { TripResponse, TripStatus } from '../../core/trip.models';
-import { TripStatusBadgeComponent } from '../../shared/layout/trip-status-badge.component';
+import { OrderApiService } from '../../core/order-api.service';
+import { OrderResponse } from '../../core/order.models';
+import { OrderStatusBadgeComponent } from '../../shared/layout/order-status-badge.component';
+import { orderUiPhase } from '../../shared/order-ui';
+
+export type OrderListFilter = 'all' | 'draft' | 'ready';
 
 @Component({
   selector: 'app-trip-list',
@@ -19,23 +22,23 @@ import { TripStatusBadgeComponent } from '../../shared/layout/trip-status-badge.
     TableModule,
     DropdownModule,
     Button,
-    TripStatusBadgeComponent,
+    OrderStatusBadgeComponent,
   ],
   templateUrl: './trip-list.component.html',
   styleUrl: './trip-list.component.css',
 })
 export class TripListComponent implements OnInit {
-  private readonly api = inject(TripApiService);
+  private readonly api = inject(OrderApiService);
   private readonly router = inject(Router);
 
-  trips: TripResponse[] = [];
-  /** null — все статусы */
-  filter: TripStatus | null = null;
+  orders: OrderResponse[] = [];
+  /** На списке нет аудита по каждому заказу — завершённые не выделяем фильтром */
+  filter: OrderListFilter | null = null;
 
-  readonly statusOptions: { label: string; value: TripStatus | null }[] = [
+  readonly filterOptions: { label: string; value: OrderListFilter | null }[] = [
     { label: 'Все', value: null },
-    { label: 'В работе', value: 'IN_PROGRESS' },
-    { label: 'Завершён', value: 'COMPLETED' },
+    { label: 'Черновик', value: 'draft' },
+    { label: 'Готов к завершению', value: 'ready' },
   ];
 
   ngOnInit(): void {
@@ -43,11 +46,39 @@ export class TripListComponent implements OnInit {
   }
 
   reload(): void {
-    const st = this.filter == null ? undefined : this.filter;
-    this.api.list(st).subscribe((t) => (this.trips = t));
+    this.api.list().subscribe((rows) => (this.orders = rows));
   }
 
-  openTrip(id: number): void {
+  get filteredOrders(): OrderResponse[] {
+    const f = this.filter;
+    if (f == null || f === 'all') {
+      return this.orders;
+    }
+    return this.orders.filter((o) => {
+      const phase = orderUiPhase(o, false);
+      if (f === 'draft') {
+        return phase === 'draft';
+      }
+      if (f === 'ready') {
+        return phase === 'ready';
+      }
+      return true;
+    });
+  }
+
+  openOrder(id: number): void {
     void this.router.navigate(['/orders', id]);
   }
+
+  routeSnippet(o: OrderResponse): string {
+    const a = (o.loadingPlace ?? '').trim();
+    const b = (o.unloadingPlace ?? '').trim();
+    const trunc = (s: string, n: number) =>
+      s.length > n ? `${s.slice(0, n)}…` : s;
+    if (!a && !b) {
+      return '—';
+    }
+    return `${trunc(a, 36)} → ${trunc(b, 36)}`;
+  }
 }
+

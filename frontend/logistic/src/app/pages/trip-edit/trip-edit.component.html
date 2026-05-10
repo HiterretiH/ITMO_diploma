@@ -1,11 +1,11 @@
-@if (busy && !trip) {
+@if (busy && !order) {
   <p>Загрузка…</p>
 }
 
-@if (trip) {
+@if (order) {
   <div class="top">
-    <h1>Рейс {{ trip.id }}</h1>
-    <app-trip-status-badge [status]="trip.status" />
+    <h1>Заказ № {{ order.orderNumber }}</h1>
+    <app-order-status-badge [order]="order" [completed]="orderCompleted" />
   </div>
 
   <p-tabs [value]="mainTab" (valueChange)="mainTab = $event">
@@ -15,383 +15,371 @@
     </p-tablist>
     <p-tabpanels>
       <p-tabpanel value="edit">
-  @if (conflictDetail) {
-    <p-message
-      severity="error"
-      [text]="conflictDetail"
-      [closable]="true"
-      (onClose)="conflictDetail = null"
-      styleClass="mb-3"
-    />
-  }
+        @if (conflictDetail) {
+          <p-message
+            severity="error"
+            [text]="conflictDetail"
+            [closable]="true"
+            (onClose)="conflictDetail = null"
+            styleClass="mb-3"
+          />
+        }
 
-  <form [formGroup]="form">
-    <p-stepper [value]="stepperValue" (valueChange)="stepperValue = $event">
-      <p-step-list>
-        <p-step [value]="1">Стороны</p-step>
-        <p-step [value]="2">Груз и маршрут</p-step>
-        <p-step [value]="3">Транспорт и водитель</p-step>
-        <p-step [value]="4">Итого и действия</p-step>
-      </p-step-list>
-      <p-step-panels>
-        <p-step-panel [value]="1">
-          <ng-template #content let-activateCallback="activateCallback">
-            <div class="step-body">
-              <div class="field">
-                <label for="shipper">Грузоотправитель</label>
-                <p-dropdown
-                  inputId="shipper"
-                  formControlName="shipperId"
-                  [options]="cpOptions()"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="—"
-                  [showClear]="true"
-                  appendTo="body"
-                  styleClass="w-full"
-                />
-                @if (canEditCatalog()) {
-                  <div class="catalog-row-actions">
-                    <p-button
-                      type="button"
-                      label="+ Добавить"
-                      [text]="true"
-                      styleClass="p-0"
-                      (onClick)="openCpDialog('shipper')"
-                    />
-                    <p-button
-                      type="button"
-                      label="Изменить"
-                      [text]="true"
-                      styleClass="p-0"
-                      [disabled]="!shipperSelected()"
-                      (onClick)="openCpEdit('shipper')"
-                    />
+        <form [formGroup]="form">
+          <p-stepper [value]="stepperValue" (valueChange)="stepperValue = $event">
+            <p-step-list>
+              <p-step [value]="1">Стороны</p-step>
+              <p-step [value]="2">Маршрут</p-step>
+              <p-step [value]="3">Транспорт и водитель</p-step>
+              <p-step [value]="4">Итого и действия</p-step>
+            </p-step-list>
+            <p-step-panels>
+              <p-step-panel [value]="1">
+                <ng-template #content let-activateCallback="activateCallback">
+                  <div class="step-body">
+                    <div class="field">
+                      <label for="cust">Заказчик</label>
+                      <p-dropdown
+                        inputId="cust"
+                        formControlName="customerId"
+                        [options]="customerOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="—"
+                        [showClear]="true"
+                        appendTo="body"
+                        styleClass="w-full"
+                      />
+                      @if (canEditCatalog()) {
+                        <div class="catalog-row-actions">
+                          <p-button
+                            type="button"
+                            label="+ Добавить"
+                            [text]="true"
+                            styleClass="p-0"
+                            (onClick)="openCustomerCreate()"
+                          />
+                          <p-button
+                            type="button"
+                            label="Изменить"
+                            [text]="true"
+                            styleClass="p-0"
+                            [disabled]="!customerSelected()"
+                            (onClick)="openCustomerEdit()"
+                          />
+                        </div>
+                      }
+                    </div>
+                    <div class="field">
+                      <label for="perf">Исполнитель</label>
+                      <p-dropdown
+                        inputId="perf"
+                        formControlName="performerId"
+                        [options]="performerOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="—"
+                        [showClear]="true"
+                        appendTo="body"
+                        styleClass="w-full"
+                      />
+                      @if (canEditCatalog()) {
+                        <div class="catalog-row-actions">
+                          <p-button
+                            type="button"
+                            label="+ Добавить"
+                            [text]="true"
+                            styleClass="p-0"
+                            (onClick)="openPerformerCreate()"
+                          />
+                          <p-button
+                            type="button"
+                            label="Изменить"
+                            [text]="true"
+                            styleClass="p-0"
+                            [disabled]="!performerSelected()"
+                            (onClick)="openPerformerEdit()"
+                          />
+                        </div>
+                      }
+                    </div>
+                    <div class="step-nav">
+                      <p-button
+                        type="button"
+                        label="Далее"
+                        icon="pi pi-arrow-right"
+                        iconPos="right"
+                        (onClick)="activateCallback(2)"
+                      />
+                    </div>
                   </div>
-                }
-              </div>
-              <div class="field">
-                <label for="consignee">Грузополучатель</label>
-                <p-dropdown
-                  inputId="consignee"
-                  formControlName="consigneeId"
-                  [options]="cpOptions()"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="—"
-                  [showClear]="true"
-                  appendTo="body"
-                  styleClass="w-full"
-                />
-                @if (canEditCatalog()) {
-                  <div class="catalog-row-actions">
-                    <p-button
-                      type="button"
-                      label="+ Добавить"
-                      [text]="true"
-                      styleClass="p-0"
-                      (onClick)="openCpDialog('consignee')"
-                    />
-                    <p-button
-                      type="button"
-                      label="Изменить"
-                      [text]="true"
-                      styleClass="p-0"
-                      [disabled]="!consigneeSelected()"
-                      (onClick)="openCpEdit('consignee')"
-                    />
+                </ng-template>
+              </p-step-panel>
+
+              <p-step-panel [value]="2">
+                <ng-template #content let-activateCallback="activateCallback">
+                  <div class="step-body">
+                    <div class="field">
+                      <label for="loadPl">Погрузка (адрес) *</label>
+                      <textarea
+                        pInputTextarea
+                        id="loadPl"
+                        formControlName="loadingPlace"
+                        rows="3"
+                        class="w-full"
+                      ></textarea>
+                    </div>
+                    <div class="field">
+                      <label for="loadCt">Контакт на погрузке</label>
+                      <input pInputText id="loadCt" formControlName="loadingContact" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label for="unlPl">Выгрузка (адрес) *</label>
+                      <textarea
+                        pInputTextarea
+                        id="unlPl"
+                        formControlName="unloadingPlace"
+                        rows="3"
+                        class="w-full"
+                      ></textarea>
+                    </div>
+                    <div class="field">
+                      <label for="unlCt">Контакт на выгрузке</label>
+                      <input pInputText id="unlCt" formControlName="unloadingContact" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label for="od">Дата заявки *</label>
+                      <p-datepicker
+                        inputId="od"
+                        formControlName="orderDate"
+                        dateFormat="yy-mm-dd"
+                        [showIcon]="true"
+                        appendTo="body"
+                        styleClass="w-full"
+                      />
+                    </div>
+                    <div class="step-nav">
+                      <p-button
+                        type="button"
+                        label="Назад"
+                        severity="secondary"
+                        icon="pi pi-arrow-left"
+                        (onClick)="activateCallback(1)"
+                      />
+                      <p-button
+                        type="button"
+                        label="Далее"
+                        icon="pi pi-arrow-right"
+                        iconPos="right"
+                        (onClick)="activateCallback(3)"
+                      />
+                    </div>
                   </div>
-                }
-              </div>
-              <div class="step-nav">
-                <p-button
-                  type="button"
-                  label="Далее"
-                  icon="pi pi-arrow-right"
-                  iconPos="right"
-                  (onClick)="activateCallback(2)"
-                />
-              </div>
-            </div>
-          </ng-template>
-        </p-step-panel>
+                </ng-template>
+              </p-step-panel>
 
-        <p-step-panel [value]="2">
-          <ng-template #content let-activateCallback="activateCallback">
-            <div class="step-body">
-              <div class="field">
-                <label for="cargo">Описание груза</label>
-                <textarea
-                  pInputTextarea
-                  id="cargo"
-                  formControlName="cargoDescription"
-                  rows="3"
-                  class="w-full"
-                ></textarea>
-              </div>
-              <div class="field">
-                <label for="weight">Масса, кг</label>
-                <p-inputNumber
-                  inputId="weight"
-                  formControlName="cargoWeightKg"
-                  [min]="0"
-                  [useGrouping]="false"
-                  styleClass="w-full"
-                />
-              </div>
-              <div class="route-stack">
-                <div class="field">
-                  <span class="route-step-label">Погрузка</span>
-                  <app-place-input
-                    [form]="form"
-                    addressKey="originAddress"
-                    contactKey="originContact"
-                    placeType="LOAD"
-                    inputId="draftOriginAddr"
-                    contactInputId="draftOriginCt"
-                  />
-                </div>
-                <div class="field">
-                  <span class="route-step-label">Разгрузка</span>
-                  <app-place-input
-                    [form]="form"
-                    addressKey="destinationAddress"
-                    contactKey="destinationContact"
-                    placeType="UNLOAD"
-                    inputId="draftDestAddr"
-                    contactInputId="draftDestCt"
-                  />
-                </div>
-              </div>
-              <div class="two-cols">
-                <div class="field">
-                  <label for="load">Погрузка</label>
-                  <p-datepicker
-                    inputId="load"
-                    formControlName="loadDate"
-                    dateFormat="yy-mm-dd"
-                    [showIcon]="true"
-                    appendTo="body"
-                    styleClass="w-full"
-                  />
-                </div>
-                <div class="field">
-                  <label for="unload">Разгрузка</label>
-                  <p-datepicker
-                    inputId="unload"
-                    formControlName="unloadDate"
-                    dateFormat="yy-mm-dd"
-                    [showIcon]="true"
-                    appendTo="body"
-                    styleClass="w-full"
-                  />
-                </div>
-              </div>
-              <div class="step-nav">
-                <p-button
-                  type="button"
-                  label="Назад"
-                  severity="secondary"
-                  icon="pi pi-arrow-left"
-                  (onClick)="activateCallback(1)"
-                />
-                <p-button
-                  type="button"
-                  label="Далее"
-                  icon="pi pi-arrow-right"
-                  iconPos="right"
-                  (onClick)="activateCallback(3)"
-                />
-              </div>
-            </div>
-          </ng-template>
-        </p-step-panel>
-
-        <p-step-panel [value]="3">
-          <ng-template #content let-activateCallback="activateCallback">
-            <div class="step-body">
-              <div class="field">
-                <label for="driver">Водитель</label>
-                <p-dropdown
-                  inputId="driver"
-                  formControlName="driverId"
-                  [options]="driverOptions()"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="—"
-                  [showClear]="true"
-                  appendTo="body"
-                  styleClass="w-full"
-                />
-                @if (canEditCatalog()) {
-                  <div class="catalog-row-actions">
-                    <p-button
-                      type="button"
-                      label="+ Добавить водителя"
-                      [text]="true"
-                      styleClass="p-0"
-                      (onClick)="openDriverCreate()"
-                    />
-                    <p-button
-                      type="button"
-                      label="Изменить"
-                      [text]="true"
-                      styleClass="p-0"
-                      [disabled]="!driverSelected()"
-                      (onClick)="openDriverEdit()"
-                    />
+              <p-step-panel [value]="3">
+                <ng-template #content let-activateCallback="activateCallback">
+                  <div class="step-body">
+                    <div class="field">
+                      <label for="driver">Водитель</label>
+                      <p-dropdown
+                        inputId="driver"
+                        formControlName="driverId"
+                        [options]="driverOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="—"
+                        [showClear]="true"
+                        appendTo="body"
+                        styleClass="w-full"
+                      />
+                      @if (canEditCatalog()) {
+                        <div class="catalog-row-actions">
+                          <p-button
+                            type="button"
+                            label="+ Добавить водителя"
+                            [text]="true"
+                            styleClass="p-0"
+                            (onClick)="openDriverCreate()"
+                          />
+                          <p-button
+                            type="button"
+                            label="Изменить"
+                            [text]="true"
+                            styleClass="p-0"
+                            [disabled]="!driverSelected()"
+                            (onClick)="openDriverEdit()"
+                          />
+                        </div>
+                      }
+                    </div>
+                    <div class="field">
+                      <label for="vehicle">Транспорт</label>
+                      <p-dropdown
+                        inputId="vehicle"
+                        formControlName="vehicleId"
+                        [options]="vehicleOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="—"
+                        [showClear]="true"
+                        appendTo="body"
+                        styleClass="w-full"
+                      />
+                      @if (canEditCatalog()) {
+                        <div class="catalog-row-actions">
+                          <p-button
+                            type="button"
+                            label="+ Добавить ТС"
+                            [text]="true"
+                            styleClass="p-0"
+                            (onClick)="openVehicleCreate()"
+                          />
+                          <p-button
+                            type="button"
+                            label="Изменить"
+                            [text]="true"
+                            styleClass="p-0"
+                            [disabled]="!vehicleSelected()"
+                            (onClick)="openVehicleEdit()"
+                          />
+                        </div>
+                      }
+                    </div>
+                    <div class="step-nav">
+                      <p-button
+                        type="button"
+                        label="Назад"
+                        severity="secondary"
+                        icon="pi pi-arrow-left"
+                        (onClick)="activateCallback(2)"
+                      />
+                      <p-button
+                        type="button"
+                        label="Далее"
+                        icon="pi pi-arrow-right"
+                        iconPos="right"
+                        (onClick)="activateCallback(4)"
+                      />
+                    </div>
                   </div>
-                }
-              </div>
-              <div class="field">
-                <label for="vehicle">Транспорт</label>
-                <p-dropdown
-                  inputId="vehicle"
-                  formControlName="vehicleId"
-                  [options]="vehicleOptions()"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="—"
-                  [showClear]="true"
-                  appendTo="body"
-                  styleClass="w-full"
-                />
-                @if (canEditCatalog()) {
-                  <div class="catalog-row-actions">
-                    <p-button
-                      type="button"
-                      label="+ Добавить ТС"
-                      [text]="true"
-                      styleClass="p-0"
-                      (onClick)="openVehicleCreate()"
-                    />
-                    <p-button
-                      type="button"
-                      label="Изменить"
-                      [text]="true"
-                      styleClass="p-0"
-                      [disabled]="!vehicleSelected()"
-                      (onClick)="openVehicleEdit()"
-                    />
-                  </div>
-                }
-              </div>
-              <div class="step-nav">
-                <p-button
-                  type="button"
-                  label="Назад"
-                  severity="secondary"
-                  icon="pi pi-arrow-left"
-                  (onClick)="activateCallback(2)"
-                />
-                <p-button
-                  type="button"
-                  label="Далее"
-                  icon="pi pi-arrow-right"
-                  iconPos="right"
-                  (onClick)="activateCallback(4)"
-                />
-              </div>
-            </div>
-          </ng-template>
-        </p-step-panel>
+                </ng-template>
+              </p-step-panel>
 
-        <p-step-panel [value]="4">
-          <ng-template #content let-activateCallback="activateCallback">
-            <div class="step-body">
-              <div class="two-cols">
-                <div class="field">
-                  <label for="price">Стоимость</label>
-                  <p-inputNumber
-                    inputId="price"
-                    formControlName="priceAmount"
-                    [min]="0"
-                    mode="decimal"
-                    [minFractionDigits]="0"
-                    [maxFractionDigits]="2"
-                    styleClass="w-full"
-                  />
-                </div>
-                <div class="field">
-                  <label for="cur">Валюта</label>
-                  <input pInputText id="cur" formControlName="currency" class="w-full" />
-                </div>
-              </div>
-
-              <div class="actions">
-                <p-button
-                  type="button"
-                  label="Сохранить"
-                  icon="pi pi-save"
-                  [disabled]="busy || form.invalid"
-                  [loading]="busy"
-                  (onClick)="save()"
-                />
-                <p-button
-                  type="button"
-                  label="Завершить рейс"
-                  icon="pi pi-check"
-                  severity="success"
-                  [disabled]="busy || !inProgress()"
-                  [loading]="busy"
-                  (onClick)="complete()"
-                />
-                <p-button
-                  type="button"
-                  label="Удалить"
-                  icon="pi pi-trash"
-                  severity="danger"
-                  [disabled]="busy"
-                  [loading]="busy"
-                  (onClick)="deleteTrip()"
-                />
-              </div>
-
-              @if (showDocuments() && docs.length > 0) {
-                <h3 class="docs-title">Документы</h3>
-                <p-table [value]="docs" styleClass="p-datatable-sm">
-                  <ng-template pTemplate="header">
-                    <tr>
-                      <th>Тип</th>
-                      <th>Формат</th>
-                      <th>Создан</th>
-                      <th></th>
-                    </tr>
-                  </ng-template>
-                  <ng-template pTemplate="body" let-d>
-                    <tr>
-                      <td>{{ d.documentType }}</td>
-                      <td>{{ d.fileFormat }}</td>
-                      <td>{{ d.createdAt | date: 'short' }}</td>
-                      <td>
-                        <p-button
-                          type="button"
-                          label="Скачать"
-                          icon="pi pi-download"
-                          [text]="true"
-                          (onClick)="download(d)"
+              <p-step-panel [value]="4">
+                <ng-template #content let-activateCallback="activateCallback">
+                  <div class="step-body">
+                    <div class="field">
+                      <label for="tc">Количество рейсов</label>
+                      <p-inputNumber
+                        inputId="tc"
+                        formControlName="tripCount"
+                        [min]="1"
+                        [useGrouping]="false"
+                        styleClass="w-full"
+                      />
+                    </div>
+                    <div class="two-cols">
+                      <div class="field">
+                        <label for="ppt">Цена за рейс</label>
+                        <p-inputNumber
+                          inputId="ppt"
+                          formControlName="pricePerTrip"
+                          [min]="0"
+                          mode="decimal"
+                          [minFractionDigits]="0"
+                          [maxFractionDigits]="2"
+                          styleClass="w-full"
                         />
-                      </td>
-                    </tr>
-                  </ng-template>
-                </p-table>
-              }
+                      </div>
+                      <div class="field">
+                        <label for="tp">Итого *</label>
+                        <p-inputNumber
+                          inputId="tp"
+                          formControlName="totalPrice"
+                          [min]="0"
+                          mode="decimal"
+                          [minFractionDigits]="0"
+                          [maxFractionDigits]="2"
+                          styleClass="w-full"
+                        />
+                      </div>
+                    </div>
 
-              <div class="step-nav">
-                <p-button
-                  type="button"
-                  label="Назад"
-                  severity="secondary"
-                  icon="pi pi-arrow-left"
-                  (onClick)="activateCallback(3)"
-                />
-              </div>
-            </div>
-          </ng-template>
-        </p-step-panel>
-      </p-step-panels>
-    </p-stepper>
-  </form>
+                    <div class="actions">
+                      <p-button
+                        type="button"
+                        label="Сохранить"
+                        icon="pi pi-save"
+                        [disabled]="busy || form.invalid"
+                        [loading]="busy"
+                        (onClick)="save()"
+                      />
+                      <p-button
+                        type="button"
+                        label="Завершить заказ"
+                        icon="pi pi-check"
+                        severity="success"
+                        [disabled]="busy || !inProgress()"
+                        [loading]="busy"
+                        (onClick)="complete()"
+                      />
+                      <p-button
+                        type="button"
+                        label="Удалить"
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [disabled]="busy"
+                        [loading]="busy"
+                        (onClick)="deleteOrder()"
+                      />
+                    </div>
+
+                    @if (showDocuments() && docs.length > 0) {
+                      <h3 class="docs-title">Документы</h3>
+                      <p-table [value]="docs" styleClass="p-datatable-sm">
+                        <ng-template pTemplate="header">
+                          <tr>
+                            <th>Тип</th>
+                            <th>Скачать</th>
+                          </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-d>
+                          <tr>
+                            <td>{{ d.documentType }}</td>
+                            <td>
+                              @for (fmt of d.formats; track fmt) {
+                                <p-button
+                                  type="button"
+                                  [label]="'Скачать ' + fmt"
+                                  icon="pi pi-download"
+                                  [text]="true"
+                                  class="mr-2"
+                                  (onClick)="downloadDocument(d.documentType, fmt)"
+                                />
+                              }
+                            </td>
+                          </tr>
+                        </ng-template>
+                      </p-table>
+                    }
+
+                    <div class="step-nav">
+                      <p-button
+                        type="button"
+                        label="Назад"
+                        severity="secondary"
+                        icon="pi pi-arrow-left"
+                        (onClick)="activateCallback(3)"
+                      />
+                    </div>
+                  </div>
+                </ng-template>
+              </p-step-panel>
+            </p-step-panels>
+          </p-stepper>
+        </form>
       </p-tabpanel>
       <p-tabpanel value="audit">
         <p-table
@@ -435,55 +423,79 @@
   </p-tabs>
 
   <p-dialog
-    [header]="cpDialogTitle()"
-    [(visible)]="cpDialogVisible"
+    [header]="customerEditingId != null ? 'Изменить заказчика' : 'Новый заказчик'"
+    [(visible)]="customerDialogVisible"
     [modal]="true"
     [style]="{ width: '26rem' }"
     [draggable]="false"
   >
-    <form [formGroup]="cpForm">
+    <form [formGroup]="customerForm">
       <div class="field">
-        <label for="q-name">Название *</label>
-        <input pInputText id="q-name" formControlName="name" class="w-full" />
-        @if (cpForm.controls.name.touched && cpForm.controls.name.invalid) {
-          <small class="p-error">Обязательное поле</small>
-        }
+        <label for="cn">Краткое название *</label>
+        <input pInputText id="cn" formControlName="shortName" class="w-full" />
       </div>
       <div class="field">
-        <label for="q-inn">ИНН</label>
-        <input pInputText id="q-inn" formControlName="inn" class="w-full" />
-        @if (cpForm.controls.inn.touched && cpForm.controls.inn.hasError('inn')) {
-          <small class="p-error">10 или 12 цифр</small>
-        }
+        <label for="cf">Полное название</label>
+        <input pInputText id="cf" formControlName="fullName" class="w-full" />
       </div>
       <div class="field">
-        <label for="q-addr">Юр. адрес</label>
-        <textarea
-          pInputTextarea
-          id="q-addr"
-          formControlName="legalAddress"
-          rows="2"
-          class="w-full"
-        ></textarea>
+        <label for="cph">Телефон</label>
+        <input pInputText id="cph" formControlName="phone" class="w-full" />
       </div>
       <div class="field">
-        <label for="q-phone">Телефон</label>
-        <input pInputText id="q-phone" formControlName="phone" class="w-full" />
+        <label for="cr">Реквизиты</label>
+        <textarea pInputTextarea id="cr" formControlName="requisites" rows="2" class="w-full"></textarea>
       </div>
     </form>
     <ng-template pTemplate="footer">
-      <p-button label="Отмена" [text]="true" (onClick)="cpDialogVisible = false" />
+      <p-button label="Отмена" [text]="true" (onClick)="customerDialogVisible = false" />
       <p-button
-        [label]="cpSaveLabel()"
-        [loading]="cpSaving"
-        [disabled]="cpForm.invalid || cpSaving"
-        (onClick)="saveCpDialog()"
+        label="Сохранить"
+        [loading]="customerSaving"
+        [disabled]="customerForm.invalid || customerSaving"
+        (onClick)="saveCustomerDialog()"
       />
     </ng-template>
   </p-dialog>
 
   <p-dialog
-    [header]="driverDialogTitle()"
+    [header]="performerEditingId != null ? 'Изменить исполнителя' : 'Новый исполнитель'"
+    [(visible)]="performerDialogVisible"
+    [modal]="true"
+    [style]="{ width: '26rem' }"
+    [draggable]="false"
+  >
+    <form [formGroup]="performerForm">
+      <div class="field">
+        <label for="pn">Краткое название *</label>
+        <input pInputText id="pn" formControlName="shortName" class="w-full" />
+      </div>
+      <div class="field">
+        <label for="pf">Полное название</label>
+        <input pInputText id="pf" formControlName="fullName" class="w-full" />
+      </div>
+      <div class="field">
+        <label for="pph">Телефон</label>
+        <input pInputText id="pph" formControlName="phone" class="w-full" />
+      </div>
+      <div class="field">
+        <label for="pin">ИНН</label>
+        <input pInputText id="pin" formControlName="inn" class="w-full" />
+      </div>
+    </form>
+    <ng-template pTemplate="footer">
+      <p-button label="Отмена" [text]="true" (onClick)="performerDialogVisible = false" />
+      <p-button
+        label="Сохранить"
+        [loading]="performerSaving"
+        [disabled]="performerForm.invalid || performerSaving"
+        (onClick)="savePerformerDialog()"
+      />
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog
+    [header]="driverEditingId != null ? 'Изменить водителя' : 'Новый водитель'"
     [(visible)]="driverDialogVisible"
     [modal]="true"
     [style]="{ width: '24rem' }"
@@ -493,29 +505,22 @@
       <div class="field">
         <label for="qd-name">ФИО *</label>
         <input pInputText id="qd-name" formControlName="fullName" class="w-full" />
-        @if (driverForm.controls.fullName.touched && driverForm.controls.fullName.invalid) {
-          <small class="p-error">Обязательное поле</small>
-        }
       </div>
       <div class="field">
-        <label for="qd-lic">Номер ВУ *</label>
-        <input pInputText id="qd-lic" formControlName="licenseNumber" class="w-full" />
-        @if (
-          driverForm.controls.licenseNumber.touched &&
-          driverForm.controls.licenseNumber.invalid
-        ) {
-          <small class="p-error">Обязательное поле</small>
-        }
+        <label for="qd-ph">Телефон</label>
+        <input pInputText id="qd-ph" formControlName="phone" class="w-full" />
       </div>
       <div class="field">
-        <label for="qd-cat">Категория</label>
-        <input pInputText id="qd-cat" formControlName="licenseCategory" class="w-full" />
+        <label class="flex gap-2 align-items-center">
+          <input type="checkbox" formControlName="isDefault" />
+          Основной для исполнителя
+        </label>
       </div>
     </form>
     <ng-template pTemplate="footer">
       <p-button label="Отмена" [text]="true" (onClick)="driverDialogVisible = false" />
       <p-button
-        [label]="driverSaveLabel()"
+        [label]="driverEditingId != null ? 'Сохранить' : 'Создать'"
         [loading]="driverSaving"
         [disabled]="driverForm.invalid || driverSaving"
         (onClick)="saveDriverDialog()"
@@ -524,7 +529,7 @@
   </p-dialog>
 
   <p-dialog
-    [header]="vehicleDialogTitle()"
+    [header]="vehicleEditingId != null ? 'Изменить ТС' : 'Новое ТС'"
     [(visible)]="vehicleDialogVisible"
     [modal]="true"
     [style]="{ width: '24rem' }"
@@ -534,45 +539,26 @@
       <div class="field">
         <label for="qv-plate">Госномер *</label>
         <input pInputText id="qv-plate" formControlName="plateNumber" class="w-full" />
-        @if (
-          vehicleForm.controls.plateNumber.touched &&
-          vehicleForm.controls.plateNumber.hasError('required')
-        ) {
-          <small class="p-error">Обязательное поле</small>
-        }
-        @if (
-          vehicleForm.controls.plateNumber.touched &&
-          vehicleForm.controls.plateNumber.hasError('plate')
-        ) {
-          <small class="p-error">Некорректный номер</small>
-        }
       </div>
       <div class="field">
-        <label for="qv-model">Модель</label>
-        <input pInputText id="qv-model" formControlName="model" class="w-full" />
+        <label for="qv-bm">Марка / модель</label>
+        <input pInputText id="qv-bm" formControlName="brandModel" class="w-full" />
       </div>
       <div class="field">
-        <label for="qv-cap">Грузоподъёмность, кг</label>
-        <p-inputNumber
-          inputId="qv-cap"
-          formControlName="loadCapacityKg"
-          [min]="0"
-          [useGrouping]="false"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-        />
-        @if (
-          vehicleForm.controls.loadCapacityKg.touched &&
-          vehicleForm.controls.loadCapacityKg.hasError('min')
-        ) {
-          <small class="p-error">Не меньше 0</small>
-        }
+        <label for="qv-type">Тип ТС</label>
+        <input pInputText id="qv-type" formControlName="type" class="w-full" />
+      </div>
+      <div class="field">
+        <label class="flex gap-2 align-items-center">
+          <input type="checkbox" formControlName="isDefault" />
+          Основное для исполнителя
+        </label>
       </div>
     </form>
     <ng-template pTemplate="footer">
       <p-button label="Отмена" [text]="true" (onClick)="vehicleDialogVisible = false" />
       <p-button
-        [label]="vehicleSaveLabel()"
+        [label]="vehicleEditingId != null ? 'Сохранить' : 'Создать'"
         [loading]="vehicleSaving"
         [disabled]="vehicleForm.invalid || vehicleSaving"
         (onClick)="saveVehicleDialog()"

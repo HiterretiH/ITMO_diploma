@@ -4,44 +4,49 @@
 </div>
 
 <div class="toolbar">
-  <label class="filter-label" for="trip-status-filter">Статус</label>
+  <label class="filter-label" for="order-filter">Статус</label>
   <p-dropdown
-    inputId="trip-status-filter"
-    [options]="statusOptions"
+    inputId="order-filter"
+    [options]="filterOptions"
     [(ngModel)]="filter"
     optionLabel="label"
     optionValue="value"
     placeholder="Все"
     [showClear]="true"
-    (onChange)="reload()"
     styleClass="minw-14rem"
   />
 </div>
 
-<p-table [value]="trips" [tableStyle]="{ 'min-width': '44rem' }" styleClass="p-datatable-sm">
+<p-table
+  [value]="filteredOrders"
+  [tableStyle]="{ 'min-width': '44rem' }"
+  styleClass="p-datatable-sm"
+>
   <ng-template pTemplate="header">
     <tr>
-      <th>№</th>
+      <th>№ заявки</th>
+      <th>Дата</th>
       <th>Статус</th>
-      <th>Владелец</th>
-      <th>Обновлён</th>
+      <th>Маршрут</th>
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-t>
-    <tr class="click-row" (click)="openTrip(t.id)">
+  <ng-template pTemplate="body" let-o>
+    <tr class="click-row" (click)="openOrder(o.id)">
       <td>
-        <a [routerLink]="['/orders', t.id]" (click)="$event.stopPropagation()">{{ t.id }}</a>
+        <a [routerLink]="['/orders', o.id]" (click)="$event.stopPropagation()">{{
+          o.orderNumber
+        }}</a>
       </td>
+      <td>{{ o.orderDate }}</td>
       <td>
-        <app-trip-status-badge [status]="t.status" />
+        <app-order-status-badge [order]="o" [completed]="false" />
       </td>
-      <td>{{ t.ownerUsername }}</td>
-      <td>{{ t.updatedAt | date: 'short' }}</td>
+      <td class="route-cell">{{ routeSnippet(o) }}</td>
     </tr>
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td colspan="4">Нет рейсов</td>
+      <td colspan="4">Нет заказов</td>
     </tr>
   </ng-template>
 </p-table>

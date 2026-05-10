@@ -15,33 +15,21 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { Divider } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumber } from 'primeng/inputnumber';
+import { InputText } from 'primeng/inputtext';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { Message } from 'primeng/message';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import {
-  CounterpartyResponse,
+  CustomerResponse,
   DriverResponse,
+  PerformerResponse,
   VehicleResponse,
 } from '../../core/catalog.models';
 import { localizeProblemToast } from '../../core/error-messages';
-import { TripApiService } from '../../core/trip-api.service';
-import { TripUpdateRequest } from '../../core/trip.models';
+import { OrderApiService } from '../../core/order-api.service';
+import { OrderUpdateRequest } from '../../core/order.models';
 import { ProblemDetail } from '../../models/problem.models';
-import { PlaceInputComponent } from '../../shared/forms/place-input.component';
-import { buildRouteLine } from '../../shared/forms/route-line.util';
 
-/**
- * Создание рейса: минимальный набор полей как в `.ide/main.py` (заказчик, исполнитель,
- * маршрут+контакты, дата, ставка × количество → итог с возможностью ручной правки),
- * затем POST → PUT → complete.
- *
- * Поля «получатель», груз/масса и дата разгрузки не показываются: бэкенд требует их
- * при завершении — подставляются в `buildUpdateRequest()` (см. `TripService.validateReadyForComplete`).
- *
- * Связность полей:
- * — ставка за рейс и число рейсов пересчитывают итог; итог можно править вручную;
- * — водитель и ТС в десктопе задавались одной строкой «исполнителя»; в API они
- *   разделены — пользователь выбирает оба поля (порядок любой).
- */
 @Component({
   selector: 'app-trip-new',
   standalone: true,
@@ -54,20 +42,22 @@ import { buildRouteLine } from '../../shared/forms/route-line.util';
     DropdownModule,
     DatePickerModule,
     InputNumber,
+    InputText,
+    InputTextarea,
     Button,
     Message,
-    PlaceInputComponent,
   ],
   templateUrl: './trip-new.component.html',
   styleUrl: './trip-new.component.css',
 })
 export class TripNewComponent implements OnInit {
-  private readonly trips = inject(TripApiService);
+  private readonly orders = inject(OrderApiService);
   private readonly catalog = inject(CatalogApiService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
 
-  counterparties: CounterpartyResponse[] = [];
+  customers: CustomerResponse[] = [];
+  performers: PerformerResponse[] = [];
   drivers: DriverResponse[] = [];
   vehicles: VehicleResponse[] = [];
 
@@ -75,17 +65,17 @@ export class TripNewComponent implements OnInit {
   errorMessage: string | null = null;
 
   readonly form = this.fb.group({
-    shipperId: this.fb.control<number | null>(null),
+    customerId: this.fb.control<number | null>(null, Validators.required),
+    performerId: this.fb.control<number | null>(null, Validators.required),
     driverId: this.fb.control<number | null>(null),
     vehicleId: this.fb.control<number | null>(null),
-    originAddress: ['', [Validators.required]],
-    originContact: [''],
-    destinationAddress: ['', [Validators.required]],
-    destinationContact: [''],
-    loadDate: this.fb.control<Date | null>(null, Validators.required),
+    loadingPlace: ['', Validators.required],
+    loadingContact: [''],
+    unloadingPlace: ['', Validators.required],
+    unloadingContact: [''],
+    orderDate: this.fb.control<Date | null>(null, Validators.required),
     legCount: this.fb.control<number>(1, [Validators.required, Validators.min(1)]),
     ratePerLeg: this.fb.control<number | null>(0, [Validators.min(0)]),
-    /** Как `total_price` в `.ide/main.py`: редактируется вручную; rate×count пересчитывает до следующей ручной правки. */
     priceAmount: this.fb.control<number | null>(0, [
       Validators.required,
       Validators.min(0),
@@ -101,7 +91,6 @@ export class TripNewComponent implements OnInit {
       .subscribe(() => this.applyTotalFromRateAndLegs());
   }
 
-  /** Авто-заполнение итога (симметрично rate×count; в main.py пересчёт только на FocusOut цены). */
   private applyTotalFromRateAndLegs(): void {
     const v = this.form.getRawValue();
     const rate = Number(v.ratePerLeg ?? 0);
@@ -113,18 +102,20 @@ export class TripNewComponent implements OnInit {
     const today = new Date();
     today.setHours(12, 0, 0, 0);
     this.form.patchValue({
-      loadDate: today,
+      orderDate: today,
     });
 
     forkJoin({
-      cp: this.catalog.counterparties(),
-      dr: this.catalog.drivers(),
-      ve: this.catalog.vehicles(),
+      customers: this.catalog.listCustomers(),
+      performers: this.catalog.listPerformers(),
+      drivers: this.catalog.listDrivers(),
+      vehicles: this.catalog.listVehicles(),
     }).subscribe({
-      next: ({ cp, dr, ve }) => {
-        this.counterparties = cp;
-        this.drivers = dr;
-        this.vehicles = ve;
+      next: ({ customers, performers, drivers, vehicles }) => {
+        this.customers = customers;
+        this.performers = performers;
+        this.drivers = drivers;
+        this.vehicles = vehicles;
       },
       error: () => {
         this.errorMessage =
@@ -133,17 +124,29 @@ export class TripNewComponent implements OnInit {
     });
   }
 
-  cpOptions(): { label: string; value: number | null }[] {
+  customerOptions(): { label: string; value: number | null }[] {
     return [
-      { label: 'Выберите организацию…', value: null },
-      ...this.counterparties.map((c) => ({ label: c.name, value: c.id })),
+      { label: 'Выберите заказчика…', value: null },
+      ...this.customers.map((c) => ({ label: c.shortName, value: c.id })),
+    ];
+  }
+
+  performerOptions(): { label: string; value: number | null }[] {
+    return [
+      { label: 'Выберите исполнителя…', value: null },
+      ...this.performers.map((p) => ({ label: p.shortName, value: p.id })),
     ];
   }
 
   driverOptions(): { label: string; value: number | null }[] {
+    const pid = this.form.getRawValue().performerId;
+    const list =
+      pid == null
+        ? this.drivers
+        : this.drivers.filter((d) => d.performerId === pid);
     return [
       { label: 'Выберите водителя…', value: null },
-      ...this.drivers.map((d) => ({
+      ...list.map((d) => ({
         label: d.fullName,
         value: d.id,
       })),
@@ -151,18 +154,23 @@ export class TripNewComponent implements OnInit {
   }
 
   vehicleOptions(): { label: string; value: number | null }[] {
+    const pid = this.form.getRawValue().performerId;
+    const list =
+      pid == null
+        ? this.vehicles
+        : this.vehicles.filter((v) => v.performerId === pid);
     return [
       { label: 'Выберите ТС…', value: null },
-      ...this.vehicles.map((v) => ({
-        label: `${v.plateNumber}${v.model ? ' · ' + v.model : ''}`,
+      ...list.map((v) => ({
+        label: `${v.plateNumber ?? ''}${v.brandModel ? ' · ' + v.brandModel : ''}`,
         value: v.id,
       })),
     ];
   }
 
-  private toIsoDate(d: Date | null | undefined): string | null {
+  private toIsoDate(d: Date | null | undefined): string | undefined {
     if (!d) {
-      return null;
+      return undefined;
     }
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -170,34 +178,34 @@ export class TripNewComponent implements OnInit {
     return `${y}-${m}-${day}`;
   }
 
-  private buildUpdateRequest(): TripUpdateRequest {
+  private buildUpdateRequest(): OrderUpdateRequest {
     const v = this.form.getRawValue();
-    const loadIso = this.toIsoDate(v.loadDate);
     return {
-      shipperId: v.shipperId,
-      consigneeId: v.shipperId,
-      driverId: v.driverId,
-      vehicleId: v.vehicleId,
-      cargoDescription: '-',
-      cargoWeightKg: 0,
-      routeFrom: buildRouteLine(v.originAddress, v.originContact),
-      routeTo: buildRouteLine(v.destinationAddress, v.destinationContact),
-      loadDate: loadIso,
-      unloadDate: loadIso,
-      priceAmount: v.priceAmount ?? 0,
-      currency: 'RUB',
+      loadingPlace: (v.loadingPlace ?? '').trim(),
+      loadingContact: (v.loadingContact ?? '').trim() || undefined,
+      unloadingPlace: (v.unloadingPlace ?? '').trim(),
+      unloadingContact: (v.unloadingContact ?? '').trim() || undefined,
+      orderDate: this.toIsoDate(v.orderDate),
+      tripCount: v.legCount ?? undefined,
+      pricePerTrip: v.ratePerLeg ?? undefined,
+      totalPrice: v.priceAmount ?? undefined,
+      driverId: v.driverId ?? undefined,
+      vehicleId: v.vehicleId ?? undefined,
     };
   }
 
   private incompleteHint(): string | null {
     const v = this.form.getRawValue();
-    if (v.shipperId == null || v.driverId == null || v.vehicleId == null) {
-      return 'Выберите заказчика, водителя и транспортное средство.';
+    if (v.customerId == null || v.performerId == null) {
+      return 'Выберите заказчика и исполнителя.';
     }
-    if (!(v.originAddress ?? '').trim() || !(v.destinationAddress ?? '').trim()) {
-      return 'Заполните пункт отправления и пункт назначения.';
+    if (v.driverId == null || v.vehicleId == null) {
+      return 'Выберите водителя и транспортное средство.';
     }
-    if (v.loadDate == null) {
+    if (!(v.loadingPlace ?? '').trim() || !(v.unloadingPlace ?? '').trim()) {
+      return 'Заполните адреса погрузки и выгрузки.';
+    }
+    if (v.orderDate == null) {
       return 'Укажите дату.';
     }
     if (v.priceAmount == null || Number(v.priceAmount) < 0) {
@@ -225,7 +233,6 @@ export class TripNewComponent implements OnInit {
     this.errorMessage = `Запрос не выполнен (код ${err.status}).`;
   }
 
-  /** Создать рейс (IN_PROGRESS), записать данные и завершить с генерацией документов. */
   saveAndComplete(): void {
     this.errorMessage = null;
     this.form.markAllAsTouched();
@@ -239,21 +246,27 @@ export class TripNewComponent implements OnInit {
       return;
     }
 
+    const v = this.form.getRawValue();
     const body = this.buildUpdateRequest();
     this.busy = true;
-    this.trips
-      .create()
+    this.orders
+      .create({
+        customerId: v.customerId!,
+        performerId: v.performerId!,
+        vehicleId: v.vehicleId,
+        driverId: v.driverId,
+      })
       .pipe(
-        concatMap((trip) =>
-          this.trips.update(trip.id, body).pipe(
-            concatMap(() => this.trips.complete(trip.id)),
+        concatMap((order) =>
+          this.orders.update(order.id, body).pipe(
+            concatMap(() => this.orders.complete(order.id)),
           ),
         ),
       )
       .subscribe({
-        next: (t) => {
+        next: (o) => {
           this.busy = false;
-          void this.router.navigate(['/orders', t.id]);
+          void this.router.navigate(['/orders', o.id]);
         },
         error: (err: HttpErrorResponse) => {
           this.handleError(err);

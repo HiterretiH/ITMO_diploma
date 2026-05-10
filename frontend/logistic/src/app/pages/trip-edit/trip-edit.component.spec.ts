@@ -7,32 +7,30 @@ import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { AuditApiService } from '../../core/audit-api.service';
-import { TripApiService } from '../../core/trip-api.service';
+import { OrderApiService } from '../../core/order-api.service';
 import { CatalogApiService } from '../../core/catalog-api.service';
-import { TripResponse } from '../../core/trip.models';
+import { OrderResponse } from '../../core/order.models';
 import { TripEditComponent } from './trip-edit.component';
 
 describe('TripEditComponent', () => {
   let fixture: ComponentFixture<TripEditComponent>;
 
-  const tripInProgress: TripResponse = {
+  const order: OrderResponse = {
     id: 1,
-    ownerId: 1,
-    ownerUsername: 'u',
-    status: 'IN_PROGRESS',
-    shipperId: null,
-    consigneeId: null,
-    driverId: null,
-    vehicleId: null,
-    cargoDescription: null,
-    cargoWeightKg: null,
-    routeFrom: 'Склад А\nКонтакт: +7999',
-    routeTo: 'Точка Б',
-    loadDate: null,
-    unloadDate: null,
-    priceAmount: null,
-    currency: 'RUB',
-    updatedAt: '2026-01-01T00:00:00Z',
+    customerId: 1,
+    performerId: 1,
+    vehicleId: 1,
+    driverId: 1,
+    orderNumber: 1,
+    orderDate: '2026-01-01',
+    loadingPlace: 'A',
+    loadingContact: null,
+    unloadingPlace: 'B',
+    unloadingContact: null,
+    tripCount: 1,
+    pricePerTrip: null,
+    totalPrice: 100,
+    templateVersion: 1,
   };
 
   beforeEach(async () => {
@@ -52,30 +50,37 @@ describe('TripEditComponent', () => {
           },
         },
         {
-          provide: TripApiService,
+          provide: OrderApiService,
           useValue: {
-            get: () => of(tripInProgress),
-            documents: () => of([]),
-            update: () => of(tripInProgress),
-            complete: () => of({ ...tripInProgress, status: 'COMPLETED' }),
+            get: () => of(order),
+            update: () => of(order),
+            complete: () => of(order),
             delete: () => of(void 0),
+            listDocuments: () => of([]),
+            downloadDocument: () => of(new Blob()),
           },
         },
         {
           provide: AuditApiService,
           useValue: {
-            listByTrip: () => of([]),
+            listByOrder: () => of([]),
           },
         },
         {
           provide: CatalogApiService,
           useValue: {
-            counterparties: () => of([]),
-            drivers: () => of([]),
-            vehicles: () => of([]),
-            places: () => of([]),
-            createPlace: () =>
-              of({ id: 1, address: 'A', contact: null, placeType: 'LOAD' }),
+            listCustomers: () => of([]),
+            listPerformers: () => of([]),
+            listDrivers: () => of([]),
+            listVehicles: () => of([]),
+            createCustomer: () => of({} as never),
+            updateCustomer: () => of({} as never),
+            createPerformer: () => of({} as never),
+            updatePerformer: () => of({} as never),
+            createDriver: () => of({} as never),
+            updateDriver: () => of({} as never),
+            createVehicle: () => of({} as never),
+            updateVehicle: () => of({} as never),
           },
         },
       ],
@@ -84,34 +89,16 @@ describe('TripEditComponent', () => {
     fixture = TestBed.createComponent(TripEditComponent);
   });
 
-  it('enables form in IN_PROGRESS', () => {
+  it('loads order and patches loading/unloading fields', () => {
     fixture.detectChanges();
     const cmp = fixture.componentInstance;
-    expect(cmp.inProgress()).toBe(true);
-    expect(cmp.form.disabled).toBe(false);
+    expect(cmp.order?.id).toBe(1);
+    expect(cmp.form.controls.loadingPlace.value).toBe('A');
+    expect(cmp.form.controls.unloadingPlace.value).toBe('B');
   });
 
-  it('unpacks routeFrom/routeTo into address and contact fields', () => {
+  it('inProgress when audit has no ORDER_COMPLETED', () => {
     fixture.detectChanges();
-    const cmp = fixture.componentInstance;
-    expect(cmp.form.get('originAddress')?.value).toBe('Склад А');
-    expect(cmp.form.get('originContact')?.value).toBe('+7999');
-    expect(cmp.form.get('destinationAddress')?.value).toBe('Точка Б');
-    expect(cmp.form.get('destinationContact')?.value).toBe('');
-  });
-
-  it('keeps form enabled in COMPLETED', () => {
-    fixture.detectChanges();
-    const cmp = fixture.componentInstance;
-    cmp.trip = {
-      ...tripInProgress,
-      status: 'COMPLETED',
-    };
-    (cmp as unknown as { patchForm: (t: TripResponse) => void }).patchForm(
-      cmp.trip,
-    );
-    (cmp as unknown as { syncFormDisabled: () => void }).syncFormDisabled();
-    expect(cmp.completed()).toBe(true);
-    expect(cmp.form.disabled).toBe(false);
+    expect(fixture.componentInstance.inProgress()).toBe(true);
   });
 });
