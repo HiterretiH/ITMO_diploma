@@ -34,7 +34,4 @@ public class Vehicle {
 
     @Column(columnDefinition = "TEXT")
     private String type;
-
-    @Column(name = "is_default", nullable = false)
-    private boolean defaultForPerformer = false;
 }

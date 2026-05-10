@@ -31,7 +31,4 @@ public class Driver {
 
     @Column(columnDefinition = "TEXT")
     private String phone;
-
-    @Column(name = "is_default", nullable = false)
-    private boolean defaultForEmployer = false;
 }

@@ -6,7 +6,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
 import { Dialog } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputText } from 'primeng/inputtext';
@@ -23,7 +22,6 @@ import { VehicleCatalogSaveEvent } from './catalog-save.models';
     ReactiveFormsModule,
     Dialog,
     Button,
-    Checkbox,
     InputText,
     DropdownModule,
   ],
@@ -50,7 +48,6 @@ export class VehicleCatalogDialogComponent {
     }),
     brandModel: [''],
     type: [''],
-    isDefault: [false],
   });
 
   performerOptions(): { label: string; value: number | null }[] {
@@ -67,30 +64,13 @@ export class VehicleCatalogDialogComponent {
   openCreate(): void {
     this.editingId = null;
     const lock = this.performerLockedId;
-    const pid = lock ?? null;
-
-    const finish = (defaultChecked: boolean): void => {
-      this.form.reset({
-        performerId: pid,
-        plateNumber: '',
-        brandModel: '',
-        type: '',
-        isDefault: defaultChecked,
-      });
-      this.visible = true;
-    };
-
-    if (pid != null) {
-      this.api.listVehicles().subscribe({
-        next: (vehicles) => {
-          const n = vehicles.filter((v) => v.performerId === pid).length;
-          finish(n === 0);
-        },
-        error: () => finish(false),
-      });
-    } else {
-      finish(false);
-    }
+    this.form.reset({
+      performerId: lock ?? null,
+      plateNumber: '',
+      brandModel: '',
+      type: '',
+    });
+    this.visible = true;
   }
 
   openEdit(row: VehicleResponse): void {
@@ -100,7 +80,6 @@ export class VehicleCatalogDialogComponent {
       plateNumber: row.plateNumber ?? '',
       brandModel: row.brandModel ?? '',
       type: row.type ?? '',
-      isDefault: row.isDefault,
     });
     this.visible = true;
   }
@@ -129,7 +108,6 @@ export class VehicleCatalogDialogComponent {
       brandModel:
         (v.brandModel ?? '').trim() === '' ? null : (v.brandModel ?? '').trim(),
       type: (v.type ?? '').trim() === '' ? null : (v.type ?? '').trim(),
-      isDefault: !!v.isDefault,
     };
     const wasCreate = this.editingId == null;
     this.saving = true;

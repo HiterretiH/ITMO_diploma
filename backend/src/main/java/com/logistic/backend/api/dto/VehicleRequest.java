@@ -6,5 +6,4 @@ public record VehicleRequest(
         @NotNull Long performerId,
         String brandModel,
         String plateNumber,
-        String type,
-        Boolean isDefault) {}
+        String type) {}

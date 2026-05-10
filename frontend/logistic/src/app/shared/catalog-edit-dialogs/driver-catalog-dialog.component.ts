@@ -6,7 +6,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
 import { Dialog } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputText } from 'primeng/inputtext';
@@ -15,7 +14,7 @@ import { DriverResponse, PerformerResponse } from '../../core/catalog.models';
 import { DriverCatalogSaveEvent } from './catalog-save.models';
 
 /**
- * @param performerLockedId если задан (например из формы заказа), выпадающий список исполнителя скрыт.
+ * @param performerLockedId если задан (например из формы рейса), выпадающий список исполнителя скрыт.
  */
 @Component({
   selector: 'app-driver-catalog-dialog',
@@ -25,7 +24,6 @@ import { DriverCatalogSaveEvent } from './catalog-save.models';
     ReactiveFormsModule,
     Dialog,
     Button,
-    Checkbox,
     InputText,
     DropdownModule,
   ],
@@ -38,7 +36,7 @@ export class DriverCatalogDialogComponent {
 
   /** Справочник исполнителей для выпадающего списка (страница каталога). */
   @Input() performers: PerformerResponse[] = [];
-  /** Фиксированный исполнитель (форма заказа); при задании список не показывается. */
+  /** Фиксированный исполнитель (форма рейса); при задании список не показывается. */
   @Input() performerLockedId: number | null = null;
 
   @Output() readonly saved = new EventEmitter<DriverCatalogSaveEvent>();
@@ -52,7 +50,6 @@ export class DriverCatalogDialogComponent {
     performerId: this.fb.control<number | null>(null, Validators.required),
     fullName: ['', [Validators.required, Validators.minLength(1)]],
     phone: [''],
-    isDefault: [false],
   });
 
   performerOptions(): { label: string; value: number | null }[] {
@@ -69,29 +66,12 @@ export class DriverCatalogDialogComponent {
   openCreate(): void {
     this.editingId = null;
     const lock = this.performerLockedId;
-    const pid = lock ?? null;
-
-    const finish = (defaultChecked: boolean): void => {
-      this.form.reset({
-        performerId: pid,
-        fullName: '',
-        phone: '',
-        isDefault: defaultChecked,
-      });
-      this.visible = true;
-    };
-
-    if (pid != null) {
-      this.api.listDrivers().subscribe({
-        next: (drivers) => {
-          const n = drivers.filter((d) => d.performerId === pid).length;
-          finish(n === 0);
-        },
-        error: () => finish(false),
-      });
-    } else {
-      finish(false);
-    }
+    this.form.reset({
+      performerId: lock ?? null,
+      fullName: '',
+      phone: '',
+    });
+    this.visible = true;
   }
 
   openEdit(row: DriverResponse): void {
@@ -100,7 +80,6 @@ export class DriverCatalogDialogComponent {
       performerId: row.performerId,
       fullName: row.fullName,
       phone: row.phone ?? '',
-      isDefault: row.isDefault,
     });
     this.visible = true;
   }
@@ -126,7 +105,6 @@ export class DriverCatalogDialogComponent {
       performerId,
       fullName: v.fullName.trim(),
       phone: v.phone.trim() === '' ? null : v.phone.trim(),
-      isDefault: v.isDefault,
     };
     const wasCreate = this.editingId == null;
     this.saving = true;

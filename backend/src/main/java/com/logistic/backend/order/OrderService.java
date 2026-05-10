@@ -77,7 +77,6 @@ public class OrderService {
             assertDriverVisible(actor, d);
             o.setDriver(d);
         }
-        applyPerformerDefaults(o);
         orderRepository.save(o);
         upsertUserTripDefaults(actor, o);
         auditService.record(
@@ -181,7 +180,6 @@ public class OrderService {
             if (o.getDriver() != null && !o.getDriver().getEmployer().getId().equals(p.getId())) {
                 o.setDriver(null);
             }
-            applyPerformerDefaults(o);
         }
         if (req.vehicleId() != null) {
             Vehicle v = vehicleRepository.findById(req.vehicleId()).orElseThrow(this::notFound);
@@ -266,20 +264,6 @@ public class OrderService {
 
     private void assertDriverVisible(User actor, Driver d) {
         assertCatalogRowAccessible(actor, d.getEmployer().getOwner().getId());
-    }
-
-    private void applyPerformerDefaults(Order o) {
-        Performer p = o.getPerformer();
-        if (p == null) {
-            return;
-        }
-        Long pid = p.getId();
-        if (o.getVehicle() == null) {
-            vehicleRepository.findByOwner_IdAndDefaultForPerformerIsTrue(pid).ifPresent(o::setVehicle);
-        }
-        if (o.getDriver() == null) {
-            driverRepository.findByEmployer_IdAndDefaultForEmployerIsTrue(pid).ifPresent(o::setDriver);
-        }
     }
 
     private static void assertPerformerOwnsVehicle(Performer p, Vehicle v) {

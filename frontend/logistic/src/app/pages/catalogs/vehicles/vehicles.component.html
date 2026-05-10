@@ -12,7 +12,6 @@
       <th>Госномер</th>
       <th>Марка / модель</th>
       <th>Тип</th>
-      <th>Основной</th>
       <th style="width: 8rem"></th>
     </tr>
   </ng-template>
@@ -22,7 +21,6 @@
       <td>{{ row.plateNumber }}</td>
       <td>{{ row.brandModel || '—' }}</td>
       <td>{{ row.type || '—' }}</td>
-      <td>{{ row.isDefault ? 'Да' : '—' }}</td>
       <td>
         <p-button
           label="Изменить"
@@ -43,7 +41,7 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td colspan="6">Нет данных</td>
+      <td colspan="5">Нет данных</td>
     </tr>
   </ng-template>
 </p-table>

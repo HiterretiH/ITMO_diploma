@@ -46,7 +46,6 @@ export interface DriverRequest {
   performerId: number;
   fullName: string;
   phone?: string | null;
-  isDefault?: boolean | null;
 }
 
 export interface DriverResponse {
@@ -54,7 +53,6 @@ export interface DriverResponse {
   performerId: number;
   fullName: string;
   phone: string | null;
-  isDefault: boolean;
 }
 
 export interface VehicleRequest {
@@ -62,7 +60,6 @@ export interface VehicleRequest {
   brandModel?: string | null;
   plateNumber?: string | null;
   type?: string | null;
-  isDefault?: boolean | null;
 }
 
 export interface VehicleResponse {
@@ -71,5 +68,4 @@ export interface VehicleResponse {
   brandModel: string | null;
   plateNumber: string | null;
   type: string | null;
-  isDefault: boolean;
 }

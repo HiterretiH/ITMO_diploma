@@ -244,8 +244,8 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
                                 null,
                                 null,
                                 null));
-        Long driverId = postDriver(token, new DriverRequest(performerId, "D", null, false));
-        Long vehicleId = postVehicle(token, new VehicleRequest(performerId, "M", "A111AA77", null, false));
+        Long driverId = postDriver(token, new DriverRequest(performerId, "D", null));
+        Long vehicleId = postVehicle(token, new VehicleRequest(performerId, "M", "A111AA77", null));
         String create =
                 objectMapper.writeValueAsString(new OrderCreateRequest(customerId, performerId, null, null));
         ResponseEntity<String> createR =

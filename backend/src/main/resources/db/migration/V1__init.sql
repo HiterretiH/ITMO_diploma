@@ -44,12 +44,8 @@ CREATE TABLE vehicles (
     owner_id BIGINT NOT NULL REFERENCES performers (id) ON DELETE CASCADE,
     brand_model TEXT,
     plate_number TEXT,
-    type TEXT,
-    is_default BOOLEAN NOT NULL DEFAULT FALSE
+    type TEXT
 );
-
-CREATE UNIQUE INDEX uq_vehicles_default_per_owner ON vehicles (owner_id)
-    WHERE is_default;
 
 CREATE INDEX idx_vehicles_owner ON vehicles (owner_id);
 
@@ -57,12 +53,8 @@ CREATE TABLE drivers (
     id BIGSERIAL PRIMARY KEY,
     employer_id BIGINT NOT NULL REFERENCES performers (id) ON DELETE CASCADE,
     full_name TEXT,
-    phone TEXT,
-    is_default BOOLEAN NOT NULL DEFAULT FALSE
+    phone TEXT
 );
-
-CREATE UNIQUE INDEX uq_drivers_default_per_employer ON drivers (employer_id)
-    WHERE is_default;
 
 CREATE INDEX idx_drivers_employer ON drivers (employer_id);
 

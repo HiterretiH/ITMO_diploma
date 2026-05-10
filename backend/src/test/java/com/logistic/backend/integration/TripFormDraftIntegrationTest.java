@@ -83,9 +83,9 @@ class TripFormDraftIntegrationTest extends AbstractPostgresIntegrationTest {
                                 null,
                                 null));
         Long driverId =
-                postDriver(token, new DriverRequest(performerId, "Ivan", null, false));
+                postDriver(token, new DriverRequest(performerId, "Ivan", null));
         Long vehicleId =
-                postVehicle(token, new VehicleRequest(performerId, null, "A111AA77", null, false));
+                postVehicle(token, new VehicleRequest(performerId, null, "A111AA77", null));
 
         ResponseEntity<String> createOrder =
                 restTemplate.postForEntity(

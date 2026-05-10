@@ -39,22 +39,6 @@
       <label for="ccd-v-type">Тип ТС</label>
       <input pInputText id="ccd-v-type" formControlName="type" class="w-full" />
     </div>
-    <div class="field">
-      <div class="flex gap-2 align-items-start">
-        <p-checkbox
-          inputId="ccd-v-def"
-          formControlName="isDefault"
-          [binary]="true"
-        />
-        <div class="flex flex-column gap-1">
-          <label for="ccd-v-def" class="m-0 cursor-pointer">Основное для исполнителя</label>
-          <small class="text-muted-color line-height-3">
-            Это транспорт будет предлагаться первым при новом рейсе с данным исполнителем.
-            У одного исполнителя может быть только одно основное ТС; новая галочка снимает предыдущую.
-          </small>
-        </div>
-      </div>
-    </div>
   </form>
   <div class="dialog-actions">
     <p-button

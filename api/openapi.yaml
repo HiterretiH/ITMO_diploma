@@ -1163,9 +1163,6 @@ components:
         phone:
           type: string
           nullable: true
-        isDefault:
-          type: boolean
-          nullable: true
 
     DriverResponse:
       type: object
@@ -1181,8 +1178,6 @@ components:
         phone:
           type: string
           nullable: true
-        isDefault:
-          type: boolean
 
     VehicleRequest:
       type: object
@@ -1199,9 +1194,6 @@ components:
           nullable: true
         type:
           type: string
-          nullable: true
-        isDefault:
-          type: boolean
           nullable: true
 
     VehicleResponse:
@@ -1222,8 +1214,6 @@ components:
         type:
           type: string
           nullable: true
-        isDefault:
-          type: boolean
 
     OrderCreateRequest:
       type: object

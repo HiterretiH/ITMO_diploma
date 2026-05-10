@@ -21,17 +21,10 @@ public class DriverService {
     @Transactional
     public DriverResponse create(DriverRequest req, User current) {
         Performer p = loadPerformerForMutation(current, req.performerId());
-        boolean firstForPerformer = driverRepository.countByEmployer_Id(p.getId()) == 0;
-        boolean effectiveDefault = Boolean.TRUE.equals(req.isDefault()) || firstForPerformer;
-        if (effectiveDefault) {
-            driverRepository.clearDefaultForEmployer(p.getId());
-            driverRepository.flush();
-        }
         Driver d = new Driver();
         d.setEmployer(p);
         d.setFullName(req.fullName());
         d.setPhone(emptyToNull(req.phone()));
-        d.setDefaultForEmployer(effectiveDefault);
         driverRepository.save(d);
         return toDto(d);
     }
@@ -40,14 +33,9 @@ public class DriverService {
     public DriverResponse update(Long id, DriverRequest req, User current) {
         Driver d = loadDriver(current, id);
         Performer p = loadPerformerForMutation(current, req.performerId());
-        if (Boolean.TRUE.equals(req.isDefault())) {
-            driverRepository.clearDefaultForEmployer(p.getId());
-            driverRepository.flush();
-        }
         d.setEmployer(p);
         d.setFullName(req.fullName());
         d.setPhone(emptyToNull(req.phone()));
-        d.setDefaultForEmployer(Boolean.TRUE.equals(req.isDefault()));
         driverRepository.save(d);
         return toDto(d);
     }
@@ -113,8 +101,7 @@ public class DriverService {
                 d.getId(),
                 d.getEmployer().getId(),
                 d.getFullName(),
-                d.getPhone(),
-                d.isDefaultForEmployer());
+                d.getPhone());
     }
 
     private ResponseStatusException notFound() {

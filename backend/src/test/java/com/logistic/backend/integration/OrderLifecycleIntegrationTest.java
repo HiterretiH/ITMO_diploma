@@ -79,11 +79,11 @@ class OrderLifecycleIntegrationTest extends AbstractPostgresIntegrationTest {
         Long driverId =
                 postDriver(
                         employeeToken,
-                        new DriverRequest(performerId, "Ivan Ivanov", "+79001234567", true));
+                        new DriverRequest(performerId, "Ivan Ivanov", "+79001234567"));
         Long vehicleId =
                 postVehicle(
                         employeeToken,
-                        new VehicleRequest(performerId, "GAZelle", "A123BC77", "фургон", true));
+                        new VehicleRequest(performerId, "GAZelle", "A123BC77", "фургон"));
 
         String createBody =
                 objectMapper.writeValueAsString(new OrderCreateRequest(customerId, performerId, null, null));

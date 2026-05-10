@@ -21,18 +21,11 @@ public class VehicleService {
     @Transactional
     public VehicleResponse create(VehicleRequest req, User current) {
         Performer p = loadPerformerForMutation(current, req.performerId());
-        boolean firstForPerformer = vehicleRepository.countByOwner_Id(p.getId()) == 0;
-        boolean effectiveDefault = Boolean.TRUE.equals(req.isDefault()) || firstForPerformer;
-        if (effectiveDefault) {
-            vehicleRepository.clearDefaultForOwner(p.getId());
-            vehicleRepository.flush();
-        }
         Vehicle v = new Vehicle();
         v.setOwner(p);
         v.setBrandModel(emptyToNull(req.brandModel()));
         v.setPlateNumber(emptyToNull(req.plateNumber()));
         v.setType(emptyToNull(req.type()));
-        v.setDefaultForPerformer(effectiveDefault);
         vehicleRepository.save(v);
         return toDto(v);
     }
@@ -41,15 +34,10 @@ public class VehicleService {
     public VehicleResponse update(Long id, VehicleRequest req, User current) {
         Vehicle v = loadVehicle(current, id);
         Performer p = loadPerformerForMutation(current, req.performerId());
-        if (Boolean.TRUE.equals(req.isDefault())) {
-            vehicleRepository.clearDefaultForOwner(p.getId());
-            vehicleRepository.flush();
-        }
         v.setOwner(p);
         v.setBrandModel(emptyToNull(req.brandModel()));
         v.setPlateNumber(emptyToNull(req.plateNumber()));
         v.setType(emptyToNull(req.type()));
-        v.setDefaultForPerformer(Boolean.TRUE.equals(req.isDefault()));
         vehicleRepository.save(v);
         return toDto(v);
     }
@@ -116,8 +104,7 @@ public class VehicleService {
                 v.getOwner().getId(),
                 v.getBrandModel(),
                 v.getPlateNumber(),
-                v.getType(),
-                v.isDefaultForPerformer());
+                v.getType());
     }
 
     private ResponseStatusException notFound() {
