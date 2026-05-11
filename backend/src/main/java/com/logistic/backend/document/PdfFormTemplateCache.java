@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Loads PDF form template bytes once at startup. Field names match {@code field_name} in
- * {@code utilities/docx_form_prep/config.py} as exported by LibreOffice from prepared .form.docx.
+ * {@code utilities/docx_to_pdf_template/config.py}; classpath PDFs are produced from {@code *.form.docx} by
+ * {@code utilities/docx_to_pdf_template/run.py} (Word export and AcroForm placement).
  */
 @Component
 public class PdfFormTemplateCache {

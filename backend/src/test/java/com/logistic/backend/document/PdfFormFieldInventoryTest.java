@@ -8,9 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
 /**
- * Ensures classpath PDF templates load and are valid single-page documents used for print overlay.
- * Field names follow {@code utilities/docx_form_prep/config.py}; layout slots are defined in {@link
- * PdfFormLayout}.
+ * Ensures classpath PDF templates load and are valid single-page documents used for AcroForm fill.
+ * Field names follow {@code utilities/docx_to_pdf_template/config.py} and {@link PdfFormValuesBuilder}.
  */
 class PdfFormFieldInventoryTest {
 

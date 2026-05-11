@@ -5,10 +5,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Builds PDF overlay slot values keyed by {@code field_name} from {@code utilities/docx_form_prep/config.py}.
- * Composite lines match the Python {@code placeholder} text (static fragments + snapshot-derived parts).
- * DOCX rendering continues to use {@link DocumentGenerationService#snapshotToContext(OrderPrintSnapshot)} with
- * legacy {@code {{ token }}} keys.
+ * Builds PDF values keyed by {@code field_name} from {@code utilities/docx_to_pdf_template/config.py}. Used for
+ * AcroForm fill: keys are {@code field_name} from {@code utilities/docx_to_pdf_template/config.py}; {@link
+ * PdfOverlayRenderer} requires every non-blank value to map to a named PDF field.
+ * DOCX rendering uses {@link DocumentGenerationService#snapshotToContext(OrderPrintSnapshot)} with {@code
+ * {{ token }}} keys.
  */
 public final class PdfFormValuesBuilder {
 
