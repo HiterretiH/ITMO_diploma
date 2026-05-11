@@ -1,4 +1,6 @@
-﻿from __future__ import annotations
+﻿"""CLI for DOCX form prep: runs JOBS from config. Placeholder → SDT logic lives in converter.py."""
+
+from __future__ import annotations
 
 import sys
 import time

@@ -2,7 +2,6 @@
 
 import re
 from collections import defaultdict
-from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Iterator, List, Optional, Sequence, Tuple
@@ -146,6 +145,8 @@ def _replace_paragraph_inline(
     chunks: Sequence[dict[str, Any]],
     full_len: int,
     next_sdt_id: Callable[[], int],
+    *,
+    sdt_in_table: bool,
 ) -> int:
     _clear_p_children_except_ppr(p_el)
     last = 0
@@ -158,60 +159,12 @@ def _replace_paragraph_inline(
                 _default_for_field(fd),
                 _rpr_at_char_index(chunks, s),
                 next_sdt_id(),
-                in_table=False,
+                in_table=sdt_in_table,
             )
         )
         last = e
         replaced += 1
     _append_run_specs(p_el, _slice_to_run_specs(chunks, last, full_len))
-    return replaced
-
-
-def _replace_paragraph_in_table(
-    tc_el: Any,
-    p_el: Any,
-    matches: Sequence[Tuple[int, int, dict]],
-    chunks: Sequence[dict[str, Any]],
-    full_len: int,
-    next_sdt_id: Callable[[], int],
-) -> int:
-    p_pr = p_el.find(qn("w:pPr"))
-    parent = p_el.getparent()
-    insert_at = list(parent).index(p_el)
-    parent.remove(p_el)
-    new_ps: List[Any] = []
-    last = 0
-    replaced = 0
-    for s, e, fd in sorted(matches, key=lambda x: x[0]):
-        if last < s:
-            np = OxmlElement("w:p")
-            if p_pr is not None:
-                np.append(deepcopy(p_pr))
-            _append_run_specs(np, _slice_to_run_specs(chunks, last, s))
-            new_ps.append(np)
-        sdt_p = OxmlElement("w:p")
-        if p_pr is not None:
-            sdt_p.append(deepcopy(p_pr))
-        sdt_p.append(
-            make_sdt_element(
-                fd["field_name"],
-                _default_for_field(fd),
-                _rpr_at_char_index(chunks, s),
-                next_sdt_id(),
-                in_table=True,
-            )
-        )
-        new_ps.append(sdt_p)
-        last = e
-        replaced += 1
-    if last < full_len:
-        np = OxmlElement("w:p")
-        if p_pr is not None:
-            np.append(deepcopy(p_pr))
-        _append_run_specs(np, _slice_to_run_specs(chunks, last, full_len))
-        new_ps.append(np)
-    for i, np in enumerate(new_ps):
-        parent.insert(insert_at + i, np)
     return replaced
 
 
@@ -240,10 +193,10 @@ def _process_paragraph_element(
         tc_el = p_el.getparent()
         while tc_el is not None and tc_el.tag != W_TC:
             tc_el = tc_el.getparent()
-    if in_table and tc_el is not None:
-        n = _replace_paragraph_in_table(tc_el, p_el, matches, chunks, full_len, next_sdt_id)
-    else:
-        n = _replace_paragraph_inline(p_el, matches, chunks, full_len, next_sdt_id)
+    sdt_in_table = in_table and tc_el is not None
+    n = _replace_paragraph_inline(
+        p_el, matches, chunks, full_len, next_sdt_id, sdt_in_table=sdt_in_table
+    )
     stats.add_replaced(bucket, n)
     return n
 
