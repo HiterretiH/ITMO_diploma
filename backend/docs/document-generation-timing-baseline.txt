@@ -1,0 +1,21 @@
+# Document generation timing baseline
+# Machine-dependent; refreshed when DocumentGenerationTimingReportTest runs.
+captured_utc=2026-05-11T22:48:37.105053800Z
+java.version=17.0.14
+java.vm.name=OpenJDK 64-Bit Server VM
+os.name=Windows 11
+
+Document generation timing (nanoseconds), OrderPrintSnapshots.manualReviewDemo + templates
+(same order as DocumentPrefetchService: DOCX all types, then PDF all types)
+
+step                                                  nanos    bytes_out
+--------------------------------------------------------------------------
+CONTRACT_APPLICATION_DOCX                         140928000         9136
+WAYBILL_DOCX                                      492611100        13353
+ACT_OF_WORK_DOCX                                  565487400        11668
+CONTRACT_APPLICATION_PDF                           66042200       153588
+WAYBILL_PDF                                       147874000       270017
+ACT_OF_WORK_PDF                                   137624300       267651
+--------------------------------------------------------------------------
+TOTAL                                            1550567000
+TOTAL (ms)                                         1550.567 ms

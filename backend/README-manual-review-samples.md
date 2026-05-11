@@ -19,6 +19,10 @@ This runs `DocumentFixtureGenerator` with output path `backend/manual-review-doc
 
 Data source: `OrderPrintSnapshots.manualReviewDemo()` (same semantics as the Angular `order-print-demo.fixture.ts` trip-form demo).
 
+## Timing baseline (committed)
+
+`./gradlew test --tests DocumentGenerationTimingReportTest` refreshes `docs/document-generation-timing-baseline.txt` with per-step nanoseconds (machine-dependent).
+
 ## Default when running `main` without Gradle
 
 If you run `DocumentFixtureGenerator` without arguments, output is relative to the process working directory (`manual-review-docs`); prefer the Gradle task so files always land under this module.

@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Measures render+overlay timings for the same sequence as {@link DocumentPrefetchService} prefetch
- * (DOCX for all types, then PDF). Writes {@code build/reports/document-generation-timing.txt}.
+ * (DOCX for all types, then PDF). Writes {@code build/reports/document-generation-timing.txt} and
+ * {@code docs/document-generation-timing-baseline.txt} (committed reference; numbers vary by machine).
  *
  * <p>Run: {@code ./gradlew test --tests DocumentGenerationTimingReportTest}
  */
@@ -21,7 +23,7 @@ class DocumentGenerationTimingReportTest {
 
     @Test
     void writesTimingReportForPrefetchOrderedGeneration() throws Exception {
-        OrderPrintSnapshot snapshot = DocumentFixtureGenerator.sampleSnapshot();
+        OrderPrintSnapshot snapshot = OrderPrintSnapshots.manualReviewDemo();
         Map<String, String> docxContext = DocumentGenerationService.snapshotToContext(snapshot);
         DocxTemplateRenderer renderer = new DocxTemplateRenderer();
         PdfFormTemplateCache pdfTemplates = new PdfFormTemplateCache();
@@ -47,7 +49,7 @@ class DocumentGenerationTimingReportTest {
         }
 
         StringBuilder sb = new StringBuilder(1024);
-        sb.append("Document generation timing (nanoseconds), sampleSnapshot + production templates\n");
+        sb.append("Document generation timing (nanoseconds), OrderPrintSnapshots.manualReviewDemo + templates\n");
         sb.append("(same order as DocumentPrefetchService: DOCX all types, then PDF all types)\n\n");
         sb.append(String.format("%-40s %18s %12s%n", "step", "nanos", "bytes_out"));
         sb.append("-".repeat(74)).append('\n');
@@ -62,7 +64,20 @@ class DocumentGenerationTimingReportTest {
         Files.createDirectories(out.getParent());
         Files.writeString(out, sb.toString(), StandardCharsets.UTF_8);
 
+        StringBuilder meta = new StringBuilder(512);
+        meta.append("# Document generation timing baseline\n");
+        meta.append("# Machine-dependent; refreshed when DocumentGenerationTimingReportTest runs.\n");
+        meta.append("captured_utc=").append(Instant.now()).append('\n');
+        meta.append("java.version=").append(System.getProperty("java.version")).append('\n');
+        meta.append("java.vm.name=").append(System.getProperty("java.vm.name")).append('\n');
+        meta.append("os.name=").append(System.getProperty("os.name")).append('\n');
+        meta.append('\n');
+        Path baseline = Path.of("docs", "document-generation-timing-baseline.txt");
+        Files.createDirectories(baseline.getParent());
+        Files.writeString(baseline, meta + sb.toString(), StandardCharsets.UTF_8);
+
         assertThat(out).exists();
+        assertThat(baseline).exists();
         assertThat(totalNanos).isPositive();
     }
 
@@ -95,7 +110,7 @@ class DocumentGenerationTimingReportTest {
             return renderDocxBytes(type, renderer, docxContext);
         }
         byte[] tpl = pdfTemplates.templateBytes(type);
-        return pdfRenderer.render(tpl, type, PdfFormValuesBuilder.values(type, snapshot));
+        return pdfRenderer.render(tpl, PdfFormValuesBuilder.values(type, snapshot));
     }
 
     private static byte[] renderDocxBytes(
