@@ -2,10 +2,8 @@ package com.logistic.backend.document;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.util.Map;
 import org.springframework.core.io.ClassPathResource;
 
@@ -20,7 +18,7 @@ public final class DocumentFixtureGenerator {
                         : Path.of("manual-review-docs").toAbsolutePath();
         Files.createDirectories(outDir);
 
-        OrderPrintSnapshot snapshot = sampleSnapshot();
+        OrderPrintSnapshot snapshot = OrderPrintSnapshots.manualReviewDemo();
         DocxTemplateRenderer renderer = new DocxTemplateRenderer();
         PdfFormTemplateCache pdfTemplates = new PdfFormTemplateCache();
         PdfOverlayRenderer pdfRenderer = new PdfOverlayRenderer();
@@ -33,7 +31,7 @@ public final class DocumentFixtureGenerator {
                     out = renderDocx(type, renderer, docxContext);
                 } else {
                     byte[] tpl = pdfTemplates.templateBytes(type);
-                    out = pdfRenderer.render(tpl, type, PdfFormValuesBuilder.values(type, snapshot));
+                    out = pdfRenderer.render(tpl, PdfFormValuesBuilder.values(type, snapshot));
                 }
                 String ext = ff == FileFormat.DOCX ? ".docx" : ".pdf";
                 Files.write(outDir.resolve(type.name().toLowerCase() + "_sample" + ext), out);
@@ -42,7 +40,7 @@ public final class DocumentFixtureGenerator {
 
         StringBuilder preview = new StringBuilder();
         preview.append("DOCX placeholder context (snapshotToContext):\n");
-        preview.append(docxContext).append("\n\nPDF overlay values (PdfFormValuesBuilder):\n");
+        preview.append(docxContext).append("\n\nPDF AcroForm values (PdfFormValuesBuilder):\n");
         for (DocumentType type : DocumentType.values()) {
             preview.append(type.name()).append(" => ").append(PdfFormValuesBuilder.values(type, snapshot)).append('\n');
         }
@@ -50,37 +48,9 @@ public final class DocumentFixtureGenerator {
         System.out.println("Generated fixtures in: " + outDir);
     }
 
+    /** Same as {@link OrderPrintSnapshots#manualReviewDemo()} (kept for existing tests and call sites). */
     public static OrderPrintSnapshot sampleSnapshot() {
-        return new OrderPrintSnapshot(
-                1001L,
-                42,
-                LocalDate.of(2026, 5, 15),
-                "ООО Ромашка",
-                "ООО Ромашка полное наименование",
-                "+78120000000",
-                "г. Москва, ул. Ленина, 1",
-                "ИП Петров",
-                "ИП Петров Петр Петрович",
-                "+79001112233",
-                "АО Банк",
-                "000000000000",
-                "044525225",
-                "770101001",
-                "40702810000000000001",
-                "30101810400000000225",
-                "г. Москва, ул. Ленина, 1",
-                "Volvo FH",
-                "А123ВС178",
-                "тягач с прицепом",
-                "Иванов Иван Иванович",
-                "+79002223344",
-                "Москва",
-                "Контакт погрузки +7 900 123 45 67",
-                "Санкт-Петербург",
-                "Контакт разгрузки +7 900 765 43 21",
-                1,
-                new BigDecimal("98500.00"),
-                new BigDecimal("98500.00"));
+        return OrderPrintSnapshots.manualReviewDemo();
     }
 
     private static byte[] renderDocx(
