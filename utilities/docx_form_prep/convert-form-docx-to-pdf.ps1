@@ -2,7 +2,8 @@
 $ErrorActionPreference = 'Stop'
 
 $d = (Resolve-Path (Join-Path $PSScriptRoot '..\..\backend\src\main\resources\templates\documents')).Path
-$f = 'pdf:writer_pdf_Export:{"CreateForm":{"type":"boolean","value":"true"},"ExportFormFields":{"type":"boolean","value":"true"}}'
+# UseTaggedPDF=false reduces tagged structure noise; ExportFormFields kept for possible future LO form export.
+$f = 'pdf:writer_pdf_Export:{"CreateForm":{"type":"boolean","value":"true"},"ExportFormFields":{"type":"boolean","value":"true"},"UseTaggedPDF":{"type":"boolean","value":"false"}}'
 $soffice = (Get-Command soffice.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)
 if (-not $soffice) { $soffice = 'C:\Program Files\LibreOffice\program\soffice.exe' }
 $tmp = Join-Path $env:TEMP ("docx-form-pdf-" + [guid]::NewGuid().ToString("N"))
