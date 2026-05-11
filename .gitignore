@@ -27,3 +27,8 @@ docker-compose.override.yml
 
 # Manual document review artifacts
 backend/manual-review-docs/
+
+# Python
+__pycache__/
+*.py[cod]
+
