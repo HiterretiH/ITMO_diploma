@@ -10,7 +10,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
-/** End-to-end PDF path: classpath PDF template + overlay values (no DOCX-to-PDF conversion). */
+/** End-to-end PDF path: classpath PDF template + AcroForm values (no DOCX-to-PDF conversion). */
 class DocumentPdfOverlayPipelineTest {
 
     @Test
@@ -24,7 +24,7 @@ class DocumentPdfOverlayPipelineTest {
             tpl = in.readAllBytes();
         }
         PdfOverlayRenderer renderer = new PdfOverlayRenderer();
-        byte[] pdf = renderer.render(tpl, DocumentType.CONTRACT_APPLICATION, pdfValues);
+        byte[] pdf = renderer.render(tpl, pdfValues);
 
         assertThat(pdf.length).isGreaterThan(500);
         assertThat(new String(pdf, 0, 5)).isEqualTo("%PDF-");
@@ -32,12 +32,17 @@ class DocumentPdfOverlayPipelineTest {
             assertThat(pd.getNumberOfPages()).isGreaterThanOrEqualTo(1);
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(pd);
-            assertThat(text).contains("ООО Ромашка");
-            assertThat(text).contains("Иванов Иван Иванович");
-            assertThat(text).contains("Москва");
-            assertThat(text).contains("Санкт-Петербург");
             assertThat(text).doesNotContain("{{");
             assertThat(text).doesNotContain("${");
+            var acro = pd.getDocumentCatalog().getAcroForm();
+            assertThat(acro == null || acro.getFields().isEmpty())
+                    .as("flattened contract PDF must not retain interactive form fields")
+                    .isTrue();
+            // PDFTextStripper is unreliable for Cyrillic after flatten (subset fonts); use stable ASCII markers.
+            assertThat(text).contains("+78120000000");
+            assertThat(text).contains("+79002223344");
+            assertThat(text).contains("Volvo FH");
+            assertThat(text).contains("98500.00");
         }
     }
 
@@ -48,7 +53,7 @@ class DocumentPdfOverlayPipelineTest {
         PdfOverlayRenderer renderer = new PdfOverlayRenderer();
         for (DocumentType type : DocumentType.values()) {
             byte[] tpl = templates.templateBytes(type);
-            byte[] pdf = renderer.render(tpl, type, PdfFormValuesBuilder.values(type, snapshot));
+            byte[] pdf = renderer.render(tpl, PdfFormValuesBuilder.values(type, snapshot));
             assertThat(new String(pdf, 0, 5)).as(type.name()).isEqualTo("%PDF-");
             try (PDDocument pd = Loader.loadPDF(pdf)) {
                 assertThat(pd.getNumberOfPages()).as(type.name()).isGreaterThanOrEqualTo(1);

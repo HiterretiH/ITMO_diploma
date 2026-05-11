@@ -43,8 +43,7 @@ class DocumentOutputSizeReportTest {
 
             byte[] templatePdf = pdfTemplates.templateBytes(type);
             byte[] pdf =
-                    pdfRenderer.render(
-                            templatePdf, type, PdfFormValuesBuilder.values(type, snapshot));
+                    pdfRenderer.render(templatePdf, PdfFormValuesBuilder.values(type, snapshot));
 
             assertThat(docx.length).as("%s rendered DOCX", docxName).isGreaterThan(500);
             assertThat(pdf.length).as("%s PDF", pdfName).isGreaterThan(800);
@@ -74,14 +73,15 @@ class DocumentOutputSizeReportTest {
                 - Rendered DOCX stays close to template size (merge fields replace placeholders).
                 - PDF output overlays values on flat template PDFs (no docx4j conversion).
                 - Peak≈sum approximates byte[] footprint if all buffers coexist for one document type.
-                - totalPeak is a sanity sum for this fixture; kept under 768 KiB in assertions.
+                - totalPeak is the sum of per-type peaks (template+output for DOCX and PDF); with flattened PDFs
+                  it stays under ~1.6 MiB for this fixture.
                 """);
 
         Path out = Path.of("build", "reports", "document-output-sizes.txt");
         Files.createDirectories(out.getParent());
         Files.writeString(out, sb.toString(), StandardCharsets.UTF_8);
 
-        assertThat(totalPeak).isLessThan(768 * 1024);
+        assertThat(totalPeak).isLessThan(1600 * 1024);
         assertThat(out).exists();
     }
 }

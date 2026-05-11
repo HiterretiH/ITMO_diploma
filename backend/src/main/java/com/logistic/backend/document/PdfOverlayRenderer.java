@@ -2,6 +2,9 @@ package com.logistic.backend.document;
 
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.pdf.AcroFields;
+import com.lowagie.text.pdf.PdfFormField;
+import com.lowagie.text.pdf.PdfName;
+import com.lowagie.text.pdf.PdfNumber;
 import com.lowagie.text.pdf.PdfReader;
 import com.lowagie.text.pdf.PdfStamper;
 import java.io.ByteArrayOutputStream;
@@ -14,24 +17,60 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 
 /**
- * Fills PDF AcroForm fields only: names must match {@link PdfFormValuesBuilder} keys. Templates are
- * produced from {@code *.form.docx} via LibreOffice with form export enabled. There is no
- * coordinate overlay fallback — regenerate PDFs if fields are missing or misnamed.
+ * Fills AcroForm fields from {@link PdfFormValuesBuilder} keys, applies multiline/left alignment for
+ * long text fields, then flattens the form so the result is a non-interactive PDF (in-memory only).
  */
 @Component
 public class PdfOverlayRenderer {
+
+    /**
+     * Text fields aligned with Word multi-line SDT placeholders in generated form PDFs. Keep in sync
+     * with template field names used for those placeholders.
+     */
+    private static final Set<String> MULTILINE_ACROFORM_FIELD_NAMES = Set.of(
+            "performer_info_ws",
+            "customer_info_ws",
+            "performer_info",
+            "customer_info",
+            "word_price");
 
     public byte[] render(byte[] templatePdf, Map<String, String> values) throws IOException {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             PdfReader reader = new PdfReader(templatePdf);
             PdfStamper stamper = new PdfStamper(reader, out);
+            applyMultilineLeftQuadding(stamper.getAcroFields());
             Set<String> filledByAcro = applyAcroFormValues(stamper, values);
             ensureAllNonBlankKeysApplied(filledByAcro, values);
+            stamper.setFormFlattening(true);
             stamper.close();
             reader.close();
             return out.toByteArray();
         } catch (DocumentException e) {
             throw new IOException("PDF AcroForm fill failed", e);
+        }
+    }
+
+    private static void applyMultilineLeftQuadding(AcroFields af) {
+        if (af == null) {
+            return;
+        }
+        Map<String, AcroFields.Item> all = af.getAllFields();
+        if (all == null || all.isEmpty()) {
+            return;
+        }
+        int qTargets =
+                AcroFields.Item.WRITE_MERGED | AcroFields.Item.WRITE_WIDGET | AcroFields.Item.WRITE_VALUE;
+        PdfNumber qLeft = new PdfNumber(PdfFormField.Q_LEFT);
+        for (String field : MULTILINE_ACROFORM_FIELD_NAMES) {
+            if (!all.containsKey(field)) {
+                continue;
+            }
+            af.setFieldProperty(field, "setfflags", PdfFormField.FF_MULTILINE, null);
+            AcroFields.Item item = af.getFieldItem(field);
+            if (item != null) {
+                item.writeToAll(PdfName.Q, qLeft, qTargets);
+                item.markUsed(af, AcroFields.Item.WRITE_VALUE | AcroFields.Item.WRITE_WIDGET);
+            }
         }
     }
 
@@ -74,8 +113,8 @@ public class PdfOverlayRenderer {
             throw new IOException(
                     "PDF AcroForm is missing fields or setField failed for non-blank keys: "
                             + missing
-                            + ". Regenerate classpath PDFs from *.form.docx (LibreOffice export with form fields; "
-                            + "field names must match utilities/docx_to_pdf_template/config.py field_name).");
+                            + ". Regenerate classpath PDF templates or align field names with "
+                            + "PdfFormValuesBuilder keys.");
         }
     }
 }
