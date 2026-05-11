@@ -8,6 +8,10 @@ import { of } from 'rxjs';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import { OrderApiService } from '../../core/order-api.service';
 import { OrderCreateRequest } from '../../core/order.models';
+import {
+  orderPrintDemoCatalogIds,
+  orderPrintDemoTripFormPatch,
+} from '../../fixtures/order-print-demo.fixture';
 import { TripNewComponent } from './trip-new.component';
 
 @Component({ standalone: true, template: '' })
@@ -105,24 +109,24 @@ describe('TripNewComponent', () => {
   it('sends OrderCreateRequest with route and totals', () => {
     fixture.detectChanges();
     const cmp = fixture.componentInstance;
-    const d = new Date(2026, 4, 15, 12, 0, 0, 0);
     cmp.form.patchValue({
-      customerId: 1,
-      performerId: 2,
-      driverId: 1,
-      vehicleId: 2,
-      loadingPlace: 'A',
-      unloadingPlace: 'B',
-      orderDate: d,
-      legCount: 2,
-      ratePerLeg: 100,
+      ...orderPrintDemoCatalogIds,
+      ...orderPrintDemoTripFormPatch,
     });
-    expect(cmp.form.controls.priceAmount.value).toBe(200);
+    expect(cmp.form.controls.priceAmount.value).toBe(98500);
     cmp.saveDraft();
     expect(lastCreatePayload).toBeDefined();
-    expect(lastCreatePayload!.tripCount).toBe(2);
-    expect(lastCreatePayload!.totalPrice).toBe(200);
-    expect(lastCreatePayload!.loadingPlace).toBe('A');
+    expect(lastCreatePayload!.tripCount).toBe(1);
+    expect(lastCreatePayload!.totalPrice).toBe(98500);
+    expect(lastCreatePayload!.pricePerTrip).toBe(98500);
+    expect(lastCreatePayload!.loadingPlace).toBe('Москва');
+    expect(lastCreatePayload!.unloadingPlace).toBe('Санкт-Петербург');
+    expect(lastCreatePayload!.loadingContact).toBe(
+      'Контакт погрузки +7 900 123 45 67',
+    );
+    expect(lastCreatePayload!.unloadingContact).toBe(
+      'Контакт разгрузки +7 900 765 43 21',
+    );
     expect(lastCreatePayload!.orderDate).toBe('2026-05-15');
     expect(lastCreatePayload!.customerId).toBe(1);
     expect(lastCreatePayload!.performerId).toBe(2);
@@ -131,18 +135,9 @@ describe('TripNewComponent', () => {
   it('includes orderNumber in create when set', () => {
     fixture.detectChanges();
     const cmp = fixture.componentInstance;
-    const d = new Date(2026, 4, 15, 12, 0, 0, 0);
     cmp.form.patchValue({
-      customerId: 1,
-      performerId: 2,
-      driverId: 1,
-      vehicleId: 2,
-      loadingPlace: 'A',
-      unloadingPlace: 'B',
-      orderDate: d,
-      legCount: 2,
-      ratePerLeg: 100,
-      orderNumber: 42,
+      ...orderPrintDemoCatalogIds,
+      ...orderPrintDemoTripFormPatch,
     });
     cmp.saveDraft();
     expect(lastCreatePayload?.orderNumber).toBe(42);
