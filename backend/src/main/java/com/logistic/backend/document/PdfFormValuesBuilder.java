@@ -5,11 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Builds PDF values keyed by {@code field_name} from {@code utilities/docx_to_pdf_template/config.py}. Used for
- * AcroForm fill: keys are {@code field_name} from {@code utilities/docx_to_pdf_template/config.py}; {@link
- * PdfOverlayRenderer} requires every non-blank value to map to a named PDF field.
- * DOCX rendering uses {@link DocumentGenerationService#snapshotToContext(OrderPrintSnapshot)} with {@code
- * {{ token }}} keys.
+ * Builds {@code field_name → value} maps for PDF AcroForm fill. Keys must match named fields in classpath PDF
+ * templates. DOCX placeholders use {@link DocumentGenerationService#snapshotToContext(OrderPrintSnapshot)}.
  */
 public final class PdfFormValuesBuilder {
 

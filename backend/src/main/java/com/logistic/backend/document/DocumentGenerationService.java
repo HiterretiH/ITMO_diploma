@@ -22,8 +22,9 @@ public class DocumentGenerationService {
     private final OrderSnapshotMapper orderSnapshotMapper;
 
     /**
-     * Renders a single document in memory (no disk, no DB). Caller must ensure order data is complete
-     * if required for the template.
+     * Renders a single document in memory (no disk, no DB): DOCX from {@link DocumentTemplateCache}, or a flat
+     * non-interactive PDF from {@link PdfFormTemplateCache} via {@link PdfOverlayRenderer}. Caller must supply
+     * complete order data when the template requires it.
      */
     public byte[] generateDocument(Order order, DocumentType type, FileFormat format) throws IOException {
         OrderPrintSnapshot snap = orderSnapshotMapper.fromOrder(order);
@@ -31,8 +32,7 @@ public class DocumentGenerationService {
             return renderDocxFromTemplate(type, snap);
         }
         byte[] pdfTemplate = pdfFormTemplateCache.templateBytes(type);
-        return pdfOverlayRenderer.render(
-                pdfTemplate, type, PdfFormValuesBuilder.values(type, snap));
+        return pdfOverlayRenderer.render(pdfTemplate, PdfFormValuesBuilder.values(type, snap));
     }
 
     /** Human-readable filename for Content-Disposition (Cyrillic allowed; unsafe chars stripped). */

@@ -7,10 +7,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
-/**
- * Ensures classpath PDF templates load and are valid single-page documents used for AcroForm fill.
- * Field names follow {@code utilities/docx_to_pdf_template/config.py} and {@link PdfFormValuesBuilder}.
- */
+/** Ensures classpath PDF templates load and are single-page documents used for AcroForm fill (before flatten). */
 class PdfFormFieldInventoryTest {
 
     @Test

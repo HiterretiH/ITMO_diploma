@@ -3,10 +3,8 @@ package com.logistic.backend.document;
 import java.util.List;
 
 /**
- * Rectangle and font size for each {@code field_name} used by {@link PdfAcroFormBootstrap} to
- * create AcroForm widgets when LibreOffice omits {@code /AcroForm}. Same user space as PDF
- * (origin bottom-left). Keep in sync with {@code utilities/docx_to_pdf_template/config.py} and probe
- * dumps in {@code build/reports/}.
+ * Rectangle and font size per field key for {@link PdfAcroFormBootstrap} when a template PDF lacks usable AcroForm
+ * widgets. PDF user space (origin bottom-left); keep keys aligned with {@link PdfFormValuesBuilder} and templates.
  */
 public final class PdfFormLayout {
 

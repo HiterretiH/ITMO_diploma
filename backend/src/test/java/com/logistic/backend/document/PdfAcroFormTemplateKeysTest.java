@@ -7,10 +7,7 @@ import com.lowagie.text.pdf.PdfReader;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/**
- * Classpath PDF templates must expose an AcroForm widget for every {@link PdfFormValuesBuilder}
- * key (matching {@code utilities/docx_to_pdf_template/config.py} {@code field_name}).
- */
+/** Classpath PDF templates must define an AcroForm widget for every {@link PdfFormValuesBuilder} key. */
 class PdfAcroFormTemplateKeysTest {
 
     @Test
