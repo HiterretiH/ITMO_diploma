@@ -6,6 +6,10 @@
 Thumbs.db
 Desktop.ini
 
+# Office / LibreOffice: lock files while .docx (etc.) are open
+.~lock.*
+~$*
+
 # Logs and temp
 *.log
 *.tmp
