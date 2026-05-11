@@ -17,7 +17,8 @@ public class DocumentGenerationService {
 
     private final DocumentTemplateCache documentTemplateCache;
     private final DocxTemplateRenderer templateRenderer;
-    private final DocxPdfConverter docxPdfConverter;
+    private final PdfFormTemplateCache pdfFormTemplateCache;
+    private final PdfOverlayRenderer pdfOverlayRenderer;
     private final OrderSnapshotMapper orderSnapshotMapper;
 
     /**
@@ -26,8 +27,12 @@ public class DocumentGenerationService {
      */
     public byte[] generateDocument(Order order, DocumentType type, FileFormat format) throws IOException {
         OrderPrintSnapshot snap = orderSnapshotMapper.fromOrder(order);
-        byte[] renderedDocx = renderDocxFromTemplate(type, snap);
-        return format == FileFormat.DOCX ? renderedDocx : docxPdfConverter.convert(renderedDocx);
+        if (format == FileFormat.DOCX) {
+            return renderDocxFromTemplate(type, snap);
+        }
+        byte[] pdfTemplate = pdfFormTemplateCache.templateBytes(type);
+        return pdfOverlayRenderer.render(
+                pdfTemplate, type, PdfFormValuesBuilder.values(type, snap));
     }
 
     /** Human-readable filename for Content-Disposition (Cyrillic allowed; unsafe chars stripped). */

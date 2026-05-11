@@ -2,6 +2,7 @@ package com.logistic.backend.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,8 +12,8 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Measures render+convert timings for the same sequence as {@link DocumentPrefetchService}
- * prefetch (DOCX for all types, then PDF). Writes {@code build/reports/document-generation-timing.txt}.
+ * Measures render+overlay timings for the same sequence as {@link DocumentPrefetchService} prefetch
+ * (DOCX for all types, then PDF). Writes {@code build/reports/document-generation-timing.txt}.
  *
  * <p>Run: {@code ./gradlew test --tests DocumentGenerationTimingReportTest}
  */
@@ -21,14 +22,13 @@ class DocumentGenerationTimingReportTest {
     @Test
     void writesTimingReportForPrefetchOrderedGeneration() throws Exception {
         OrderPrintSnapshot snapshot = DocumentFixtureGenerator.sampleSnapshot();
-        Map<String, String> context = DocumentGenerationService.snapshotToContext(snapshot);
+        Map<String, String> docxContext = DocumentGenerationService.snapshotToContext(snapshot);
         DocxTemplateRenderer renderer = new DocxTemplateRenderer();
-        DocxPdfConverter converter = new DocxPdfConverter();
-
-        record Row(String label, long nanos, int bytesOut) {}
+        PdfFormTemplateCache pdfTemplates = new PdfFormTemplateCache();
+        PdfOverlayRenderer pdfRenderer = new PdfOverlayRenderer();
 
         for (int w = 0; w < 2; w++) {
-            runSequence(renderer, converter, context);
+            runSequence(renderer, pdfRenderer, pdfTemplates, docxContext, snapshot);
         }
 
         List<Row> rows = new ArrayList<>();
@@ -36,19 +36,13 @@ class DocumentGenerationTimingReportTest {
         for (FileFormat ff : DocumentPrefetchService.PREFETCH_FORMAT_ORDER) {
             for (DocumentType dt : DocumentType.values()) {
                 long start = System.nanoTime();
-                byte[] docx =
-                        renderDocxBytes(dt, renderer, DocumentTemplateCache.fileName(dt), context);
-                byte[] out = ff == FileFormat.DOCX ? docx : converter.convert(docx);
+                byte[] out = generateOne(dt, ff, renderer, pdfRenderer, pdfTemplates, docxContext, snapshot);
                 long elapsed = System.nanoTime() - start;
                 totalNanos += elapsed;
 
                 assertThat(out.length).isGreaterThan(500);
 
-                rows.add(
-                        new Row(
-                                dt.name() + "_" + ff.name(),
-                                elapsed,
-                                out.length));
+                rows.add(new Row(dt.name() + "_" + ff.name(), elapsed, out.length));
             }
         }
 
@@ -72,29 +66,42 @@ class DocumentGenerationTimingReportTest {
         assertThat(totalNanos).isPositive();
     }
 
+    private record Row(String label, long nanos, int bytesOut) {}
+
     private static void runSequence(
             DocxTemplateRenderer renderer,
-            DocxPdfConverter converter,
-            Map<String, String> context)
+            PdfOverlayRenderer pdfRenderer,
+            PdfFormTemplateCache pdfTemplates,
+            Map<String, String> docxContext,
+            OrderPrintSnapshot snapshot)
             throws Exception {
         for (FileFormat ff : DocumentPrefetchService.PREFETCH_FORMAT_ORDER) {
             for (DocumentType dt : DocumentType.values()) {
-                byte[] docx =
-                        renderDocxBytes(dt, renderer, DocumentTemplateCache.fileName(dt), context);
-                if (ff == FileFormat.PDF) {
-                    converter.convert(docx);
-                }
+                generateOne(dt, ff, renderer, pdfRenderer, pdfTemplates, docxContext, snapshot);
             }
         }
     }
 
-    private static byte[] renderDocxBytes(
+    private static byte[] generateOne(
             DocumentType type,
+            FileFormat ff,
             DocxTemplateRenderer renderer,
-            String templateFileName,
-            Map<String, String> context)
-            throws java.io.IOException {
-        try (var in =
+            PdfOverlayRenderer pdfRenderer,
+            PdfFormTemplateCache pdfTemplates,
+            Map<String, String> docxContext,
+            OrderPrintSnapshot snapshot)
+            throws Exception {
+        if (ff == FileFormat.DOCX) {
+            return renderDocxBytes(type, renderer, docxContext);
+        }
+        byte[] tpl = pdfTemplates.templateBytes(type);
+        return pdfRenderer.render(tpl, type, PdfFormValuesBuilder.values(type, snapshot));
+    }
+
+    private static byte[] renderDocxBytes(
+            DocumentType type, DocxTemplateRenderer renderer, Map<String, String> context) throws Exception {
+        String templateFileName = DocumentTemplateCache.fileName(type);
+        try (InputStream in =
                 DocumentGenerationTimingReportTest.class
                         .getClassLoader()
                         .getResourceAsStream("templates/documents/" + templateFileName)) {

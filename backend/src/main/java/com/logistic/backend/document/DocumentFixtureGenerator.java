@@ -22,19 +22,31 @@ public final class DocumentFixtureGenerator {
 
         OrderPrintSnapshot snapshot = sampleSnapshot();
         DocxTemplateRenderer renderer = new DocxTemplateRenderer();
-        DocxPdfConverter pdfConverter = new DocxPdfConverter();
-        Map<String, String> context = DocumentGenerationService.snapshotToContext(snapshot);
+        PdfFormTemplateCache pdfTemplates = new PdfFormTemplateCache();
+        PdfOverlayRenderer pdfRenderer = new PdfOverlayRenderer();
+        Map<String, String> docxContext = DocumentGenerationService.snapshotToContext(snapshot);
 
         for (FileFormat ff : DocumentPrefetchService.PREFETCH_FORMAT_ORDER) {
             for (DocumentType type : DocumentType.values()) {
-                byte[] docx = renderDocx(type, renderer, context);
-                byte[] out = ff == FileFormat.DOCX ? docx : pdfConverter.convert(docx);
+                byte[] out;
+                if (ff == FileFormat.DOCX) {
+                    out = renderDocx(type, renderer, docxContext);
+                } else {
+                    byte[] tpl = pdfTemplates.templateBytes(type);
+                    out = pdfRenderer.render(tpl, type, PdfFormValuesBuilder.values(type, snapshot));
+                }
                 String ext = ff == FileFormat.DOCX ? ".docx" : ".pdf";
                 Files.write(outDir.resolve(type.name().toLowerCase() + "_sample" + ext), out);
             }
         }
 
-        Files.writeString(outDir.resolve("context-preview.txt"), context.toString());
+        StringBuilder preview = new StringBuilder();
+        preview.append("DOCX placeholder context (snapshotToContext):\n");
+        preview.append(docxContext).append("\n\nPDF overlay values (PdfFormValuesBuilder):\n");
+        for (DocumentType type : DocumentType.values()) {
+            preview.append(type.name()).append(" => ").append(PdfFormValuesBuilder.values(type, snapshot)).append('\n');
+        }
+        Files.writeString(outDir.resolve("context-preview.txt"), preview.toString());
         System.out.println("Generated fixtures in: " + outDir);
     }
 

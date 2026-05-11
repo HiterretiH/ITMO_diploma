@@ -56,10 +56,7 @@ public class PdfOverlayRenderer {
         Phrase phrase = new Phrase(text, font);
         ColumnText ct = new ColumnText(cb);
         ct.setSimpleColumn(phrase, slot.llx(), slot.lly(), slot.urx(), slot.ury(), leading, Element.ALIGN_LEFT);
-        int status = ct.go();
-        while (ColumnText.hasMoreText(status)) {
-            status = ct.go();
-        }
+        ct.go();
     }
 
     private BaseFont cyrillicBaseFont() throws IOException {
