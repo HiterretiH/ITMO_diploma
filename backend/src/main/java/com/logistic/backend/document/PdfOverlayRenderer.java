@@ -3,7 +3,7 @@ package com.logistic.backend.document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
-import com.lowagie.text.Phrase;
+import com.lowagie.text.Paragraph;
 import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.ColumnText;
 import com.lowagie.text.pdf.PdfContentByte;
@@ -17,8 +17,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 /**
- * Overlays printable values onto flat template PDFs using Liberation Sans (Cyrillic). Coordinates
- * are defined in {@link PdfFormLayout}.
+ * Overlays printable values onto flat template PDFs using Liberation Sans (Cyrillic). Each slot is
+ * clipped to its rectangle so overflow does not cover neighbouring labels. Coordinates are defined
+ * in {@link PdfFormLayout}.
  */
 @Component
 public class PdfOverlayRenderer {
@@ -51,12 +52,51 @@ public class PdfOverlayRenderer {
 
     private static void drawInSlot(PdfContentByte cb, BaseFont bf, PdfFormLayout.Slot slot, String text)
             throws DocumentException {
-        Font font = new Font(bf, slot.fontSizePt());
-        float leading = slot.fontSizePt() * 1.18f;
-        Phrase phrase = new Phrase(text, font);
+        float w = slot.urx() - slot.llx();
+        float h = slot.ury() - slot.lly();
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        float fontSize = scaleFontToFit(slot.fontSizePt(), text, w, h, bf);
+        Font font = new Font(bf, fontSize);
+        float leading = fontSize * 1.12f;
+        Paragraph paragraph = new Paragraph(text, font);
+        paragraph.setLeading(leading);
+
+        cb.saveState();
+        cb.rectangle(slot.llx(), slot.lly(), w, h);
+        cb.clip();
+        cb.newPath();
+
         ColumnText ct = new ColumnText(cb);
-        ct.setSimpleColumn(phrase, slot.llx(), slot.lly(), slot.urx(), slot.ury(), leading, Element.ALIGN_LEFT);
+        ct.setSimpleColumn(
+                paragraph, slot.llx(), slot.lly(), slot.urx(), slot.ury(), leading, Element.ALIGN_LEFT);
         ct.go();
+
+        cb.restoreState();
+    }
+
+    /**
+     * Slightly shrink font when the text is long relative to slot area so multi-line blocks stay
+     * inside the clip (especially {@code word_price}).
+     */
+    private static float scaleFontToFit(
+            float requestedPt, String text, float slotWidth, float slotHeight, BaseFont bf) {
+        float size = requestedPt;
+        for (int i = 0; i < 6 && size >= 6f; i++) {
+            float lineHeight = size * 1.12f;
+            int approxLines =
+                    Math.max(
+                            1,
+                            (int)
+                                    Math.ceil(
+                                            bf.getWidthPoint(text, size) / Math.max(1f, slotWidth - 2f)));
+            if (approxLines * lineHeight <= slotHeight + 0.5f) {
+                return size;
+            }
+            size -= 0.75f;
+        }
+        return Math.max(6f, size);
     }
 
     private BaseFont cyrillicBaseFont() throws IOException {
