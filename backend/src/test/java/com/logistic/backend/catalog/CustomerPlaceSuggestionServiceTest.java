@@ -107,6 +107,26 @@ class CustomerPlaceSuggestionServiceTest {
     }
 
     @Test
+    void doesNotCallTypedataWhenQueryTwoCharsBelowMinLength() {
+        typedataProperties.setEnabled(true);
+        typedataProperties.setToken("secret");
+        CustomerPlace p =
+                place(
+                        customer,
+                        CustomerPlaceKind.LOAD,
+                        "Ab Street",
+                        "x",
+                        Instant.parse("2026-01-01T00:00:00Z"));
+        when(customerRepository.findByIdAndOwner_Id(7L, 42L)).thenReturn(Optional.of(customer));
+        when(placeRepository.findByCustomer_IdAndKindOrderByUpdatedAtDesc(7L, CustomerPlaceKind.LOAD))
+                .thenReturn(List.of(p));
+
+        service.suggest(owner, 7L, CustomerPlaceKind.LOAD, "ab");
+
+        verify(typeDataCachedSuggestService, never()).suggest(anyString());
+    }
+
+    @Test
     void capsHistoryAtConfiguredMax() {
         placeSuggestionProperties.setMaxHistory(2);
         Instant base = Instant.parse("2026-01-01T00:00:00Z");

@@ -373,7 +373,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Optional substring filter on history; external suggestions require a long enough query when TypeData is enabled
+          description: Optional substring filter on history; when TypeData is enabled, external suggestions are requested only if q is at least 3 characters after trim
       responses:
         '200':
           description: Suggestions ordered with history entries first

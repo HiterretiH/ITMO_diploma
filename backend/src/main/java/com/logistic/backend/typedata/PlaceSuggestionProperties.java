@@ -7,7 +7,7 @@ public class PlaceSuggestionProperties {
 
     private int maxHistory = 5;
     private int maxExternal = 10;
-    private int externalMinQueryLength = 2;
+    private int externalMinQueryLength = 3;
 
     public int getMaxHistory() {
         return maxHistory;
