@@ -8,8 +8,9 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { GuestHeaderComponent } from '../../shared/guest-header/guest-header.component';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { InputText } from 'primeng/inputtext';
@@ -32,7 +33,7 @@ const passwordMatchValidator: ValidatorFn = (
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterLink,
+    GuestHeaderComponent,
     Card,
     InputText,
     Password,

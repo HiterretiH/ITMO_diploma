@@ -1,5 +1,7 @@
-<div class="login-wrap">
-  <p-card header="Регистрация">
+<div class="guest-page">
+  <app-guest-header [showLoginLink]="true" [showRegisterLink]="false" />
+  <div class="login-wrap">
+    <p-card header="Регистрация">
     <form [formGroup]="form" (ngSubmit)="submit()">
       <div class="field">
         <label for="reg-user">Логин</label>
@@ -64,9 +66,6 @@
         styleClass="w-full"
       />
     </form>
-    <p class="login-extra">
-      Уже есть аккаунт?
-      <a routerLink="/login">Вход</a>
-    </p>
   </p-card>
+  </div>
 </div>

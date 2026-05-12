@@ -5,8 +5,9 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { GuestHeaderComponent } from '../../shared/guest-header/guest-header.component';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { InputText } from 'primeng/inputtext';
@@ -18,11 +19,11 @@ import { Password } from 'primeng/password';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    GuestHeaderComponent,
     Card,
     InputText,
     Password,
     Button,
-    RouterLink,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',

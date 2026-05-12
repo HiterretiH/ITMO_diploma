@@ -1,0 +1,45 @@
+:host ::ng-deep .guest-toolbar.p-toolbar {
+  border-radius: 0;
+  border-width: 0 0 1px;
+}
+
+.guest-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-right: 0.75rem;
+  border-radius: var(--p-border-radius-md, 6px);
+  color: var(--p-text-color);
+  text-decoration: none;
+}
+
+.guest-home:hover {
+  background: var(--p-content-hover-background);
+}
+
+.guest-home:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: 2px;
+}
+
+.guest-home .pi {
+  font-size: 1.15rem;
+}
+
+.guest-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.guest-nav-link {
+  color: var(--p-primary-color);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.guest-nav-link:hover {
+  text-decoration: underline;
+}

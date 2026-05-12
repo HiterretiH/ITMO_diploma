@@ -1,0 +1,35 @@
+<p-toolbar styleClass="guest-toolbar">
+  <ng-template #start>
+    <a
+      routerLink="/welcome"
+      class="guest-home"
+      tabindex="0"
+      aria-label="На главную"
+      title="На главную"
+    >
+      <i class="pi pi-home" aria-hidden="true"></i>
+    </a>
+    <nav class="guest-nav" aria-label="Авторизация">
+      @if (showLoginLink()) {
+        <a routerLink="/login" class="guest-nav-link" tabindex="0">Вход</a>
+      }
+      @if (showRegisterLink()) {
+        <a routerLink="/register" class="guest-nav-link" tabindex="0"
+          >Регистрация</a
+        >
+      }
+    </nav>
+  </ng-template>
+  <ng-template #end>
+    <p-button
+      type="button"
+      [icon]="themeIcon()"
+      [text]="true"
+      rounded="true"
+      severity="secondary"
+      aria-label="Переключить светлую или тёмную тему"
+      title="Тема: светлая или тёмная (нажмите для переключения)"
+      (onClick)="cycleTheme()"
+    />
+  </ng-template>
+</p-toolbar>
