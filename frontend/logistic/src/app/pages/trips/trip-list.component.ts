@@ -77,7 +77,7 @@ export class TripListComponent implements OnInit {
       return;
     }
     this.confirm.confirm({
-      message: 'Завершить рейс? Будут сгенерированы документы.',
+      message: 'Завершить рейс?',
       header: 'Подтверждение',
       icon: 'pi pi-check-circle',
       accept: () => {
