@@ -19,24 +19,17 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 
 /**
- * Fills AcroForm fields from {@link PdfFormValuesBuilder} keys, applies multiline/left alignment for
- * long text fields, then flattens the form so the result is a non-interactive PDF (in-memory only).
+ * Fills AcroForm fields from {@link PdfFormValuesBuilder} keys, aligns variable text toward the top-left of
+ * each widget (OpenPDF single-line mode vertically centers; multiline layout matches top-left), then flattens
+ * the form so the result is a non-interactive PDF (in-memory only).
  */
 @Component
 public class PdfOverlayRenderer {
 
     private static final String LIBERATION_SANS_RESOURCE = "/fonts/LiberationSans-Regular.ttf";
 
-    /**
-     * Text fields aligned with Word multi-line SDT placeholders in generated form PDFs. Keep in sync
-     * with template field names used for those placeholders.
-     */
-    private static final Set<String> MULTILINE_ACROFORM_FIELD_NAMES = Set.of(
-            "performer_info_ws",
-            "customer_info_ws",
-            "performer_info",
-            "customer_info",
-            "word_price");
+    private static final int Q_WRITE_TARGETS =
+            AcroFields.Item.WRITE_MERGED | AcroFields.Item.WRITE_WIDGET | AcroFields.Item.WRITE_VALUE;
 
     private static volatile BaseFont liberationSansCache;
 
@@ -48,7 +41,7 @@ public class PdfOverlayRenderer {
             BaseFont bf = liberationSans();
             af.addSubstitutionFont(bf);
             applyEmbeddedCyrillicFont(af, bf);
-            applyMultilineLeftQuadding(af);
+            applyTopLeftFormTextLayout(af);
             Set<String> filledByAcro = applyAcroFormValues(stamper, values);
             ensureAllNonBlankKeysApplied(filledByAcro, values);
             stamper.setFormFlattening(true);
@@ -103,7 +96,12 @@ public class PdfOverlayRenderer {
         }
     }
 
-    private static void applyMultilineLeftQuadding(AcroFields af) {
+    /**
+     * OpenPDF draws single-line text vertically centered in the widget; multiline layout starts from the top.
+     * For normal text fields we set left quadding ({@code /Q}) and turn on multiline (except comb/password/file
+     * fields) so filled values sit at the top-left like the Word placeholders. Combo boxes only get {@code /Q}.
+     */
+    private static void applyTopLeftFormTextLayout(AcroFields af) {
         if (af == null) {
             return;
         }
@@ -111,19 +109,30 @@ public class PdfOverlayRenderer {
         if (all == null || all.isEmpty()) {
             return;
         }
-        int qTargets =
-                AcroFields.Item.WRITE_MERGED | AcroFields.Item.WRITE_WIDGET | AcroFields.Item.WRITE_VALUE;
+        af.setExtraMargin(0f, 0f);
         PdfNumber qLeft = new PdfNumber(PdfFormField.Q_LEFT);
-        for (String field : MULTILINE_ACROFORM_FIELD_NAMES) {
-            if (!all.containsKey(field)) {
+        for (String fieldName : all.keySet()) {
+            int fieldType = af.getFieldType(fieldName);
+            if (fieldType != AcroFields.FIELD_TYPE_TEXT && fieldType != AcroFields.FIELD_TYPE_COMBO) {
                 continue;
             }
-            af.setFieldProperty(field, "setfflags", PdfFormField.FF_MULTILINE, null);
-            AcroFields.Item item = af.getFieldItem(field);
-            if (item != null) {
-                item.writeToAll(PdfName.Q, qLeft, qTargets);
-                item.markUsed(af, AcroFields.Item.WRITE_VALUE | AcroFields.Item.WRITE_WIDGET);
+            AcroFields.Item item = af.getFieldItem(fieldName);
+            if (item == null) {
+                continue;
             }
+            if (fieldType == AcroFields.FIELD_TYPE_TEXT) {
+                PdfNumber ffObj = item.getMerged(0).getAsNumber(PdfName.FF);
+                int ff = ffObj != null ? ffObj.intValue() : 0;
+                boolean restrictMultiline =
+                        (ff & PdfFormField.FF_COMB) != 0
+                                || (ff & PdfFormField.FF_PASSWORD) != 0
+                                || (ff & PdfFormField.FF_FILESELECT) != 0;
+                if (!restrictMultiline) {
+                    af.setFieldProperty(fieldName, "setfflags", PdfFormField.FF_MULTILINE, null);
+                }
+            }
+            item.writeToAll(PdfName.Q, qLeft, Q_WRITE_TARGETS);
+            item.markUsed(af, AcroFields.Item.WRITE_VALUE | AcroFields.Item.WRITE_WIDGET);
         }
     }
 
