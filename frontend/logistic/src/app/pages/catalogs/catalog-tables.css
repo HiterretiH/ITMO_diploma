@@ -1,0 +1,101 @@
+:host .page-head {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+:host .page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+:host ::ng-deep .p-datatable {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background: linear-gradient(
+    135deg,
+    var(--color-bg),
+    color-mix(in srgb, var(--color-border) 35%, var(--color-bg))
+  );
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding: 1rem;
+  border-bottom: 2px solid var(--color-border);
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr {
+  transition: var(--transition-fast);
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  transform: translateX(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host ::ng-deep .p-datatable .p-datatable-tbody > tr {
+    transition: none;
+  }
+
+  :host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+    transform: none;
+  }
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  padding: 1rem;
+  border-color: var(--color-border);
+}
+
+:host ::ng-deep .p-datatable .p-button.p-button-text {
+  margin: 0 0.25rem;
+  padding: 0.5rem;
+}
+
+:host ::ng-deep .p-datatable .p-button.p-button-text:hover {
+  background: var(--color-bg);
+}
+
+:host ::ng-deep .p-datatable-emptymessage td {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.catalog-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--color-text-muted);
+}
+
+.catalog-empty-state .pi {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+.catalog-empty-state p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.w-full {
+  width: 100%;
+}
