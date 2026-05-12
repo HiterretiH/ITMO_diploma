@@ -15,9 +15,9 @@ import { ThemeService } from '../../core/theme.service';
 export class GuestHeaderComponent {
   readonly theme = inject(ThemeService);
 
-  /** Show text link to login (e.g. on register or welcome). */
+  /** Show text link to login (e.g. on register). */
   readonly showLoginLink = input(false);
-  /** Show text link to register (e.g. on login or welcome). */
+  /** Show text link to register (e.g. on login). */
   readonly showRegisterLink = input(false);
 
   cycleTheme(): void {
