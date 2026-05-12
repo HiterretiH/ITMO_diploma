@@ -1,12 +1,10 @@
 package com.logistic.backend.document;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
@@ -38,19 +36,6 @@ public class DocxTemplateRenderer {
         }
     }
 
-    private static void replaceInTable(XWPFTable table, Map<String, String> context) {
-        for (XWPFTableRow row : table.getRows()) {
-            for (XWPFTableCell cell : row.getTableCells()) {
-                for (XWPFParagraph paragraph : cell.getParagraphs()) {
-                    replaceInParagraph(paragraph, context);
-                }
-                for (XWPFTable nested : cell.getTables()) {
-                    replaceInTable(nested, context);
-                }
-            }
-        }
-    }
-
     private static void appendTableText(StringBuilder sb, XWPFTable table) {
         for (XWPFTableRow row : table.getRows()) {
             for (XWPFTableCell cell : row.getTableCells()) {
@@ -68,33 +53,5 @@ public class DocxTemplateRenderer {
                 }
             }
         }
-    }
-
-    private static void replaceInParagraph(XWPFParagraph paragraph, Map<String, String> context) {
-        String original = paragraph.getText();
-        if (original == null || original.isBlank()) {
-            return;
-        }
-        String replaced = applyContext(original, context);
-        if (replaced.equals(original)) {
-            return;
-        }
-        int size = paragraph.getRuns().size();
-        for (int i = size - 1; i >= 0; i--) {
-            paragraph.removeRun(i);
-        }
-        XWPFRun run = paragraph.createRun();
-        run.setText(replaced, 0);
-    }
-
-    private static String applyContext(String source, Map<String, String> context) {
-        String result = source;
-        for (Map.Entry<String, String> e : context.entrySet()) {
-            String value = e.getValue() == null ? "" : e.getValue();
-            result = result.replace("${" + e.getKey() + "}", value);
-            result = result.replace("{{" + e.getKey() + "}}", value);
-            result = result.replace("{{ " + e.getKey() + " }}", value);
-        }
-        return result;
     }
 }
