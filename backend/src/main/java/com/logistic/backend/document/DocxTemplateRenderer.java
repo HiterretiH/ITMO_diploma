@@ -16,17 +16,7 @@ import org.springframework.stereotype.Component;
 public class DocxTemplateRenderer {
 
     public byte[] render(byte[] template, Map<String, String> context) throws IOException {
-        try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(template))) {
-            for (XWPFParagraph paragraph : doc.getParagraphs()) {
-                replaceInParagraph(paragraph, context);
-            }
-            for (XWPFTable table : doc.getTables()) {
-                replaceInTable(table, context);
-            }
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            doc.write(out);
-            return out.toByteArray();
-        }
+        return DocxOpcXmlSubstitution.render(template, context);
     }
 
     public String extractText(byte[] docxBody) throws IOException {
