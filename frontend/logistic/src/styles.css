@@ -121,6 +121,18 @@ h1.page-title {
   color: var(--color-text-muted);
 }
 
+.surface-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+}
+
+.surface-panel--compact {
+  padding: var(--space-4);
+}
+
 .page-head {
   display: flex;
   flex-wrap: wrap;

@@ -1,9 +1,5 @@
-.overview-card {
-  padding: 1rem 1.15rem;
-  margin-bottom: 1rem;
-  border: 1px solid var(--p-content-border-color, #e2e8f0);
-  border-radius: var(--p-border-radius, 8px);
-  background: var(--p-content-background, #fff);
+.trip-edit-overview {
+  margin-bottom: var(--space-4);
 }
 
 .overview-title {

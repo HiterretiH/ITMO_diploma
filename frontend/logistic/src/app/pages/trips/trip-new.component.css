@@ -51,12 +51,7 @@
 }
 
 .catalog-block {
-  padding: 1.25rem;
-  margin-bottom: 1rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, var(--p-border-radius));
-  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-4);
 }
 
 .catalog-block .section-title::before {
