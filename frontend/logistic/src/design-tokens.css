@@ -1,0 +1,76 @@
+/* App-level semantic tokens; align with Prime Aura where possible. */
+:root {
+  --color-primary: var(--p-primary-color, #3b82f6);
+  --color-primary-hover: var(--p-primary-hover-color, #2563eb);
+  --color-success: var(--p-green-500, #10b981);
+  --color-warning: var(--p-yellow-500, #f59e0b);
+  --color-danger: var(--p-red-500, #ef4444);
+
+  --color-bg: var(--p-content-background, #f8fafc);
+  --color-surface: var(--p-surface-0, #ffffff);
+  --color-border: var(--p-content-border-color, #e2e8f0);
+  --color-text: var(--p-text-color, #0f172a);
+  --color-text-muted: var(--p-text-muted-color, #64748b);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+  --radius-md: 0.75rem;
+  --transition-fast: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+html.app-dark {
+  --color-bg: var(--p-content-background);
+  --color-surface: var(--p-surface-900, #1e293b);
+  --color-border: var(--p-content-border-color, #334155);
+  --color-text: var(--p-text-color, #f1f5f9);
+  --color-text-muted: var(--p-text-muted-color, #94a3b8);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.p-button,
+.p-inputtext,
+.p-password .p-inputtext,
+.p-inputtextarea,
+.p-dropdown,
+.p-card {
+  transition: var(--transition-fast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p-button,
+  .p-inputtext,
+  .p-password .p-inputtext,
+  .p-inputtextarea,
+  .p-dropdown,
+  .p-card {
+    transition: none;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.p-button:focus-visible,
+.p-inputtext:focus-visible,
+.p-inputtextarea:focus-visible {
+  outline-offset: 2px;
+}

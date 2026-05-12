@@ -1,4 +1,5 @@
 @import 'primeicons/primeicons.css';
+@import './design-tokens.css';
 
 html,
 body {
@@ -11,11 +12,10 @@ app-root {
 }
 html {
   /*
-   * Не использовать --p-surface-50 для фона приложения: в Aura dark palette
-   * surface.50 остаётся светлым (zinc.50), из‑за этого «тёмная тема» не меняла фон.
-   * --p-content-background следует colorScheme (light: почти белый, dark: surface.900).
+   * Do not use --p-surface-50 for app background: in Aura dark, surface-50 stays light.
+   * --p-content-background follows color scheme (light vs dark).
    */
-  background: var(--p-content-background, #f8fafc);
+  background: var(--color-bg);
 }
 body {
   margin: 0;
@@ -26,15 +26,15 @@ body {
     Roboto,
     Arial,
     sans-serif;
-  background: var(--p-content-background, #f8fafc);
-  color: var(--p-text-color, #0f172a);
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 h1.page-title {
   margin: 0 0 1rem;
   font-size: 1.35rem;
   font-weight: 600;
-  color: var(--p-text-color, #0f172a);
+  color: var(--color-text);
 }
 
 .page-head {
