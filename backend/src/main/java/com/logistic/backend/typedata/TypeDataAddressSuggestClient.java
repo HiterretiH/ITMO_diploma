@@ -1,6 +1,8 @@
 package com.logistic.backend.typedata;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import org.springframework.web.client.RestClientException;
 public class TypeDataAddressSuggestClient {
 
     private final TypedataProperties typedataProperties;
+    private final ObjectMapper objectMapper;
     private final RestClient restClient = RestClient.create();
 
     public List<String> fetchSuggestions(String query) {
@@ -29,7 +32,7 @@ public class TypeDataAddressSuggestClient {
         }
         String q = query.strip();
         try {
-            JsonNode root =
+            String json =
                     restClient
                             .post()
                             .uri(typedataProperties.getApiUrl())
@@ -40,8 +43,12 @@ public class TypeDataAddressSuggestClient {
                                     "Token " + typedataProperties.getToken().strip())
                             .body(Map.of("query", q))
                             .retrieve()
-                            .body(JsonNode.class);
-            if (root == null || !root.has("suggestions") || !root.get("suggestions").isArray()) {
+                            .body(String.class);
+            if (json == null || json.isBlank()) {
+                return List.of();
+            }
+            JsonNode root = objectMapper.readTree(json);
+            if (!root.has("suggestions") || !root.get("suggestions").isArray()) {
                 return List.of();
             }
             List<String> out = new ArrayList<>();
@@ -54,7 +61,7 @@ public class TypeDataAddressSuggestClient {
                 }
             }
             return out;
-        } catch (RestClientException ex) {
+        } catch (RestClientException | JsonProcessingException ex) {
             log.warn("TypeData suggest request failed: {}", ex.getMessage());
             return List.of();
         }
