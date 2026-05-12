@@ -120,7 +120,11 @@
         <th>Дата</th>
         <th>Заказчик</th>
         @if (listTab() === 'active') {
-          <th class="col-actions" scope="col">Действия</th>
+          <th
+            class="col-actions"
+            scope="col"
+            aria-label="Row actions"
+          ></th>
         }
       </tr>
     </ng-template>

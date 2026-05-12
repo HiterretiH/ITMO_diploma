@@ -141,11 +141,6 @@
   text-align: end;
 }
 
-:host ::ng-deep .p-datatable .p-datatable-thead > tr > th.col-actions {
-  background: var(--color-bg);
-  text-align: end;
-}
-
 .click-row {
   cursor: pointer;
 }
