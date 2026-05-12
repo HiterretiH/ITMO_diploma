@@ -29,8 +29,11 @@
     />
 
     <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveDraft()">
-      <section class="block" aria-labelledby="sec-customer">
-        <h2 id="sec-customer" class="block-heading">Заказчик и исполнитель</h2>
+      <section class="block catalog-block" aria-labelledby="sec-customer">
+        <h2 id="sec-customer" class="block-heading">
+          <i class="pi pi-users" aria-hidden="true"></i>
+          Заказчик и исполнитель
+        </h2>
         <app-trip-form-field
           [control]="form.controls.customerId"
           label="Заказчик"
@@ -55,7 +58,7 @@
               fieldAriaDescribedBy('trip-err-customerId', form.controls.customerId)
             "
           />
-          <div class="trip-field-actions catalog-row-actions">
+          <div class="field-actions catalog-row-actions trip-field-actions">
             <p-button
               type="button"
               label="Добавить…"
@@ -64,14 +67,21 @@
               size="small"
               (onClick)="catalogDialogs.openCustomerCreate()"
             />
-            <p-button
-              type="button"
-              label="Изменить"
-              [text]="true"
-              styleClass="p-0"
-              [disabled]="!customerSelected()"
-              (onClick)="catalogDialogs.openCustomerEdit(customers)"
-            />
+            <span
+              pTooltip="Сначала выберите заказчика в списке"
+              tooltipPosition="top"
+              [tooltipDisabled]="customerSelected()"
+            >
+              <p-button
+                type="button"
+                label="Изменить"
+                [text]="true"
+                styleClass="p-0"
+                icon="pi pi-pencil"
+                [disabled]="!customerSelected()"
+                (onClick)="catalogDialogs.openCustomerEdit(customers)"
+              />
+            </span>
           </div>
         </app-trip-form-field>
         <app-trip-form-field
@@ -98,7 +108,7 @@
               fieldAriaDescribedBy('trip-err-performerId', form.controls.performerId)
             "
           />
-          <div class="trip-field-actions catalog-row-actions">
+          <div class="field-actions catalog-row-actions trip-field-actions">
             <p-button
               type="button"
               label="Добавить…"
@@ -107,22 +117,32 @@
               size="small"
               (onClick)="catalogDialogs.openPerformerCreate()"
             />
-            <p-button
-              type="button"
-              label="Изменить"
-              [text]="true"
-              styleClass="p-0"
-              [disabled]="!performerSelected()"
-              (onClick)="catalogDialogs.openPerformerEdit(performers)"
-            />
+            <span
+              pTooltip="Сначала выберите исполнителя в списке"
+              tooltipPosition="top"
+              [tooltipDisabled]="performerSelected()"
+            >
+              <p-button
+                type="button"
+                label="Изменить"
+                [text]="true"
+                styleClass="p-0"
+                icon="pi pi-pencil"
+                [disabled]="!performerSelected()"
+                (onClick)="catalogDialogs.openPerformerEdit(performers)"
+              />
+            </span>
           </div>
         </app-trip-form-field>
       </section>
 
       <p-divider />
 
-      <section class="block" aria-labelledby="sec-performer">
-        <h2 id="sec-performer" class="block-heading">Транспорт</h2>
+      <section class="block catalog-block" aria-labelledby="sec-performer">
+        <h2 id="sec-performer" class="block-heading">
+          <i class="pi pi-truck" aria-hidden="true"></i>
+          Транспорт
+        </h2>
         <div class="grid-2">
           <app-trip-form-field
             [control]="form.controls.driverId"
@@ -148,7 +168,7 @@
                 fieldAriaDescribedBy('trip-err-driverId', form.controls.driverId)
               "
             />
-            <div class="trip-field-actions catalog-row-actions">
+            <div class="field-actions catalog-row-actions trip-field-actions">
               <p-button
                 type="button"
                 label="Добавить…"
@@ -157,14 +177,21 @@
                 size="small"
                 (onClick)="catalogDialogs.openDriverCreate()"
               />
-              <p-button
-                type="button"
-                label="Изменить"
-                [text]="true"
-                styleClass="p-0"
-                [disabled]="!driverSelected()"
-                (onClick)="catalogDialogs.openDriverEdit(drivers)"
-              />
+              <span
+                pTooltip="Сначала выберите водителя в списке"
+                tooltipPosition="top"
+                [tooltipDisabled]="driverSelected()"
+              >
+                <p-button
+                  type="button"
+                  label="Изменить"
+                  [text]="true"
+                  styleClass="p-0"
+                  icon="pi pi-pencil"
+                  [disabled]="!driverSelected()"
+                  (onClick)="catalogDialogs.openDriverEdit(drivers)"
+                />
+              </span>
             </div>
           </app-trip-form-field>
           <app-trip-form-field
@@ -191,7 +218,7 @@
                 fieldAriaDescribedBy('trip-err-vehicleId', form.controls.vehicleId)
               "
             />
-            <div class="trip-field-actions catalog-row-actions">
+            <div class="field-actions catalog-row-actions trip-field-actions">
               <p-button
                 type="button"
                 label="Добавить…"
@@ -200,14 +227,21 @@
                 size="small"
                 (onClick)="catalogDialogs.openVehicleCreate()"
               />
-              <p-button
-                type="button"
-                label="Изменить"
-                [text]="true"
-                styleClass="p-0"
-                [disabled]="!vehicleSelected()"
-                (onClick)="catalogDialogs.openVehicleEdit(vehicles)"
-              />
+              <span
+                pTooltip="Сначала выберите транспорт в списке"
+                tooltipPosition="top"
+                [tooltipDisabled]="vehicleSelected()"
+              >
+                <p-button
+                  type="button"
+                  label="Изменить"
+                  [text]="true"
+                  styleClass="p-0"
+                  icon="pi pi-pencil"
+                  [disabled]="!vehicleSelected()"
+                  (onClick)="catalogDialogs.openVehicleEdit(vehicles)"
+                />
+              </span>
             </div>
           </app-trip-form-field>
         </div>

@@ -44,6 +44,14 @@
   margin-bottom: 1rem;
 }
 
+:host ::ng-deep .msg-banner.p-message,
+:host ::ng-deep .msg-banner.p-message.p-message-error {
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius-md, var(--p-border-radius));
+  border: none !important;
+  box-shadow: 0 2px 8px rgb(239 68 68 / 0.15);
+}
+
 .trip-new-form {
   display: flex;
   flex-direction: column;
@@ -52,6 +60,23 @@
 
 .block {
   padding: 1.25rem 0;
+}
+
+.catalog-block {
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, var(--p-border-radius));
+  box-shadow: var(--shadow-sm);
+}
+
+.catalog-block .block-heading::before {
+  display: none;
+}
+
+.catalog-block .block-heading {
+  gap: 0.5rem;
 }
 
 .block-heading {
@@ -100,18 +125,25 @@
   color: var(--color-text);
 }
 
-.catalog-row-actions {
+.catalog-row-actions,
+.field-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm) 0.75rem;
   align-items: center;
-  margin-top: var(--space-sm);
+  margin-top: var(--space-md);
 }
 
-:host ::ng-deep .catalog-row-actions .p-button {
+:host ::ng-deep .catalog-row-actions .p-button,
+:host ::ng-deep .field-actions .p-button {
   font-size: 0.85rem;
   padding: 0.4rem 0.8rem;
   border-radius: 0.5rem;
+}
+
+:host ::ng-deep .trip-new-form > p-divider {
+  margin: 0.25rem 0;
+  opacity: 0.35;
 }
 
 .grid-2 {

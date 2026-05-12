@@ -19,6 +19,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { Message } from 'primeng/message';
+import { Tooltip } from 'primeng/tooltip';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import {
   CustomerResponse,
@@ -54,6 +55,7 @@ import { TripFormFieldComponent } from '../../shared/trip-form-field/trip-form-f
     InputTextarea,
     Button,
     Message,
+    Tooltip,
     OrderCatalogDialogsComponent,
     TripFormFieldComponent,
   ],
