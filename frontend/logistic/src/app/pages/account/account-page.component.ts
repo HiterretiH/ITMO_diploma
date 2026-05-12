@@ -15,6 +15,10 @@ import { Message } from 'primeng/message';
 import { Password } from 'primeng/password';
 import { MeApiService } from '../../core/me-api.service';
 import { Role, UserResponse } from '../../core/user.models';
+import {
+  currentPasswordRequiredMessage,
+  newPasswordApiErrorMessage,
+} from '../../shared/forms/password-api-messages';
 
 const passwordChangeMatchValidator: ValidatorFn = (
   group: AbstractControl,
@@ -77,6 +81,24 @@ export class AccountPageComponent implements OnInit {
 
   rolesLine(roles: Role[]): string {
     return roles.map((r) => this.roleLabel(r)).join(', ');
+  }
+
+  currentPasswordError(): string | null {
+    return currentPasswordRequiredMessage(
+      this.passwordForm.controls.currentPassword,
+    );
+  }
+
+  newPasswordError(): string | null {
+    return newPasswordApiErrorMessage(this.passwordForm.controls.newPassword);
+  }
+
+  newPasswordConfirmRequired(): string | null {
+    const c = this.passwordForm.controls.newPasswordConfirm;
+    if (!c.touched || !c.errors?.['required']) {
+      return null;
+    }
+    return 'Подтвердите новый пароль';
   }
 
   submitPassword(): void {

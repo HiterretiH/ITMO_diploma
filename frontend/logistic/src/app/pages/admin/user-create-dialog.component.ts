@@ -12,6 +12,7 @@ import { Password } from 'primeng/password';
 import { InputText } from 'primeng/inputtext';
 import { AdminApiService } from '../../core/admin-api.service';
 import { Role } from '../../core/user.models';
+import { newPasswordApiErrorMessage } from '../../shared/forms/password-api-messages';
 
 @Component({
   selector: 'app-user-create-dialog',
@@ -37,14 +38,42 @@ export class UserCreateDialogComponent {
 
   saving = false;
 
+  usernameError(): string | null {
+    const c = this.form.controls.username;
+    if (!c.touched || !c.errors) {
+      return null;
+    }
+    if (c.errors['required']) {
+      return 'Укажите логин';
+    }
+    if (c.errors['minlength']) {
+      return 'Не короче 3 символов';
+    }
+    if (c.errors['maxlength']) {
+      return 'Не длиннее 128 символов';
+    }
+    return null;
+  }
+
+  passwordError(): string | null {
+    return newPasswordApiErrorMessage(this.form.controls.password);
+  }
+
   readonly roleOptions: { label: string; value: Role }[] = [
     { label: 'Пользователь', value: 'USER' },
     { label: 'Администратор', value: 'ADMIN' },
   ];
 
   readonly form = this.fb.nonNullable.group({
-    username: ['', [Validators.required, Validators.minLength(1)]],
-    password: ['', [Validators.required, Validators.minLength(1)]],
+    username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(128)]],
+    password: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.maxLength(128),
+      ],
+    ],
     roles: this.fb.nonNullable.control<Role[]>(['USER'], {
       validators: [(c) => ((c.value?.length ?? 0) > 0 ? null : { roles: true })],
     }),

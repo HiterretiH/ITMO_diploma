@@ -15,6 +15,10 @@ import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
+import {
+  newPasswordApiErrorMessage,
+  registerUsernameErrorMessage,
+} from '../../shared/forms/password-api-messages';
 
 const passwordMatchValidator: ValidatorFn = (
   group: AbstractControl,
@@ -71,6 +75,14 @@ export class RegisterComponent {
   );
 
   busy = false;
+
+  usernameError(): string | null {
+    return registerUsernameErrorMessage(this.form.controls.username);
+  }
+
+  passwordError(): string | null {
+    return newPasswordApiErrorMessage(this.form.controls.password);
+  }
 
   submit(): void {
     if (this.form.invalid || this.busy) {

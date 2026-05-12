@@ -13,8 +13,8 @@
           autocomplete="username"
           class="w-full"
         />
-        @if (form.controls.username.touched && form.controls.username.invalid) {
-          <small class="p-error">От 3 до 128 символов</small>
+        @if (usernameError()) {
+          <small class="p-error">{{ usernameError() }}</small>
         }
       </div>
       <div class="field">
@@ -29,8 +29,8 @@
           [fluid]="true"
           autocomplete="new-password"
         />
-        @if (form.controls.password.touched && form.controls.password.invalid) {
-          <small class="p-error">От 6 до 128 символов</small>
+        @if (passwordError()) {
+          <small class="p-error">{{ passwordError() }}</small>
         }
       </div>
       <div class="field">

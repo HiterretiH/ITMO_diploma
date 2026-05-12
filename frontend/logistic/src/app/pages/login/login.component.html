@@ -13,8 +13,8 @@
           autocomplete="username"
           class="w-full"
         />
-        @if (form.controls.username.touched && form.controls.username.invalid) {
-          <small class="p-error">Укажите логин</small>
+        @if (usernameError()) {
+          <small class="p-error">{{ usernameError() }}</small>
         }
       </div>
       <div class="field">
@@ -29,8 +29,8 @@
           [fluid]="true"
           autocomplete="current-password"
         />
-        @if (form.controls.password.touched && form.controls.password.invalid) {
-          <small class="p-error">Укажите пароль</small>
+        @if (passwordError()) {
+          <small class="p-error">{{ passwordError() }}</small>
         }
       </div>
       <p-button

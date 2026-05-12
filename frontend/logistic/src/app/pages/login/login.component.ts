@@ -34,11 +34,27 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
 
   readonly form = this.fb.nonNullable.group({
-    username: ['', [Validators.required, Validators.minLength(1)]],
-    password: ['', [Validators.required, Validators.minLength(1)]],
+    username: ['', Validators.required],
+    password: ['', Validators.required],
   });
 
   busy = false;
+
+  usernameError(): string | null {
+    const c = this.form.controls.username;
+    if (!c.touched || !c.errors) {
+      return null;
+    }
+    return c.errors['required'] ? 'Укажите логин' : null;
+  }
+
+  passwordError(): string | null {
+    const c = this.form.controls.password;
+    if (!c.touched || !c.errors) {
+      return null;
+    }
+    return c.errors['required'] ? 'Укажите пароль' : null;
+  }
 
   submit(): void {
     if (this.form.invalid || this.busy) {
@@ -47,7 +63,7 @@ export class LoginComponent {
     }
     const { username, password } = this.form.getRawValue();
     this.busy = true;
-    this.auth.login(username, password).subscribe({
+    this.auth.login(username.trim(), password).subscribe({
       next: () => void this.router.navigateByUrl('/orders'),
       error: () => {
         this.busy = false;

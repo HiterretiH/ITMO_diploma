@@ -33,11 +33,8 @@
               [fluid]="true"
               autocomplete="current-password"
             />
-            @if (
-              passwordForm.controls.currentPassword.touched &&
-              passwordForm.controls.currentPassword.invalid
-            ) {
-              <small class="p-error">Укажите текущий пароль</small>
+            @if (currentPasswordError()) {
+              <small class="p-error">{{ currentPasswordError() }}</small>
             }
           </div>
           <div class="field">
@@ -52,8 +49,8 @@
               [fluid]="true"
               autocomplete="new-password"
             />
-            @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.invalid) {
-              <small class="p-error">Не короче 6 символов</small>
+            @if (newPasswordError()) {
+              <small class="p-error">{{ newPasswordError() }}</small>
             }
           </div>
           <div class="field">
@@ -68,6 +65,9 @@
               [fluid]="true"
               autocomplete="new-password"
             />
+            @if (newPasswordConfirmRequired()) {
+              <small class="p-error">{{ newPasswordConfirmRequired() }}</small>
+            }
             @if (
               passwordForm.controls.newPasswordConfirm.touched &&
               passwordForm.errors?.['passwordMismatch']
