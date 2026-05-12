@@ -22,6 +22,19 @@ CREATE TABLE customers (
 
 CREATE INDEX idx_customers_owner ON customers (owner_id);
 
+CREATE TABLE customer_route_hints (
+    id BIGSERIAL PRIMARY KEY,
+    customer_id BIGINT NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
+    kind VARCHAR(16) NOT NULL,
+    place_key VARCHAR(64) NOT NULL,
+    place_text TEXT NOT NULL,
+    contact_text TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (customer_id, kind, place_key)
+);
+
+CREATE INDEX idx_route_hints_customer_kind ON customer_route_hints (customer_id, kind);
+
 CREATE TABLE performers (
     id BIGSERIAL PRIMARY KEY,
     owner_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,

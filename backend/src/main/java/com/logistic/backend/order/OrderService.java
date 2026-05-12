@@ -9,10 +9,12 @@ import com.logistic.backend.audit.AuditEventType;
 import com.logistic.backend.audit.AuditService;
 import com.logistic.backend.catalog.Customer;
 import com.logistic.backend.catalog.CustomerRepository;
+import com.logistic.backend.catalog.CustomerRouteHintService;
 import com.logistic.backend.catalog.Driver;
 import com.logistic.backend.catalog.DriverRepository;
 import com.logistic.backend.catalog.Performer;
 import com.logistic.backend.catalog.PerformerRepository;
+import com.logistic.backend.catalog.RouteHintKind;
 import com.logistic.backend.catalog.Vehicle;
 import com.logistic.backend.catalog.VehicleRepository;
 import com.logistic.backend.document.DocumentGenerationService;
@@ -48,6 +50,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
+    private final CustomerRouteHintService customerRouteHintService;
     private final PerformerRepository performerRepository;
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
@@ -89,6 +92,7 @@ public class OrderService {
         apply(o, req.toUpdateMask(), actor);
         syncOrderOwner(o);
         orderRepository.save(o);
+        recordRouteHints(o);
         upsertUserTripDefaults(actor, o);
         auditService.record(
                 actor, o, AuditEventType.ORDER_CREATED, Map.of("orderId", o.getId().toString()));
@@ -107,6 +111,7 @@ public class OrderService {
         apply(o, req, actor);
         syncOrderOwner(o);
         orderRepository.save(o);
+        recordRouteHints(o);
         upsertUserTripDefaults(actor, o);
         auditService.record(
                 actor, o, AuditEventType.ORDER_UPDATED, Map.of("orderId", o.getId().toString()));
@@ -273,6 +278,13 @@ public class OrderService {
         if (req.totalPrice() != null) {
             o.setTotalPrice(req.totalPrice());
         }
+    }
+
+    private void recordRouteHints(Order o) {
+        customerRouteHintService.upsertFromOrder(
+                o.getCustomer(), RouteHintKind.LOAD, o.getLoadingPlace(), o.getLoadingContact());
+        customerRouteHintService.upsertFromOrder(
+                o.getCustomer(), RouteHintKind.UNLOAD, o.getUnloadingPlace(), o.getUnloadingContact());
     }
 
     private void syncOrderOwner(Order o) {

@@ -314,6 +314,46 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /api/v1/customers/{id}/route-hints:
+    get:
+      tags: [Customers]
+      summary: List route address/contact hints for a customer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: kind
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [LOAD, UNLOAD]
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional substring filter on place text
+      responses:
+        '200':
+          description: Hints for the given kind
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerRouteHintResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/v1/performers:
     get:
       tags: [Performers]
@@ -1159,6 +1199,18 @@ components:
           type: string
           nullable: true
         requisites:
+          type: string
+          nullable: true
+
+    CustomerRouteHintResponse:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [LOAD, UNLOAD]
+        place:
+          type: string
+        contact:
           type: string
           nullable: true
 
