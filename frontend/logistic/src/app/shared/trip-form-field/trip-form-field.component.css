@@ -1,6 +1,6 @@
 :host {
   display: block;
-  margin-bottom: 0.85rem;
+  margin-bottom: var(--space-xl, 0.85rem);
 }
 
 :host(:last-child) {
@@ -14,5 +14,5 @@
 .trip-form-field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-sm, 0.35rem);
 }

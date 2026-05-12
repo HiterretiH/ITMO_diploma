@@ -1,7 +1,16 @@
+:host {
+  --space-xs: 0.25rem;
+  --space-sm: 0.35rem;
+  --space-md: 0.5rem;
+  --space-lg: 0.65rem;
+  --space-xl: 0.85rem;
+  --radius: var(--p-border-radius);
+}
+
 .trip-new-wrap {
   max-width: 52rem;
   margin: 0 auto;
-  padding: 0.25rem 0 2.5rem;
+  padding: var(--space-xs) 0 2.5rem;
 }
 
 .trip-new-wrap .page-head {
@@ -9,7 +18,7 @@
 }
 
 :host ::ng-deep .trip-new-wrap .p-card-body {
-  padding-top: 0.25rem;
+  padding-top: var(--space-xs);
 }
 
 .msg-banner {
@@ -23,30 +32,30 @@
 }
 
 .block {
-  padding: 0.35rem 0 1rem;
+  padding: var(--space-sm) 0 1rem;
 }
 
 .block-heading {
-  margin: 0 0 0.65rem;
+  margin: 0 0 var(--space-lg);
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color);
 }
 
 .block-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0.35rem 0 0;
+  gap: var(--space-md);
+  margin: var(--space-sm) 0 0;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.85rem;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
 }
 
 .field:last-child {
@@ -56,9 +65,9 @@
 .catalog-row-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.75rem;
+  gap: var(--space-sm) 0.75rem;
   align-items: center;
-  margin-top: 0.35rem;
+  margin-top: var(--space-sm);
 }
 
 label {
@@ -80,10 +89,10 @@ label {
 
 .route-point {
   margin-bottom: 1.15rem;
-  padding: 0.85rem 1rem;
-  border-radius: var(--p-border-radius, 6px);
-  background: var(--p-content-background, #f8fafc);
-  border: 1px solid var(--p-content-border-color, #e2e8f0);
+  padding: var(--space-xl) 1rem;
+  border-radius: var(--radius);
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
 }
 
 .route-point:last-of-type {
@@ -92,10 +101,10 @@ label {
 
 .route-label {
   display: block;
-  margin-bottom: 0.65rem;
+  margin-bottom: var(--space-lg);
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--p-primary-color, #3b82f6);
+  color: var(--p-primary-color);
 }
 
 .grid-money {
@@ -116,9 +125,9 @@ label {
 }
 
 .field-hint {
-  margin: 0.25rem 0 0;
+  margin: var(--space-xs) 0 0;
   font-size: 0.82rem;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color);
   line-height: 1.4;
 }
 
@@ -127,7 +136,7 @@ label {
   flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.65rem;
+  gap: var(--space-lg);
   margin-top: 1.25rem;
   padding-top: 1rem;
 }
@@ -139,23 +148,23 @@ label {
 /* Keep textual hints (small.p-error); avoid loud red outlines on touched invalid controls */
 :host ::ng-deep .trip-new-form input.ng-invalid.ng-touched,
 :host ::ng-deep .trip-new-form textarea.ng-invalid.ng-touched {
-  border-color: var(--p-input-border-color, #cbd5e1);
+  border-color: var(--p-input-border-color);
   box-shadow: none;
 }
 
 :host ::ng-deep .trip-new-form p-dropdown.ng-invalid.ng-touched .p-dropdown,
 :host ::ng-deep .trip-new-form p-dropdown.ng-invalid.ng-touched .p-select {
-  border-color: var(--p-input-border-color, #cbd5e1);
+  border-color: var(--p-input-border-color);
   box-shadow: none;
 }
 
 :host ::ng-deep .trip-new-form p-datepicker.ng-invalid.ng-touched .p-datepicker-input,
 :host ::ng-deep .trip-new-form p-datepicker.ng-invalid.ng-touched .p-inputtext {
-  border-color: var(--p-input-border-color, #cbd5e1);
+  border-color: var(--p-input-border-color);
   box-shadow: none;
 }
 
 :host ::ng-deep .trip-new-form p-inputnumber.ng-invalid.ng-touched .p-inputnumber-input {
-  border-color: var(--p-input-border-color, #cbd5e1);
+  border-color: var(--p-input-border-color);
   box-shadow: none;
 }

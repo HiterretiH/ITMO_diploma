@@ -1,18 +1,28 @@
+:host {
+  --space-xs: 0.25rem;
+  --space-sm: 0.35rem;
+  --space-md: 0.5rem;
+  --space-lg: 0.65rem;
+  --space-xl: 0.85rem;
+  --radius: var(--p-border-radius);
+  --empty-state-icon-size: 2rem;
+}
+
 .head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.85rem 1.25rem;
+  gap: var(--space-xl) 1.25rem;
   margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--p-content-border-color, #e2e8f0);
+  padding-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--p-content-border-color);
 }
 
 .done-toolbar {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: var(--space-lg);
   margin-bottom: 1rem;
 }
 
@@ -26,13 +36,13 @@
 .filter-field {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-xs);
   min-width: 0;
 }
 
 .filter-label {
   font-size: 0.8rem;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color);
 }
 
 :host ::ng-deep .done-dropdown {
@@ -48,7 +58,7 @@
 .tab-desc {
   margin: 0 0 0.75rem;
   font-size: 0.95rem;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color);
 }
 
 .col-actions {
@@ -62,11 +72,11 @@
 }
 
 .click-row:hover {
-  background: color-mix(in srgb, var(--p-highlight-background, #e3f2fd) 40%, transparent);
+  background: color-mix(in srgb, var(--p-highlight-background) 40%, transparent);
 }
 
 .empty-state {
-  padding: 1.5rem 1rem;
+  padding: 1.5rem var(--space-xl);
   text-align: center;
   vertical-align: middle;
 }
@@ -75,17 +85,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-md);
 }
 
 .empty-state-icon {
-  font-size: 2rem;
+  font-size: var(--empty-state-icon-size);
   opacity: 0.4;
 }
 
 .empty-state-text {
   margin: 0;
   font-size: 0.95rem;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color);
 }
-
