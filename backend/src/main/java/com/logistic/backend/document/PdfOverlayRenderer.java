@@ -2,6 +2,7 @@ package com.logistic.backend.document;
 
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.pdf.AcroFields;
+import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfFormField;
 import com.lowagie.text.pdf.PdfName;
 import com.lowagie.text.pdf.PdfNumber;
@@ -9,6 +10,7 @@ import com.lowagie.text.pdf.PdfReader;
 import com.lowagie.text.pdf.PdfStamper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +25,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class PdfOverlayRenderer {
 
+    private static final String LIBERATION_SANS_RESOURCE = "/fonts/LiberationSans-Regular.ttf";
+
     /**
      * Text fields aligned with Word multi-line SDT placeholders in generated form PDFs. Keep in sync
      * with template field names used for those placeholders.
@@ -34,11 +38,15 @@ public class PdfOverlayRenderer {
             "customer_info",
             "word_price");
 
+    private static volatile BaseFont liberationSansCache;
+
     public byte[] render(byte[] templatePdf, Map<String, String> values) throws IOException {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             PdfReader reader = new PdfReader(templatePdf);
             PdfStamper stamper = new PdfStamper(reader, out);
-            applyMultilineLeftQuadding(stamper.getAcroFields());
+            AcroFields af = stamper.getAcroFields();
+            applyEmbeddedCyrillicFont(af);
+            applyMultilineLeftQuadding(af);
             Set<String> filledByAcro = applyAcroFormValues(stamper, values);
             ensureAllNonBlankKeysApplied(filledByAcro, values);
             stamper.setFormFlattening(true);
@@ -47,6 +55,50 @@ public class PdfOverlayRenderer {
             return out.toByteArray();
         } catch (DocumentException e) {
             throw new IOException("PDF AcroForm fill failed", e);
+        }
+    }
+
+    private static BaseFont liberationSans() throws IOException, DocumentException {
+        BaseFont cached = liberationSansCache;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (PdfOverlayRenderer.class) {
+            cached = liberationSansCache;
+            if (cached != null) {
+                return cached;
+            }
+            try (InputStream in = PdfOverlayRenderer.class.getResourceAsStream(LIBERATION_SANS_RESOURCE)) {
+                if (in == null) {
+                    throw new IOException("Missing classpath resource: " + LIBERATION_SANS_RESOURCE);
+                }
+                byte[] ttf = in.readAllBytes();
+                BaseFont bf = BaseFont.createFont(
+                        "LiberationSans-Regular.ttf",
+                        BaseFont.IDENTITY_H,
+                        BaseFont.EMBEDDED,
+                        true,
+                        ttf,
+                        null,
+                        false,
+                        false);
+                liberationSansCache = bf;
+                return bf;
+            }
+        }
+    }
+
+    private static void applyEmbeddedCyrillicFont(AcroFields af) throws IOException, DocumentException {
+        if (af == null) {
+            return;
+        }
+        Map<String, AcroFields.Item> all = af.getAllFields();
+        if (all == null || all.isEmpty()) {
+            return;
+        }
+        BaseFont bf = liberationSans();
+        for (String fieldName : all.keySet()) {
+            af.setFieldProperty(fieldName, "textfont", bf, null);
         }
     }
 

@@ -37,6 +37,7 @@ class PdfOverlayRendererTest {
             assertThat(text).contains("99");
             assertThat(text).contains("3");
             assertThat(text).contains("12");
+            DocumentPdfOverlayPipelineTest.assertFlattenedPdfUsesEmbeddedLiberationAndCyrillicText(out, text);
         }
     }
 }

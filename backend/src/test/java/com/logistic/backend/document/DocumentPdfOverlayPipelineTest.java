@@ -38,12 +38,46 @@ class DocumentPdfOverlayPipelineTest {
             assertThat(acro == null || acro.getFields().isEmpty())
                     .as("flattened contract PDF must not retain interactive form fields")
                     .isTrue();
-            // PDFTextStripper is unreliable for Cyrillic after flatten (subset fonts); use stable ASCII markers.
             assertThat(text).contains("+78120000000");
             assertThat(text).contains("+79002223344");
             assertThat(text).contains("Volvo FH");
             assertThat(text).contains("98500.00");
+            assertFlattenedPdfUsesEmbeddedLiberationAndCyrillicText(pdf, text);
         }
+    }
+
+    @Test
+    void actPdfContainsRenderedCyrillicFromFixtureSnapshot() throws Exception {
+        OrderPrintSnapshot snapshot = DocumentFixtureGenerator.sampleSnapshot();
+        Map<String, String> pdfValues = PdfFormValuesBuilder.values(DocumentType.ACT_OF_WORK, snapshot);
+        byte[] tpl;
+        try (InputStream in = new ClassPathResource(PdfFormTemplateCache.CLASSPATH_DIR + "act_of_work.pdf")
+                .getInputStream()) {
+            tpl = in.readAllBytes();
+        }
+        PdfOverlayRenderer renderer = new PdfOverlayRenderer();
+        byte[] pdf = renderer.render(tpl, pdfValues);
+        assertThat(new String(pdf, 0, 5)).isEqualTo("%PDF-");
+        try (PDDocument pd = Loader.loadPDF(pdf)) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            String text = stripper.getText(pd);
+            assertThat(text).doesNotContain("{{");
+            var acro = pd.getDocumentCatalog().getAcroForm();
+            assertThat(acro == null || acro.getFields().isEmpty()).isTrue();
+            assertFlattenedPdfUsesEmbeddedLiberationAndCyrillicText(pdf, text);
+        }
+    }
+
+    static void assertFlattenedPdfUsesEmbeddedLiberationAndCyrillicText(byte[] pdf, String strippedText) {
+        assertThat(new String(pdf, java.nio.charset.StandardCharsets.ISO_8859_1))
+                .as("embedded subset should reference Liberation font")
+                .containsIgnoringCase("Liberation");
+        boolean hasCyrillic =
+                strippedText.codePoints()
+                        .anyMatch(cp -> Character.UnicodeBlock.of(cp) == Character.UnicodeBlock.CYRILLIC);
+        assertThat(hasCyrillic)
+                .as("PDFTextStripper should surface Cyrillic after form fill with embedded Unicode font")
+                .isTrue();
     }
 
     @Test
