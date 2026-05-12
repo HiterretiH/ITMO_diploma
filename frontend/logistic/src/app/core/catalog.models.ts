@@ -15,6 +15,14 @@ export interface CustomerResponse {
   requisites: string | null;
 }
 
+export type RouteHintKind = 'LOAD' | 'UNLOAD';
+
+export interface CustomerRouteHintResponse {
+  kind: RouteHintKind;
+  place: string;
+  contact: string | null;
+}
+
 export interface PerformerRequest {
   shortName: string;
   fullName?: string | null;

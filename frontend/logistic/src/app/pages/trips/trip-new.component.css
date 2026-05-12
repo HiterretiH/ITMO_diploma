@@ -195,6 +195,7 @@
 
 :host ::ng-deep .trip-new-form .p-inputtext,
 :host ::ng-deep .trip-new-form .p-inputtextarea,
+:host ::ng-deep .trip-new-form p-autocomplete .p-inputtext,
 :host ::ng-deep .trip-new-form .p-dropdown .p-inputtext,
 :host ::ng-deep .trip-new-form .p-datepicker .p-inputtext,
 :host ::ng-deep .trip-new-form .p-inputnumber .p-inputnumber-input {
@@ -209,6 +210,7 @@
 
 :host ::ng-deep .trip-new-form .p-inputtext:focus,
 :host ::ng-deep .trip-new-form .p-inputtextarea:focus,
+:host ::ng-deep .trip-new-form p-autocomplete.p-focus .p-inputtext,
 :host ::ng-deep .trip-new-form .p-dropdown.p-focus .p-inputtext,
 :host ::ng-deep .trip-new-form .p-datepicker.p-focus .p-inputtext,
 :host ::ng-deep .trip-new-form .p-inputnumber.p-focus .p-inputnumber-input {
@@ -224,7 +226,8 @@
 }
 
 :host ::ng-deep .trip-new-form input.ng-invalid.ng-touched,
-:host ::ng-deep .trip-new-form textarea.ng-invalid.ng-touched {
+:host ::ng-deep .trip-new-form textarea.ng-invalid.ng-touched,
+:host ::ng-deep .trip-new-form p-autocomplete.ng-invalid.ng-touched .p-inputtext {
   border-color: var(--p-input-border-color);
   box-shadow: none;
 }
@@ -244,6 +247,12 @@
 :host ::ng-deep .trip-new-form p-inputnumber.ng-invalid.ng-touched .p-inputnumber-input {
   border-color: var(--p-input-border-color);
   box-shadow: none;
+}
+
+:host ::ng-deep .trip-new-form p-autocomplete .trip-route-ac-input {
+  min-height: 4.5rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 768px) {

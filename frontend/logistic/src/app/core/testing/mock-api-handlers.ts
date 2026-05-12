@@ -3,10 +3,12 @@ import type { JwtResponse, LoginRequest, RegisterRequest } from '../auth.models'
 import type {
   CustomerRequest,
   CustomerResponse,
+  CustomerRouteHintResponse,
   DriverRequest,
   DriverResponse,
   PerformerRequest,
   PerformerResponse,
+  RouteHintKind,
   VehicleRequest,
   VehicleResponse,
 } from '../catalog.models';
@@ -371,6 +373,62 @@ let mockOrders: OrderResponse[] = [
 
 let nextOrderId = 9;
 
+const routeHintStore = new Map<string, CustomerRouteHintResponse[]>();
+
+function routeHintStorageKey(customerId: number, kind: RouteHintKind): string {
+  return `${customerId}:${kind}`;
+}
+
+function normalizeRouteHintPlace(place: string): string {
+  return place.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function upsertRouteHintRow(
+  customerId: number,
+  kind: RouteHintKind,
+  place: string,
+  contact: string | null | undefined,
+): void {
+  const t = place.trim();
+  if (!t) {
+    return;
+  }
+  const key = routeHintStorageKey(customerId, kind);
+  const rows = routeHintStore.get(key) ?? [];
+  const nk = normalizeRouteHintPlace(t);
+  const idx = rows.findIndex((r) => normalizeRouteHintPlace(r.place) === nk);
+  const c =
+    contact != null && String(contact).trim() ? String(contact).trim() : null;
+  const row: CustomerRouteHintResponse = { kind, place: t, contact: c };
+  const next = [...rows];
+  if (idx >= 0) {
+    next[idx] = row;
+  } else {
+    next.push(row);
+  }
+  routeHintStore.set(key, next);
+}
+
+function recordRouteHintsFromOrder(o: {
+  customerId: number;
+  loadingPlace: string;
+  loadingContact: string | null;
+  unloadingPlace: string;
+  unloadingContact: string | null;
+}): void {
+  upsertRouteHintRow(o.customerId, 'LOAD', o.loadingPlace, o.loadingContact);
+  upsertRouteHintRow(
+    o.customerId,
+    'UNLOAD',
+    o.unloadingPlace,
+    o.unloadingContact,
+  );
+}
+
+for (const o of mockOrders) {
+  recordRouteHintsFromOrder(o);
+}
+
 const ALL_DOC_TYPES = [
   'CONTRACT_APPLICATION',
   'WAYBILL',
@@ -517,6 +575,29 @@ export function handleMockApiRequest(
     return json(new HttpResponse({ status: 200, body: draft }));
   }
 
+  const routeHintsMatch =
+    /^\/api\/v1\/customers\/(\d+)\/route-hints$/.exec(pathname);
+  if (routeHintsMatch && method === 'GET') {
+    const customerId = Number(routeHintsMatch[1]);
+    const kind = searchParams.get('kind');
+    const q = (searchParams.get('q') ?? '').trim();
+    if (kind !== 'LOAD' && kind !== 'UNLOAD') {
+      return json(
+        new HttpResponse({
+          status: 400,
+          body: { title: 'Bad Request', detail: 'kind must be LOAD or UNLOAD' },
+        }),
+      );
+    }
+    const rows =
+      routeHintStore.get(routeHintStorageKey(customerId, kind)) ?? [];
+    const filtered =
+      q === ''
+        ? [...rows]
+        : rows.filter((r) => r.place.toLowerCase().includes(q.toLowerCase()));
+    return json(new HttpResponse({ status: 200, body: filtered }));
+  }
+
   if (method === 'POST' && pathname === '/api/v1/admin/users') {
     const body = req.body as UserCreateRequest;
     const created: UserResponse = {
@@ -548,6 +629,7 @@ export function handleMockApiRequest(
         performerShortName: existing.performerShortName,
       };
       mockOrders = mockOrders.map((o) => (o.id === id ? merged : o));
+      recordRouteHintsFromOrder(merged);
       return json(new HttpResponse({ status: 200, body: merged }));
     }
     if (method === 'DELETE') {
@@ -655,6 +737,7 @@ export function handleMockApiRequest(
       completed: false,
     });
     mockOrders = [...mockOrders, created];
+    recordRouteHintsFromOrder(created);
     return json(new HttpResponse({ status: 200, body: created }));
   }
 

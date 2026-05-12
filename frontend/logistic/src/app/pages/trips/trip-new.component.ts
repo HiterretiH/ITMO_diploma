@@ -10,6 +10,11 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { distinctUntilChanged, forkJoin, of } from 'rxjs';
+import {
+  AutoComplete,
+  type AutoCompleteCompleteEvent,
+  type AutoCompleteSelectEvent,
+} from 'primeng/autocomplete';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -17,12 +22,12 @@ import { Divider } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
 import { Message } from 'primeng/message';
 import { Tooltip } from 'primeng/tooltip';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import {
   CustomerResponse,
+  CustomerRouteHintResponse,
   DriverResponse,
   PerformerResponse,
   VehicleResponse,
@@ -52,7 +57,7 @@ import { TripFormFieldComponent } from '../../shared/trip-form-field/trip-form-f
     DatePickerModule,
     InputNumber,
     InputText,
-    InputTextarea,
+    AutoComplete,
     Button,
     Message,
     Tooltip,
@@ -76,6 +81,12 @@ export class TripNewComponent implements OnInit {
   performers: PerformerResponse[] = [];
   drivers: DriverResponse[] = [];
   vehicles: VehicleResponse[] = [];
+
+  loadRouteHintRows: CustomerRouteHintResponse[] = [];
+  unloadRouteHintRows: CustomerRouteHintResponse[] = [];
+  loadPlaceSuggestions: CustomerRouteHintResponse[] = [];
+  unloadPlaceSuggestions: CustomerRouteHintResponse[] = [];
+  private routeHintsLoadGeneration = 0;
 
   busy = false;
   errorMessage: string | null = null;
@@ -110,6 +121,7 @@ export class TripNewComponent implements OnInit {
     this.form.controls.customerId.valueChanges
       .pipe(distinctUntilChanged(), takeUntilDestroyed())
       .subscribe((customerId) => {
+        this.refreshRouteHints(customerId ?? null);
         if (this.editOrderId != null) {
           return;
         }
@@ -122,6 +134,97 @@ export class TripNewComponent implements OnInit {
           error: () => {},
         });
       });
+  }
+
+  private refreshRouteHints(customerId: number | null): void {
+    const gen = ++this.routeHintsLoadGeneration;
+    if (customerId == null) {
+      this.loadRouteHintRows = [];
+      this.unloadRouteHintRows = [];
+      this.loadPlaceSuggestions = [];
+      this.unloadPlaceSuggestions = [];
+      return;
+    }
+    forkJoin({
+      load: this.catalog.getCustomerRouteHints(customerId, 'LOAD'),
+      unload: this.catalog.getCustomerRouteHints(customerId, 'UNLOAD'),
+    }).subscribe({
+      next: ({ load, unload }) => {
+        if (gen !== this.routeHintsLoadGeneration) {
+          return;
+        }
+        this.loadRouteHintRows = load;
+        this.unloadRouteHintRows = unload;
+      },
+      error: () => {
+        if (gen !== this.routeHintsLoadGeneration) {
+          return;
+        }
+        this.loadRouteHintRows = [];
+        this.unloadRouteHintRows = [];
+      },
+    });
+  }
+
+  completeLoadPlaces(event: AutoCompleteCompleteEvent): void {
+    const q = (event.query ?? '').trim().toLowerCase();
+    this.loadPlaceSuggestions = this.filterHintRows(this.loadRouteHintRows, q);
+  }
+
+  completeUnloadPlaces(event: AutoCompleteCompleteEvent): void {
+    const q = (event.query ?? '').trim().toLowerCase();
+    this.unloadPlaceSuggestions = this.filterHintRows(
+      this.unloadRouteHintRows,
+      q,
+    );
+  }
+
+  private filterHintRows(
+    rows: CustomerRouteHintResponse[],
+    q: string,
+  ): CustomerRouteHintResponse[] {
+    if (!q) {
+      return [...rows];
+    }
+    return rows.filter((r) => r.place.toLowerCase().includes(q));
+  }
+
+  onLoadPlaceSelected(event: AutoCompleteSelectEvent): void {
+    const place = this.hintPlaceFromSelectValue(event.value);
+    if (!place) {
+      return;
+    }
+    const row = this.loadRouteHintRows.find((r) => r.place === place);
+    if (row) {
+      this.form.patchValue({ loadingContact: row.contact ?? '' });
+    }
+  }
+
+  onUnloadPlaceSelected(event: AutoCompleteSelectEvent): void {
+    const place = this.hintPlaceFromSelectValue(event.value);
+    if (!place) {
+      return;
+    }
+    const row = this.unloadRouteHintRows.find((r) => r.place === place);
+    if (row) {
+      this.form.patchValue({ unloadingContact: row.contact ?? '' });
+    }
+  }
+
+  private hintPlaceFromSelectValue(value: unknown): string | null {
+    if (typeof value === 'string' && value.trim()) {
+      return value;
+    }
+    if (
+      value &&
+      typeof value === 'object' &&
+      'place' in value &&
+      typeof (value as { place: unknown }).place === 'string'
+    ) {
+      const p = (value as { place: string }).place.trim();
+      return p || null;
+    }
+    return null;
   }
 
   private applyTotalFromRateAndLegs(): void {
@@ -189,6 +292,7 @@ export class TripNewComponent implements OnInit {
       });
       this.applyTripDraft(payload.draft);
     }
+    this.refreshRouteHints(this.form.getRawValue().customerId ?? null);
   }
 
   private patchOrderIntoForm(o: OrderResponse): void {
@@ -274,6 +378,7 @@ export class TripNewComponent implements OnInit {
         this.performers = performers;
         this.drivers = drivers;
         this.vehicles = vehicles;
+        this.refreshRouteHints(this.form.getRawValue().customerId ?? null);
       },
       error: () => {
         this.errorMessage =

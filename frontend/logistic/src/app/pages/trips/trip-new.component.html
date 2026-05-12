@@ -257,16 +257,27 @@
           htmlFor="loadPl"
           errorDomId="trip-err-loadingPlace"
         >
-          <textarea
-            pInputTextarea
-            id="loadPl"
+          <p-autoComplete
+            inputId="loadPl"
             formControlName="loadingPlace"
-            rows="3"
-            class="w-full"
+            [suggestions]="loadPlaceSuggestions"
+            (completeMethod)="completeLoadPlaces($event)"
+            optionLabel="place"
+            optionValue="place"
+            [forceSelection]="false"
+            [dropdown]="true"
+            [minLength]="0"
+            [showClear]="true"
+            appendTo="body"
+            [fluid]="true"
+            styleClass="w-full"
+            inputStyleClass="trip-route-ac-input"
+            emptyMessage="Нет сохраненных адресов"
+            (onSelect)="onLoadPlaceSelected($event)"
             [attr.aria-describedby]="
               fieldAriaDescribedBy('trip-err-loadingPlace', form.controls.loadingPlace)
             "
-          ></textarea>
+          />
         </app-trip-form-field>
         <div class="field">
           <label for="loadCt">Контакт на погрузке</label>
@@ -278,16 +289,27 @@
           htmlFor="unlPl"
           errorDomId="trip-err-unloadingPlace"
         >
-          <textarea
-            pInputTextarea
-            id="unlPl"
+          <p-autoComplete
+            inputId="unlPl"
             formControlName="unloadingPlace"
-            rows="3"
-            class="w-full"
+            [suggestions]="unloadPlaceSuggestions"
+            (completeMethod)="completeUnloadPlaces($event)"
+            optionLabel="place"
+            optionValue="place"
+            [forceSelection]="false"
+            [dropdown]="true"
+            [minLength]="0"
+            [showClear]="true"
+            appendTo="body"
+            [fluid]="true"
+            styleClass="w-full"
+            inputStyleClass="trip-route-ac-input"
+            emptyMessage="Нет сохраненных адресов"
+            (onSelect)="onUnloadPlaceSelected($event)"
             [attr.aria-describedby]="
               fieldAriaDescribedBy('trip-err-unloadingPlace', form.controls.unloadingPlace)
             "
-          ></textarea>
+          />
         </app-trip-form-field>
         <div class="field">
           <label for="unlCt">Контакт на выгрузке</label>

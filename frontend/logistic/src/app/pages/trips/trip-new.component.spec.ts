@@ -72,6 +72,7 @@ describe('TripNewComponent', () => {
             listPerformers: () => of([]),
             listDrivers: () => of([]),
             listVehicles: () => of([]),
+            getCustomerRouteHints: () => of([]),
           },
         },
       ],
