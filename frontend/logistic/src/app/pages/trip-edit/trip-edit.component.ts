@@ -7,6 +7,7 @@ import { concatMap, delay, finalize, tap } from 'rxjs/operators';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
+import { ProgressSpinner } from 'primeng/progressspinner';
 import { TableModule } from 'primeng/table';
 import { localizeProblemToast } from '../../core/error-messages';
 import { OrderApiService } from '../../core/order-api.service';
@@ -28,6 +29,7 @@ import { orderReadyForBackendComplete } from '../../shared/order-ui';
     CommonModule,
     Button,
     Message,
+    ProgressSpinner,
     TableModule,
     OrderStatusBadgeComponent,
   ],

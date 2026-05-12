@@ -1,5 +1,12 @@
 @if (busy && !order) {
-  <p>Загрузка…</p>
+  <div class="loading-overlay" aria-live="polite">
+    <p-progressSpinner
+      strokeWidth="4"
+      styleClass="trip-edit-loading-spinner"
+      ariaLabel="Loading"
+    />
+    <span class="loading-text">Загрузка данных…</span>
+  </div>
 }
 
 @if (order) {
