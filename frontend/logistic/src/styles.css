@@ -31,10 +31,50 @@ body {
 }
 
 h1.page-title {
-  margin: 0 0 1rem;
-  font-size: 1.35rem;
-  font-weight: 600;
+  margin: 0 0 var(--space-6);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.25;
   color: var(--color-text);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 1rem;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.text-body {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+.text-caption {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
 }
 
 .page-head {
@@ -42,8 +82,8 @@ h1.page-title {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem 1.25rem;
-  margin-bottom: 1.25rem;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .page-head .page-title {

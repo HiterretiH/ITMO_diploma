@@ -20,9 +20,7 @@
 }
 
 .page-subtitle {
-  margin: 0.25rem 0 0;
-  font-size: 0.9rem;
-  color: var(--p-text-muted-color);
+  margin: var(--space-1) 0 0;
 }
 
 :host ::ng-deep .primary-action.p-button {

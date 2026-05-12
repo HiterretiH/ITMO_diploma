@@ -17,13 +17,6 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.trip-new-wrap .page-title {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
 :host ::ng-deep .trip-new-wrap .p-card {
   border: none;
   border-radius: 1.25rem;
@@ -66,33 +59,12 @@
   box-shadow: var(--shadow-sm);
 }
 
-.catalog-block .block-heading::before {
+.catalog-block .section-title::before {
   display: none;
 }
 
-.catalog-block .block-heading {
+.catalog-block .section-title {
   gap: 0.5rem;
-}
-
-.block-heading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0 0 1.25rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-}
-
-.block-heading::before {
-  content: '';
-  width: 3px;
-  height: 1rem;
-  flex-shrink: 0;
-  border-radius: 2px;
-  background: var(--color-primary);
 }
 
 .block-actions {
@@ -113,9 +85,8 @@
   margin-bottom: 0;
 }
 
-.field label,
 :host ::ng-deep app-trip-form-field .field label {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text);
 }
@@ -298,7 +269,7 @@
 }
 
 @media (max-width: 480px) {
-  .trip-new-wrap .page-title {
+  .trip-new-wrap h1.page-title {
     font-size: 1.35rem;
   }
 }
