@@ -249,12 +249,6 @@
   box-shadow: none;
 }
 
-:host ::ng-deep .trip-new-form p-autocomplete .trip-route-ac-input {
-  min-height: 4.5rem;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
 @media (max-width: 768px) {
   .trip-new-wrap .page-head {
     flex-direction: column;
