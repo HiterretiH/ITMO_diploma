@@ -79,10 +79,6 @@ export class AccountPageComponent implements OnInit {
     return r === 'ADMIN' ? 'Администратор' : 'Пользователь';
   }
 
-  rolesLine(roles: Role[]): string {
-    return roles.map((r) => this.roleLabel(r)).join(', ');
-  }
-
   currentPasswordError(): string | null {
     return currentPasswordRequiredMessage(
       this.passwordForm.controls.currentPassword,

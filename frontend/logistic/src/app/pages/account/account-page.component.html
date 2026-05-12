@@ -8,12 +8,22 @@
       <p-card header="Профиль">
         <div class="profile-block">
           <div class="field-row">
-            <span class="label">Логин</span>
+            <span class="label">
+              <i class="pi pi-user field-label-icon" aria-hidden="true"></i>
+              <span class="label-text">Логин</span>
+            </span>
             <span class="value">{{ profile.username }}</span>
           </div>
           <div class="field-row">
-            <span class="label">Роли</span>
-            <span class="value roles">{{ rolesLine(profile.roles) }}</span>
+            <span class="label">
+              <i class="pi pi-shield field-label-icon" aria-hidden="true"></i>
+              <span class="label-text">Роли</span>
+            </span>
+            <span class="value roles">
+              @for (role of profile.roles; track role) {
+                <span class="role-chip">{{ roleLabel(role) }}</span>
+              }
+            </span>
           </div>
         </div>
       </p-card>
