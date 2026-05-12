@@ -5,10 +5,15 @@
 }
 
 :host ::ng-deep .shell-toolbar.p-toolbar {
-  padding: 0.6rem clamp(0.75rem, 2vw, 1.25rem);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1.5rem;
   flex-wrap: wrap;
-  row-gap: 0.35rem;
-  border-bottom: 1px solid var(--p-content-border-color, #e2e8f0);
+  row-gap: 0.5rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 :host ::ng-deep .shell-toolbar .p-toolbar-start,
@@ -23,45 +28,81 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  margin-right: 0.35rem;
-  padding-right: 0.35rem;
-  border-right: 1px solid var(--p-content-border-color, #e2e8f0);
-  border-radius: var(--p-border-radius-md, 6px);
-  color: var(--p-text-color, #0f172a);
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-right: 0.75rem;
+  padding-right: 0.75rem;
+  border-right: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
   text-decoration: none;
   align-self: center;
+  transition: var(--transition-fast);
 }
 
 .shell-home:hover {
-  background: var(--p-content-hover-background);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  transform: scale(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-home:hover {
+    transform: none;
+  }
 }
 
 .shell-home:focus-visible {
-  outline: 2px solid var(--p-primary-color);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 .shell-home .pi {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
 }
 
 .nav-link {
   text-decoration: none;
 }
 
+:host ::ng-deep a.nav-link .p-button {
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: var(--transition-fast);
+}
+
 :host ::ng-deep a.nav-link.active-link .p-button {
-  font-weight: 700;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+:host ::ng-deep a.nav-link.active-link .p-button:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+:host ::ng-deep .theme-toggle.p-button {
+  transition: transform 0.3s ease, var(--transition-fast);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host ::ng-deep .theme-toggle.p-button:hover {
+    transform: rotate(15deg);
+  }
 }
 
 .shell-main {
   flex: 1 1 auto;
-  padding: clamp(0.85rem, 2vw, 1.35rem) clamp(0.85rem, 3vw, 1.75rem);
-  max-width: 1320px;
+  min-height: calc(100vh - 4rem);
+  padding: 2rem;
+  max-width: 1440px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
+  background: var(--color-bg);
 }
 
 @media (max-width: 480px) {
