@@ -1,19 +1,37 @@
 <p-toolbar styleClass="shell-toolbar">
   <ng-template #start>
-    <a routerLink="/orders" class="brand" tabindex="0">Документооборот</a>
     <a
       routerLink="/orders"
-      routerLinkActive="active-link"
+      class="shell-home"
+      tabindex="0"
+      aria-label="К списку рейсов"
+      title="К списку рейсов"
+    >
+      <i class="pi pi-home" aria-hidden="true"></i>
+    </a>
+    <a
+      routerLink="/orders"
+      [class.active-link]="ordersListNavActive()"
       pButton
       class="nav-link"
       [text]="true"
       label="Рейсы"
     ></a>
+    <a
+      routerLink="/orders/new"
+      [class.active-link]="createTripNavActive()"
+      pButton
+      class="nav-link"
+      [text]="true"
+      label="Создать рейс"
+    ></a>
     <p-button
       type="button"
-      label="Справочники"
+      label="Каталоги"
       icon="pi pi-angle-down"
       [text]="true"
+      aria-label="Каталоги: заказчики, исполнители, водители, транспорт"
+      title="Заказчики, исполнители, водители, транспорт"
       (onClick)="catalogMenu.toggle($event)"
     />
     <p-menu #catalogMenu [popup]="true" [model]="catalogItems" appendTo="body" />

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { Button, ButtonDirective } from 'primeng/button';
 import { Menu } from 'primeng/menu';
@@ -29,6 +29,7 @@ import { UserCreateDialogComponent } from '../admin/user-create-dialog.component
 export class ShellComponent {
   readonly auth = inject(AuthService);
   readonly theme = inject(ThemeService);
+  private readonly router = inject(Router);
 
   adminUserDialogVisible = false;
 
@@ -57,5 +58,18 @@ export class ShellComponent {
 
   themeIcon(): string {
     return this.theme.cycleIcon();
+  }
+
+  ordersListNavActive(): boolean {
+    const path = this.router.url.split('?')[0];
+    if (path === '/orders') {
+      return true;
+    }
+    return /^\/orders\/\d+$/.test(path);
+  }
+
+  createTripNavActive(): boolean {
+    const path = this.router.url.split('?')[0];
+    return path === '/orders/new' || /^\/orders\/\d+\/edit$/.test(path);
   }
 }

@@ -19,21 +19,32 @@
   gap: 0.2rem 0.35rem;
 }
 
-.brand {
-  font-weight: 700;
-  margin-right: 0.5rem;
+.shell-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-right: 0.35rem;
   padding-right: 0.35rem;
   border-right: 1px solid var(--p-content-border-color, #e2e8f0);
+  border-radius: var(--p-border-radius-md, 6px);
   color: var(--p-text-color, #0f172a);
   text-decoration: none;
   align-self: center;
-  letter-spacing: -0.02em;
 }
 
-.brand:focus-visible {
+.shell-home:hover {
+  background: var(--p-content-hover-background);
+}
+
+.shell-home:focus-visible {
   outline: 2px solid var(--p-primary-color);
   outline-offset: 2px;
-  border-radius: 2px;
+}
+
+.shell-home .pi {
+  font-size: 1.1rem;
 }
 
 .nav-link {
@@ -54,7 +65,7 @@
 }
 
 @media (max-width: 480px) {
-  .brand {
+  .shell-home {
     border-right: none;
     padding-right: 0;
     margin-right: 0.35rem;
