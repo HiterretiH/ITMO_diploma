@@ -9,7 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { distinctUntilChanged, forkJoin, of } from 'rxjs';
+import { distinctUntilChanged, forkJoin, of, Subject, catchError, debounceTime, switchMap } from 'rxjs';
 import {
   AutoComplete,
   type AutoCompleteCompleteEvent,
@@ -23,11 +23,13 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
+import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import {
   CustomerResponse,
   CustomerPlaceResponse,
+  CustomerPlaceSuggestionResponse,
   DriverResponse,
   PerformerResponse,
   VehicleResponse,
@@ -61,6 +63,7 @@ import { TripFormFieldComponent } from '../../shared/trip-form-field/trip-form-f
     Button,
     Message,
     Tooltip,
+    Tag,
     OrderCatalogDialogsComponent,
     TripFormFieldComponent,
   ],
@@ -84,8 +87,10 @@ export class TripNewComponent implements OnInit {
 
   loadPlaceRows: CustomerPlaceResponse[] = [];
   unloadPlaceRows: CustomerPlaceResponse[] = [];
-  loadPlaceSuggestions: CustomerPlaceResponse[] = [];
-  unloadPlaceSuggestions: CustomerPlaceResponse[] = [];
+  loadPlaceSuggestions: CustomerPlaceSuggestionResponse[] = [];
+  unloadPlaceSuggestions: CustomerPlaceSuggestionResponse[] = [];
+  private readonly loadPlaceSuggestQuery$ = new Subject<string>();
+  private readonly unloadPlaceSuggestQuery$ = new Subject<string>();
   private customerPlacesLoadGeneration = 0;
 
   busy = false;
@@ -134,6 +139,58 @@ export class TripNewComponent implements OnInit {
           error: () => {},
         });
       });
+
+    this.loadPlaceSuggestQuery$
+      .pipe(
+        debounceTime(300),
+        switchMap((query) => {
+          const customerId = this.form.getRawValue().customerId;
+          if (customerId == null) {
+            this.loadPlaceSuggestions = [];
+            return of<CustomerPlaceSuggestionResponse[] | null>(null);
+          }
+          const q = (query ?? '').trim();
+          return this.catalog
+              .getCustomerPlaceSuggestions(
+                  customerId,
+                  'LOAD',
+                  q === '' ? undefined : q,
+              )
+              .pipe(catchError(() => of<CustomerPlaceSuggestionResponse[]>([])));
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe((list) => {
+        if (list !== null) {
+          this.loadPlaceSuggestions = list;
+        }
+      });
+
+    this.unloadPlaceSuggestQuery$
+      .pipe(
+        debounceTime(300),
+        switchMap((query) => {
+          const customerId = this.form.getRawValue().customerId;
+          if (customerId == null) {
+            this.unloadPlaceSuggestions = [];
+            return of<CustomerPlaceSuggestionResponse[] | null>(null);
+          }
+          const q = (query ?? '').trim();
+          return this.catalog
+              .getCustomerPlaceSuggestions(
+                  customerId,
+                  'UNLOAD',
+                  q === '' ? undefined : q,
+              )
+              .pipe(catchError(() => of<CustomerPlaceSuggestionResponse[]>([])));
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe((list) => {
+        if (list !== null) {
+          this.unloadPlaceSuggestions = list;
+        }
+      });
   }
 
   private refreshCustomerPlaces(customerId: number | null): void {
@@ -167,26 +224,19 @@ export class TripNewComponent implements OnInit {
   }
 
   completeLoadPlaces(event: AutoCompleteCompleteEvent): void {
-    const q = (event.query ?? '').trim().toLowerCase();
-    this.loadPlaceSuggestions = this.filterPlaceRows(this.loadPlaceRows, q);
+    this.loadPlaceSuggestQuery$.next(event.query ?? '');
   }
 
   completeUnloadPlaces(event: AutoCompleteCompleteEvent): void {
-    const q = (event.query ?? '').trim().toLowerCase();
-    this.unloadPlaceSuggestions = this.filterPlaceRows(this.unloadPlaceRows, q);
-  }
-
-  private filterPlaceRows(
-    rows: CustomerPlaceResponse[],
-    q: string,
-  ): CustomerPlaceResponse[] {
-    if (!q) {
-      return [...rows];
-    }
-    return rows.filter((r) => r.address.toLowerCase().includes(q));
+    this.unloadPlaceSuggestQuery$.next(event.query ?? '');
   }
 
   onLoadPlaceSelected(event: AutoCompleteSelectEvent): void {
+    const suggestion = this.resolveSuggestion(event.value, this.loadPlaceSuggestions);
+    if (suggestion?.source === 'HISTORY') {
+      this.form.patchValue({ loadingContact: suggestion.contact ?? '' });
+      return;
+    }
     const address = this.selectedAddressFromEvent(event.value);
     if (!address) {
       return;
@@ -198,6 +248,11 @@ export class TripNewComponent implements OnInit {
   }
 
   onUnloadPlaceSelected(event: AutoCompleteSelectEvent): void {
+    const suggestion = this.resolveSuggestion(event.value, this.unloadPlaceSuggestions);
+    if (suggestion?.source === 'HISTORY') {
+      this.form.patchValue({ unloadingContact: suggestion.contact ?? '' });
+      return;
+    }
     const address = this.selectedAddressFromEvent(event.value);
     if (!address) {
       return;
@@ -206,6 +261,27 @@ export class TripNewComponent implements OnInit {
     if (row) {
       this.form.patchValue({ unloadingContact: row.contact ?? '' });
     }
+  }
+
+  private resolveSuggestion(
+    value: unknown,
+    list: CustomerPlaceSuggestionResponse[],
+  ): CustomerPlaceSuggestionResponse | null {
+    if (
+      value &&
+      typeof value === 'object' &&
+      'source' in value &&
+      'address' in value
+    ) {
+      const o = value as CustomerPlaceSuggestionResponse;
+      const a = o.address?.trim();
+      return a ? o : null;
+    }
+    const addr = typeof value === 'string' ? value.trim() : '';
+    if (!addr) {
+      return null;
+    }
+    return list.find((s) => s.address === addr) ?? null;
   }
 
   private selectedAddressFromEvent(value: unknown): string | null {

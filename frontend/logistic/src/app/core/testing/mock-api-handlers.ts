@@ -4,6 +4,7 @@ import type {
   CustomerRequest,
   CustomerResponse,
   CustomerPlaceResponse,
+  CustomerPlaceSuggestionResponse,
   DriverRequest,
   DriverResponse,
   PerformerRequest,
@@ -615,6 +616,43 @@ export function handleMockApiRequest(
         ? [...rows]
         : rows.filter((r) => r.address.toLowerCase().includes(q.toLowerCase()));
     return json(new HttpResponse({ status: 200, body: filtered }));
+  }
+
+  const placeSuggestionsMatch =
+    /^\/api\/v1\/customers\/(\d+)\/place-suggestions$/.exec(pathname);
+  if (placeSuggestionsMatch && method === 'GET') {
+    const customerId = Number(placeSuggestionsMatch[1]);
+    const kind = searchParams.get('kind');
+    const q = (searchParams.get('q') ?? '').trim();
+    if (kind !== 'LOAD' && kind !== 'UNLOAD') {
+      return json(
+        new HttpResponse({
+          status: 400,
+          body: { title: 'Bad Request', detail: 'kind must be LOAD or UNLOAD' },
+        }),
+      );
+    }
+    const k = kind as CustomerPlaceKind;
+    const rows =
+      customerPlaceStore.get(customerPlaceStorageKey(customerId, k)) ?? [];
+    const needle = q === '' ? null : q.toLowerCase();
+    const historyRows = rows
+      .filter((r) => !needle || r.address.toLowerCase().includes(needle))
+      .slice(0, 5);
+    const historyPart: CustomerPlaceSuggestionResponse[] = historyRows.map((r) => ({
+      source: 'HISTORY',
+      kind: k,
+      address: r.address,
+      contact: r.contact,
+    }));
+    const externalPart: CustomerPlaceSuggestionResponse[] = [
+      { source: 'EXTERNAL', kind: k, address: `Mock typedata A (${k})`, contact: null },
+      { source: 'EXTERNAL', kind: k, address: `Mock typedata B (${k})`, contact: null },
+      { source: 'EXTERNAL', kind: k, address: `Mock typedata C (${k})`, contact: null },
+    ];
+    return json(
+      new HttpResponse({ status: 200, body: [...historyPart, ...externalPart] }),
+    );
   }
 
   if (method === 'POST' && pathname === '/api/v1/admin/users') {

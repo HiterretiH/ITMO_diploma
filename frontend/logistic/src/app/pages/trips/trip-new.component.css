@@ -249,6 +249,36 @@
   box-shadow: none;
 }
 
+.trip-suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.trip-suggestion-item__addr {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:host ::ng-deep .p-autocomplete-panel .trip-suggestion-item--history {
+  margin: 0 -0.35rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.375rem;
+  background: color-mix(in srgb, var(--color-border) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+}
+
+:host ::ng-deep .trip-suggestion-item__tag.p-tag {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+}
+
 @media (max-width: 768px) {
   .trip-new-wrap .page-head {
     flex-direction: column;

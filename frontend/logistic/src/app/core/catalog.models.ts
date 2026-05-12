@@ -23,6 +23,15 @@ export interface CustomerPlaceResponse {
   contact: string | null;
 }
 
+export type PlaceSuggestionSource = 'HISTORY' | 'EXTERNAL';
+
+export interface CustomerPlaceSuggestionResponse {
+  source: PlaceSuggestionSource;
+  kind: CustomerPlaceKind;
+  address: string;
+  contact: string | null;
+}
+
 export interface PerformerRequest {
   shortName: string;
   fullName?: string | null;

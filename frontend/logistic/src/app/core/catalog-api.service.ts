@@ -6,6 +6,7 @@ import {
   CustomerRequest,
   CustomerResponse,
   CustomerPlaceResponse,
+  CustomerPlaceSuggestionResponse,
   DriverRequest,
   DriverResponse,
   PerformerRequest,
@@ -52,6 +53,20 @@ export class CatalogApiService {
     }
     return this.http.get<CustomerPlaceResponse[]>(
       `${this.base}/customers/${customerId}/places?${parts.join('&')}`,
+    );
+  }
+
+  getCustomerPlaceSuggestions(
+    customerId: number,
+    kind: CustomerPlaceKind,
+    q?: string,
+  ): Observable<CustomerPlaceSuggestionResponse[]> {
+    const parts = [`kind=${encodeURIComponent(kind)}`];
+    if (q != null && q.trim() !== '') {
+      parts.push(`q=${encodeURIComponent(q.trim())}`);
+    }
+    return this.http.get<CustomerPlaceSuggestionResponse[]>(
+      `${this.base}/customers/${customerId}/place-suggestions?${parts.join('&')}`,
     );
   }
 

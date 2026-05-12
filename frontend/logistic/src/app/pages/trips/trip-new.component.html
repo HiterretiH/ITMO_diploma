@@ -271,12 +271,28 @@
             appendTo="body"
             [fluid]="true"
             styleClass="w-full"
-            emptyMessage="Нет сохраненных адресов"
+            emptyMessage="Нет подходящих адресов"
             (onSelect)="onLoadPlaceSelected($event)"
             [attr.aria-describedby]="
               fieldAriaDescribedBy('trip-err-loadingPlace', form.controls.loadingPlace)
             "
-          />
+          >
+            <ng-template pTemplate="item" let-item>
+              <div
+                class="trip-suggestion-item"
+                [class.trip-suggestion-item--history]="item.source === 'HISTORY'"
+              >
+                <span class="trip-suggestion-item__addr">{{ item.address }}</span>
+                @if (item.source === 'HISTORY') {
+                  <p-tag
+                    severity="secondary"
+                    value="Из истории"
+                    styleClass="trip-suggestion-item__tag"
+                  />
+                }
+              </div>
+            </ng-template>
+          </p-autoComplete>
         </app-trip-form-field>
         <div class="field">
           <label for="loadCt">Контакт на погрузке</label>
@@ -302,12 +318,28 @@
             appendTo="body"
             [fluid]="true"
             styleClass="w-full"
-            emptyMessage="Нет сохраненных адресов"
+            emptyMessage="Нет подходящих адресов"
             (onSelect)="onUnloadPlaceSelected($event)"
             [attr.aria-describedby]="
               fieldAriaDescribedBy('trip-err-unloadingPlace', form.controls.unloadingPlace)
             "
-          />
+          >
+            <ng-template pTemplate="item" let-item>
+              <div
+                class="trip-suggestion-item"
+                [class.trip-suggestion-item--history]="item.source === 'HISTORY'"
+              >
+                <span class="trip-suggestion-item__addr">{{ item.address }}</span>
+                @if (item.source === 'HISTORY') {
+                  <p-tag
+                    severity="secondary"
+                    value="Из истории"
+                    styleClass="trip-suggestion-item__tag"
+                  />
+                }
+              </div>
+            </ng-template>
+          </p-autoComplete>
         </app-trip-form-field>
         <div class="field">
           <label for="unlCt">Контакт на выгрузке</label>
