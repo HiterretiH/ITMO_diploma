@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
+  AbstractControl,
   FormBuilder,
   ReactiveFormsModule,
   Validators,
@@ -35,6 +36,7 @@ import {
 } from '../../core/order.models';
 import { ProblemDetail } from '../../models/problem.models';
 import { OrderCatalogDialogsComponent } from '../../shared/order-catalog-dialogs/order-catalog-dialogs.component';
+import { TripFormFieldComponent } from '../../shared/trip-form-field/trip-form-field.component';
 
 @Component({
   selector: 'app-trip-new',
@@ -53,6 +55,7 @@ import { OrderCatalogDialogsComponent } from '../../shared/order-catalog-dialogs
     Button,
     Message,
     OrderCatalogDialogsComponent,
+    TripFormFieldComponent,
   ],
   templateUrl: './trip-new.component.html',
   styleUrl: './trip-new.component.css',
@@ -275,6 +278,26 @@ export class TripNewComponent implements OnInit {
 
   vehicleSelected(): boolean {
     return this.form.getRawValue().vehicleId != null;
+  }
+
+  fieldAriaDescribedBy(errorDomId: string, c: AbstractControl): string | null {
+    return c.invalid && c.touched ? errorDomId : null;
+  }
+
+  ratePerLegErrorText(): string {
+    const c = this.form.controls.ratePerLeg;
+    return c.hasError('min')
+      ? 'Не может быть отрицательным'
+      : 'Обязательное поле';
+  }
+
+  legCountErrorText(): string {
+    const c = this.form.controls.legCount;
+    return c.hasError('min') ? 'Минимум 1' : 'Обязательное поле';
+  }
+
+  priceAmountErrorText(): string {
+    return 'Не может быть отрицательным';
   }
 
   private sortOpts<T extends { label: string }>(rows: T[]): T[] {

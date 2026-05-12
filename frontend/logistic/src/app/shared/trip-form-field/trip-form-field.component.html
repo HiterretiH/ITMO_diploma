@@ -1,0 +1,15 @@
+<div class="field trip-form-field">
+  <label [attr.for]="htmlFor()">{{ label() }}</label>
+  <div class="trip-form-field-control">
+    <ng-content />
+  </div>
+  @if (showError()) {
+    <small
+      class="p-error"
+      [id]="errorDomId()"
+      role="alert"
+      >{{ errorText() }}</small
+    >
+  }
+  <ng-content select=".trip-field-actions" />
+</div>

@@ -31,8 +31,12 @@
     <form [formGroup]="form" class="trip-new-form" (ngSubmit)="saveDraft()">
       <section class="block" aria-labelledby="sec-customer">
         <h2 id="sec-customer" class="block-heading">Заказчик и исполнитель</h2>
-        <div class="field">
-          <label for="cust">Заказчик</label>
+        <app-trip-form-field
+          [control]="form.controls.customerId"
+          label="Заказчик"
+          htmlFor="cust"
+          errorDomId="trip-err-customerId"
+        >
           <p-dropdown
             inputId="cust"
             formControlName="customerId"
@@ -47,11 +51,11 @@
             [placeholder]="customers.length ? '—' : 'Нет заказчиков'"
             appendTo="body"
             styleClass="w-full"
+            [attr.aria-describedby]="
+              fieldAriaDescribedBy('trip-err-customerId', form.controls.customerId)
+            "
           />
-          @if (form.controls.customerId.invalid && form.controls.customerId.touched) {
-            <small class="p-error">Обязательное поле</small>
-          }
-          <div class="catalog-row-actions">
+          <div class="trip-field-actions catalog-row-actions">
             <p-button
               type="button"
               label="Добавить…"
@@ -69,9 +73,13 @@
               (onClick)="catalogDialogs.openCustomerEdit(customers)"
             />
           </div>
-        </div>
-        <div class="field">
-          <label for="perf">Исполнитель</label>
+        </app-trip-form-field>
+        <app-trip-form-field
+          [control]="form.controls.performerId"
+          label="Исполнитель"
+          htmlFor="perf"
+          errorDomId="trip-err-performerId"
+        >
           <p-dropdown
             inputId="perf"
             formControlName="performerId"
@@ -86,11 +94,11 @@
             [placeholder]="performers.length ? '—' : 'Нет исполнителей'"
             appendTo="body"
             styleClass="w-full"
+            [attr.aria-describedby]="
+              fieldAriaDescribedBy('trip-err-performerId', form.controls.performerId)
+            "
           />
-          @if (form.controls.performerId.invalid && form.controls.performerId.touched) {
-            <small class="p-error">Обязательное поле</small>
-          }
-          <div class="catalog-row-actions">
+          <div class="trip-field-actions catalog-row-actions">
             <p-button
               type="button"
               label="Добавить…"
@@ -108,7 +116,7 @@
               (onClick)="catalogDialogs.openPerformerEdit(performers)"
             />
           </div>
-        </div>
+        </app-trip-form-field>
       </section>
 
       <p-divider />
@@ -116,8 +124,12 @@
       <section class="block" aria-labelledby="sec-performer">
         <h2 id="sec-performer" class="block-heading">Транспорт</h2>
         <div class="grid-2">
-          <div class="field">
-            <label for="driver">Водитель</label>
+          <app-trip-form-field
+            [control]="form.controls.driverId"
+            label="Водитель"
+            htmlFor="driver"
+            errorDomId="trip-err-driverId"
+          >
             <p-dropdown
               inputId="driver"
               formControlName="driverId"
@@ -132,8 +144,11 @@
               [placeholder]="driverOptions().length ? '—' : 'Нет водителей'"
               appendTo="body"
               styleClass="w-full"
+              [attr.aria-describedby]="
+                fieldAriaDescribedBy('trip-err-driverId', form.controls.driverId)
+              "
             />
-            <div class="catalog-row-actions">
+            <div class="trip-field-actions catalog-row-actions">
               <p-button
                 type="button"
                 label="Добавить…"
@@ -151,9 +166,13 @@
                 (onClick)="catalogDialogs.openDriverEdit(drivers)"
               />
             </div>
-          </div>
-          <div class="field">
-            <label for="vehicle">Транспорт</label>
+          </app-trip-form-field>
+          <app-trip-form-field
+            [control]="form.controls.vehicleId"
+            label="Транспорт"
+            htmlFor="vehicle"
+            errorDomId="trip-err-vehicleId"
+          >
             <p-dropdown
               inputId="vehicle"
               formControlName="vehicleId"
@@ -168,8 +187,11 @@
               [placeholder]="vehicleOptions().length ? '—' : 'Нет ТС'"
               appendTo="body"
               styleClass="w-full"
+              [attr.aria-describedby]="
+                fieldAriaDescribedBy('trip-err-vehicleId', form.controls.vehicleId)
+              "
             />
-            <div class="catalog-row-actions">
+            <div class="trip-field-actions catalog-row-actions">
               <p-button
                 type="button"
                 label="Добавить…"
@@ -187,7 +209,7 @@
                 (onClick)="catalogDialogs.openVehicleEdit(vehicles)"
               />
             </div>
-          </div>
+          </app-trip-form-field>
         </div>
       </section>
 
@@ -195,36 +217,44 @@
 
       <section class="block" aria-labelledby="sec-route">
         <h2 id="sec-route" class="block-heading">Маршрут</h2>
-        <div class="field">
-          <label for="loadPl">Погрузка (адрес)</label>
+        <app-trip-form-field
+          [control]="form.controls.loadingPlace"
+          label="Погрузка (адрес)"
+          htmlFor="loadPl"
+          errorDomId="trip-err-loadingPlace"
+        >
           <textarea
             pInputTextarea
             id="loadPl"
             formControlName="loadingPlace"
             rows="3"
             class="w-full"
+            [attr.aria-describedby]="
+              fieldAriaDescribedBy('trip-err-loadingPlace', form.controls.loadingPlace)
+            "
           ></textarea>
-          @if (form.controls.loadingPlace.invalid && form.controls.loadingPlace.touched) {
-            <small class="p-error">Обязательное поле</small>
-          }
-        </div>
+        </app-trip-form-field>
         <div class="field">
           <label for="loadCt">Контакт на погрузке</label>
           <input pInputText id="loadCt" formControlName="loadingContact" class="w-full" />
         </div>
-        <div class="field">
-          <label for="unlPl">Выгрузка (адрес)</label>
+        <app-trip-form-field
+          [control]="form.controls.unloadingPlace"
+          label="Выгрузка (адрес)"
+          htmlFor="unlPl"
+          errorDomId="trip-err-unloadingPlace"
+        >
           <textarea
             pInputTextarea
             id="unlPl"
             formControlName="unloadingPlace"
             rows="3"
             class="w-full"
+            [attr.aria-describedby]="
+              fieldAriaDescribedBy('trip-err-unloadingPlace', form.controls.unloadingPlace)
+            "
           ></textarea>
-          @if (form.controls.unloadingPlace.invalid && form.controls.unloadingPlace.touched) {
-            <small class="p-error">Обязательное поле</small>
-          }
-        </div>
+        </app-trip-form-field>
         <div class="field">
           <label for="unlCt">Контакт на выгрузке</label>
           <input pInputText id="unlCt" formControlName="unloadingContact" class="w-full" />
@@ -235,8 +265,12 @@
 
       <section class="block" aria-labelledby="sec-date">
         <h2 id="sec-date" class="block-heading">Дата и номер</h2>
-        <div class="field">
-          <label for="loadD">Дата заявки</label>
+        <app-trip-form-field
+          [control]="form.controls.orderDate"
+          label="Дата заявки"
+          htmlFor="loadD"
+          errorDomId="trip-err-orderDate"
+        >
           <p-datepicker
             inputId="loadD"
             formControlName="orderDate"
@@ -244,11 +278,11 @@
             [showIcon]="true"
             appendTo="body"
             styleClass="w-full"
+            [attr.aria-describedby]="
+              fieldAriaDescribedBy('trip-err-orderDate', form.controls.orderDate)
+            "
           />
-          @if (form.controls.orderDate.invalid && form.controls.orderDate.touched) {
-            <small class="p-error">Обязательное поле</small>
-          }
-        </div>
+        </app-trip-form-field>
         <div class="field">
           <label for="ordNumNew">Номер заявки</label>
           <p-inputNumber
@@ -267,8 +301,13 @@
       <section class="block" aria-labelledby="sec-money">
         <h2 id="sec-money" class="block-heading">Оплата</h2>
         <div class="grid-money">
-          <div class="field">
-            <label for="rate">Ставка за рейс</label>
+          <app-trip-form-field
+            [control]="form.controls.ratePerLeg"
+            label="Ставка за рейс"
+            htmlFor="rate"
+            errorDomId="trip-err-ratePerLeg"
+            [errorText]="ratePerLegErrorText()"
+          >
             <p-inputNumber
               inputId="rate"
               formControlName="ratePerLeg"
@@ -279,17 +318,18 @@
               suffix=" ₽"
               placeholder="0"
               styleClass="w-full"
+              [attr.aria-describedby]="
+                fieldAriaDescribedBy('trip-err-ratePerLeg', form.controls.ratePerLeg)
+              "
             />
-            @if (
-              form.controls.ratePerLeg.invalid &&
-              form.controls.ratePerLeg.touched &&
-              form.controls.ratePerLeg.hasError('min')
-            ) {
-              <small class="p-error">Не может быть отрицательным</small>
-            }
-          </div>
-          <div class="field">
-            <label for="legCount">Число перевозок</label>
+          </app-trip-form-field>
+          <app-trip-form-field
+            [control]="form.controls.legCount"
+            label="Число перевозок"
+            htmlFor="legCount"
+            errorDomId="trip-err-legCount"
+            [errorText]="legCountErrorText()"
+          >
             <p-inputNumber
               inputId="legCount"
               formControlName="legCount"
@@ -297,17 +337,19 @@
               [useGrouping]="false"
               placeholder="1"
               styleClass="w-full"
+              [attr.aria-describedby]="
+                fieldAriaDescribedBy('trip-err-legCount', form.controls.legCount)
+              "
             />
-            @if (form.controls.legCount.invalid && form.controls.legCount.touched) {
-              @if (form.controls.legCount.hasError('min')) {
-                <small class="p-error">Минимум 1</small>
-              } @else {
-                <small class="p-error">Обязательное поле</small>
-              }
-            }
-          </div>
-          <div class="field total-field">
-            <label for="priceAmount">Итого, ₽</label>
+          </app-trip-form-field>
+          <app-trip-form-field
+            [control]="form.controls.priceAmount"
+            label="Итого, ₽"
+            htmlFor="priceAmount"
+            errorDomId="trip-err-priceAmount"
+            [errorText]="priceAmountErrorText()"
+            class="total-field"
+          >
             <p-inputNumber
               inputId="priceAmount"
               formControlName="priceAmount"
@@ -318,15 +360,11 @@
               suffix=" ₽"
               placeholder="0"
               styleClass="w-full"
+              [attr.aria-describedby]="
+                fieldAriaDescribedBy('trip-err-priceAmount', form.controls.priceAmount)
+              "
             />
-            @if (
-              form.controls.priceAmount.invalid &&
-              form.controls.priceAmount.touched &&
-              form.controls.priceAmount.hasError('min')
-            ) {
-              <small class="p-error">Не может быть отрицательным</small>
-            }
-          </div>
+          </app-trip-form-field>
         </div>
       </section>
 
