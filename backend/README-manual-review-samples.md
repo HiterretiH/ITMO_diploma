@@ -21,7 +21,7 @@ Data source: `OrderPrintSnapshots.manualReviewDemo()` (same semantics as the Ang
 
 ## Timing baseline (committed)
 
-`./gradlew test --tests DocumentGenerationTimingReportTest` refreshes `docs/document-generation-timing-baseline.txt` with per-step nanoseconds (machine-dependent). Templates are preloaded via `DocumentTemplateCache` and `PdfFormTemplateCache`; the timed window is render/overlay only (no per-step classpath read).
+`./gradlew test --tests DocumentGenerationTimingReportTest` writes `build/reports/document-generation-timing.txt` with per-step nanoseconds (machine-dependent; not tracked in git). Templates are preloaded via `DocumentTemplateCache` and `PdfFormTemplateCache`; the timed window is render/overlay only (no per-step classpath read).
 
 ## Default when running `main` without Gradle
 

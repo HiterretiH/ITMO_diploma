@@ -28,6 +28,9 @@ docker-compose.override.yml
 # Manual document review artifacts
 backend/manual-review-docs/
 
+# Local timing report from DocumentGenerationTimingReportTest (under backend/ when tests run from backend)
+backend/docs/document-generation-timing-baseline.txt
+
 # Python
 __pycache__/
 *.py[cod]
