@@ -116,11 +116,11 @@
   >
     <ng-template pTemplate="header">
       <tr>
-        <th>№ заявки</th>
+        <th scope="col">№</th>
         <th>Дата</th>
         <th>Заказчик</th>
         @if (listTab() === 'active') {
-          <th class="col-actions"></th>
+          <th class="col-actions" scope="col">Действия</th>
         }
       </tr>
     </ng-template>
