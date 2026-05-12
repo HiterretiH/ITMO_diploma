@@ -1,0 +1,138 @@
+.guest-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.guest-page .login-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.login-wrap {
+  width: 100%;
+  max-width: 26rem;
+  margin: 0 auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .login-wrap {
+    animation: guestFadeInUp 0.4s ease-out;
+  }
+}
+
+@keyframes guestFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:host ::ng-deep .login-wrap .p-card {
+  width: 100%;
+  max-width: 26rem;
+  border: none;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  background: var(--color-surface);
+  color: #0f172a;
+}
+
+:host ::ng-deep .login-wrap .p-card .p-card-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  color: #0f172a;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.field label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.field .label-icon {
+  opacity: 0.6;
+}
+
+:host ::ng-deep .login-wrap .p-inputtext,
+:host ::ng-deep .login-wrap .p-password {
+  width: 100%;
+}
+
+:host ::ng-deep .login-wrap .p-inputtext {
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+}
+
+:host ::ng-deep .login-wrap .p-inputtext:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 15%, transparent);
+  outline: none;
+}
+
+:host ::ng-deep .login-wrap .p-button {
+  width: 100%;
+  padding: 0.875rem;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host ::ng-deep .login-wrap .p-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  :host ::ng-deep .login-wrap .p-button:active {
+    transform: translateY(0);
+  }
+}
+
+.login-extra {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.login-extra a {
+  margin-left: 0.25rem;
+  color: var(--color-primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.login-extra a:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+.w-full {
+  width: 100%;
+}

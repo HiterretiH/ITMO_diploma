@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { GuestHeaderComponent } from '../../shared/guest-header/guest-header.component';
 import { Button } from 'primeng/button';
@@ -20,6 +20,7 @@ import { Password } from 'primeng/password';
     CommonModule,
     ReactiveFormsModule,
     GuestHeaderComponent,
+    RouterLink,
     Card,
     InputText,
     Password,

@@ -2,45 +2,55 @@
   <app-guest-header [showLoginLink]="false" [showRegisterLink]="true" />
   <div class="login-wrap">
     <p-card header="Вход">
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="field">
-        <label for="login-user">Логин</label>
-        <input
-          pInputText
-          id="login-user"
-          type="text"
-          formControlName="username"
-          autocomplete="username"
-          class="w-full"
-        />
-        @if (usernameError()) {
-          <small class="p-error">{{ usernameError() }}</small>
-        }
-      </div>
-      <div class="field">
-        <label for="login-pass">Пароль</label>
-        <p-password
-          inputId="login-pass"
-          formControlName="password"
-          [feedback]="false"
-          [toggleMask]="true"
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field">
+          <label for="login-user">
+            <i class="pi pi-user label-icon" aria-hidden="true"></i>
+            Логин
+          </label>
+          <input
+            pInputText
+            id="login-user"
+            type="text"
+            formControlName="username"
+            autocomplete="username"
+            class="w-full"
+          />
+          @if (usernameError()) {
+            <small class="p-error">{{ usernameError() }}</small>
+          }
+        </div>
+        <div class="field">
+          <label for="login-pass">
+            <i class="pi pi-lock label-icon" aria-hidden="true"></i>
+            Пароль
+          </label>
+          <p-password
+            inputId="login-pass"
+            formControlName="password"
+            [feedback]="false"
+            [toggleMask]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [fluid]="true"
+            autocomplete="current-password"
+          />
+          @if (passwordError()) {
+            <small class="p-error">{{ passwordError() }}</small>
+          }
+        </div>
+        <p-button
+          type="submit"
+          label="Войти"
+          [disabled]="busy || form.invalid"
+          [loading]="busy"
           styleClass="w-full"
-          inputStyleClass="w-full"
-          [fluid]="true"
-          autocomplete="current-password"
         />
-        @if (passwordError()) {
-          <small class="p-error">{{ passwordError() }}</small>
-        }
-      </div>
-      <p-button
-        type="submit"
-        label="Войти"
-        [disabled]="busy || form.invalid"
-        [loading]="busy"
-        styleClass="w-full"
-      />
-    </form>
-  </p-card>
+        <p class="login-extra">
+          Нет аккаунта?
+          <a routerLink="/register">Регистрация</a>
+        </p>
+      </form>
+    </p-card>
   </div>
 </div>

@@ -2,70 +2,83 @@
   <app-guest-header [showLoginLink]="true" [showRegisterLink]="false" />
   <div class="login-wrap">
     <p-card header="Регистрация">
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="field">
-        <label for="reg-user">Логин</label>
-        <input
-          pInputText
-          id="reg-user"
-          type="text"
-          formControlName="username"
-          autocomplete="username"
-          class="w-full"
-        />
-        @if (usernameError()) {
-          <small class="p-error">{{ usernameError() }}</small>
-        }
-      </div>
-      <div class="field">
-        <label for="reg-pass">Пароль</label>
-        <p-password
-          inputId="reg-pass"
-          formControlName="password"
-          [feedback]="false"
-          [toggleMask]="true"
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field">
+          <label for="reg-user">
+            <i class="pi pi-user label-icon" aria-hidden="true"></i>
+            Логин
+          </label>
+          <input
+            pInputText
+            id="reg-user"
+            type="text"
+            formControlName="username"
+            autocomplete="username"
+            class="w-full"
+          />
+          @if (usernameError()) {
+            <small class="p-error">{{ usernameError() }}</small>
+          }
+        </div>
+        <div class="field">
+          <label for="reg-pass">
+            <i class="pi pi-lock label-icon" aria-hidden="true"></i>
+            Пароль
+          </label>
+          <p-password
+            inputId="reg-pass"
+            formControlName="password"
+            [feedback]="false"
+            [toggleMask]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [fluid]="true"
+            autocomplete="new-password"
+          />
+          @if (passwordError()) {
+            <small class="p-error">{{ passwordError() }}</small>
+          }
+        </div>
+        <div class="field">
+          <label for="reg-pass2">
+            <i class="pi pi-lock label-icon" aria-hidden="true"></i>
+            Повтор пароля
+          </label>
+          <p-password
+            inputId="reg-pass2"
+            formControlName="passwordConfirm"
+            [feedback]="false"
+            [toggleMask]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [fluid]="true"
+            autocomplete="new-password"
+          />
+          @if (
+            form.controls.passwordConfirm.touched &&
+            form.hasError('passwordMismatch')
+          ) {
+            <small class="p-error">Пароли не совпадают</small>
+          }
+          @if (
+            form.controls.passwordConfirm.touched &&
+            form.controls.passwordConfirm.hasError('required')
+          ) {
+            <small class="p-error">Подтвердите пароль</small>
+          }
+        </div>
+        <p-button
+          type="submit"
+          label="Зарегистрироваться"
+          [disabled]="busy || form.invalid"
+          [loading]="busy"
           styleClass="w-full"
-          inputStyleClass="w-full"
-          [fluid]="true"
-          autocomplete="new-password"
         />
-        @if (passwordError()) {
-          <small class="p-error">{{ passwordError() }}</small>
-        }
-      </div>
-      <div class="field">
-        <label for="reg-pass2">Повтор пароля</label>
-        <p-password
-          inputId="reg-pass2"
-          formControlName="passwordConfirm"
-          [feedback]="false"
-          [toggleMask]="true"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-          [fluid]="true"
-          autocomplete="new-password"
-        />
-        @if (
-          form.controls.passwordConfirm.touched &&
-          form.hasError('passwordMismatch')
-        ) {
-          <small class="p-error">Пароли не совпадают</small>
-        }
-        @if (
-          form.controls.passwordConfirm.touched &&
-          form.controls.passwordConfirm.hasError('required')
-        ) {
-          <small class="p-error">Подтвердите пароль</small>
-        }
-      </div>
-      <p-button
-        type="submit"
-        label="Зарегистрироваться"
-        [disabled]="busy || form.invalid"
-        [loading]="busy"
-        styleClass="w-full"
-      />
-    </form>
-  </p-card>
+        <p class="login-extra">
+          Уже есть аккаунт?
+          <a routerLink="/login">Вход</a>
+        </p>
+      </form>
+    </p-card>
   </div>
 </div>
