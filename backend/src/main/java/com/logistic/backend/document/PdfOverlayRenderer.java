@@ -45,7 +45,9 @@ public class PdfOverlayRenderer {
             PdfReader reader = new PdfReader(templatePdf);
             PdfStamper stamper = new PdfStamper(reader, out);
             AcroFields af = stamper.getAcroFields();
-            applyEmbeddedCyrillicFont(af);
+            BaseFont bf = liberationSans();
+            af.addSubstitutionFont(bf);
+            applyEmbeddedCyrillicFont(af, bf);
             applyMultilineLeftQuadding(af);
             Set<String> filledByAcro = applyAcroFormValues(stamper, values);
             ensureAllNonBlankKeysApplied(filledByAcro, values);
@@ -88,7 +90,7 @@ public class PdfOverlayRenderer {
         }
     }
 
-    private static void applyEmbeddedCyrillicFont(AcroFields af) throws IOException, DocumentException {
+    private static void applyEmbeddedCyrillicFont(AcroFields af, BaseFont bf) throws IOException, DocumentException {
         if (af == null) {
             return;
         }
@@ -96,7 +98,6 @@ public class PdfOverlayRenderer {
         if (all == null || all.isEmpty()) {
             return;
         }
-        BaseFont bf = liberationSans();
         for (String fieldName : all.keySet()) {
             af.setFieldProperty(fieldName, "textfont", bf, null);
         }
