@@ -425,9 +425,29 @@ function recordCustomerPlacesFromOrder(o: {
   );
 }
 
-for (const o of mockOrders) {
-  recordCustomerPlacesFromOrder(o);
+function seedDemoCustomerPlaces(): void {
+  const loadPairs: [string, string][] = [
+    ['Москва, склад, ул. Складская, 1', '+7 (495) 100-00-01, диспетчер (Москва)'],
+    [
+      'Санкт-Петербург, терминал, Кожевенная линия, 40',
+      '+7 (812) 200-00-02, диспетчер (СПб)',
+    ],
+  ];
+  const unloadPairs: [string, string][] = [
+    ['Москва, РЦ, МКАД 50 км, въезд 3', '+7 (495) 300-00-03, ответственный (Москва)'],
+    ['Санкт-Петербург, склад, ул. Загородная, 15', '+7 (812) 400-00-04, ответственный (СПб)'],
+  ];
+  for (const cust of customers) {
+    for (const [address, contact] of loadPairs) {
+      upsertCustomerPlaceRow(cust.id, 'LOAD', address, contact);
+    }
+    for (const [address, contact] of unloadPairs) {
+      upsertCustomerPlaceRow(cust.id, 'UNLOAD', address, contact);
+    }
+  }
 }
+
+seedDemoCustomerPlaces();
 
 const ALL_DOC_TYPES = [
   'CONTRACT_APPLICATION',
