@@ -1,11 +1,9 @@
 package com.logistic.backend.document;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import org.springframework.core.io.ClassPathResource;
 
 public final class DocumentFixtureGenerator {
 
@@ -19,7 +17,7 @@ public final class DocumentFixtureGenerator {
         Files.createDirectories(outDir);
 
         OrderPrintSnapshot snapshot = OrderPrintSnapshots.manualReviewDemo();
-        DocxTemplateRenderer renderer = new DocxTemplateRenderer();
+        DocumentTemplateCache docxTemplates = new DocumentTemplateCache();
         PdfFormTemplateCache pdfTemplates = new PdfFormTemplateCache();
         PdfOverlayRenderer pdfRenderer = new PdfOverlayRenderer();
         Map<String, String> docxContext = DocumentGenerationService.snapshotToContext(snapshot);
@@ -28,7 +26,7 @@ public final class DocumentFixtureGenerator {
             for (DocumentType type : DocumentType.values()) {
                 byte[] out;
                 if (ff == FileFormat.DOCX) {
-                    out = renderDocx(type, renderer, docxContext);
+                    out = renderDocx(type, docxTemplates, docxContext);
                 } else {
                     byte[] tpl = pdfTemplates.templateBytes(type);
                     out = pdfRenderer.render(tpl, PdfFormValuesBuilder.values(type, snapshot));
@@ -54,17 +52,8 @@ public final class DocumentFixtureGenerator {
     }
 
     private static byte[] renderDocx(
-            DocumentType type, DocxTemplateRenderer renderer, Map<String, String> context)
+            DocumentType type, DocumentTemplateCache docxTemplates, Map<String, String> context)
             throws IOException {
-        String templateName =
-                switch (type) {
-                    case CONTRACT_APPLICATION -> "contract_application.docx";
-                    case WAYBILL -> "waybill.docx";
-                    case ACT_OF_WORK -> "act_of_work.docx";
-                };
-        String resourcePath = "templates/documents/" + templateName;
-        try (InputStream in = new ClassPathResource(resourcePath).getInputStream()) {
-            return renderer.render(in.readAllBytes(), context);
-        }
+        return docxTemplates.compiledTemplate(type).render(context);
     }
 }

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class DocxTemplateRenderer {
 
     public byte[] render(byte[] template, Map<String, String> context) throws IOException {
-        return DocxOpcXmlSubstitution.render(template, context);
+        return DocxCompiledTemplate.compile(template).render(context);
     }
 
     public String extractText(byte[] docxBody) throws IOException {

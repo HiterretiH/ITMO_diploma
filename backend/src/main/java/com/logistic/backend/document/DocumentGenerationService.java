@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 public class DocumentGenerationService {
 
     private final DocumentTemplateCache documentTemplateCache;
-    private final DocxTemplateRenderer templateRenderer;
     private final PdfFormTemplateCache pdfFormTemplateCache;
     private final PdfOverlayRenderer pdfOverlayRenderer;
     private final OrderSnapshotMapper orderSnapshotMapper;
@@ -79,8 +78,9 @@ public class DocumentGenerationService {
     }
 
     private byte[] renderDocxFromTemplate(DocumentType type, OrderPrintSnapshot snapshot) throws IOException {
-        byte[] template = documentTemplateCache.templateBytes(type);
-        return templateRenderer.render(template, snapshotToContext(snapshot));
+        return documentTemplateCache
+                .compiledTemplate(type)
+                .render(snapshotToContext(snapshot));
     }
 
     static Map<String, String> snapshotToContext(OrderPrintSnapshot s) {

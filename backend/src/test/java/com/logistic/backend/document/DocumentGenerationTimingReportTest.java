@@ -26,13 +26,12 @@ class DocumentGenerationTimingReportTest {
     void writesTimingReportForPrefetchOrderedGeneration() throws Exception {
         OrderPrintSnapshot snapshot = OrderPrintSnapshots.manualReviewDemo();
         Map<String, String> docxContext = DocumentGenerationService.snapshotToContext(snapshot);
-        DocxTemplateRenderer renderer = new DocxTemplateRenderer();
         DocumentTemplateCache docxTemplates = new DocumentTemplateCache();
         PdfFormTemplateCache pdfTemplates = new PdfFormTemplateCache();
         PdfOverlayRenderer pdfRenderer = new PdfOverlayRenderer();
 
         for (int w = 0; w < 2; w++) {
-            runSequence(renderer, pdfRenderer, docxTemplates, pdfTemplates, docxContext, snapshot);
+            runSequence(pdfRenderer, docxTemplates, pdfTemplates, docxContext, snapshot);
         }
 
         List<Row> rows = new ArrayList<>();
@@ -41,7 +40,7 @@ class DocumentGenerationTimingReportTest {
             for (DocumentType dt : DocumentType.values()) {
                 long start = System.nanoTime();
                 byte[] out =
-                        generateOne(dt, ff, renderer, pdfRenderer, docxTemplates, pdfTemplates, docxContext, snapshot);
+                        generateOne(dt, ff, pdfRenderer, docxTemplates, pdfTemplates, docxContext, snapshot);
                 long elapsed = System.nanoTime() - start;
                 totalNanos += elapsed;
 
@@ -89,7 +88,6 @@ class DocumentGenerationTimingReportTest {
     private record Row(String label, long nanos, int bytesOut) {}
 
     private static void runSequence(
-            DocxTemplateRenderer renderer,
             PdfOverlayRenderer pdfRenderer,
             DocumentTemplateCache docxTemplates,
             PdfFormTemplateCache pdfTemplates,
@@ -98,7 +96,7 @@ class DocumentGenerationTimingReportTest {
             throws Exception {
         for (FileFormat ff : DocumentPrefetchService.PREFETCH_FORMAT_ORDER) {
             for (DocumentType dt : DocumentType.values()) {
-                generateOne(dt, ff, renderer, pdfRenderer, docxTemplates, pdfTemplates, docxContext, snapshot);
+                generateOne(dt, ff, pdfRenderer, docxTemplates, pdfTemplates, docxContext, snapshot);
             }
         }
     }
@@ -106,7 +104,6 @@ class DocumentGenerationTimingReportTest {
     private static byte[] generateOne(
             DocumentType type,
             FileFormat ff,
-            DocxTemplateRenderer renderer,
             PdfOverlayRenderer pdfRenderer,
             DocumentTemplateCache docxTemplates,
             PdfFormTemplateCache pdfTemplates,
@@ -114,9 +111,8 @@ class DocumentGenerationTimingReportTest {
             OrderPrintSnapshot snapshot)
             throws Exception {
         if (ff == FileFormat.DOCX) {
-            byte[] tpl = docxTemplates.templateBytes(type);
-            assertThat(tpl).isNotNull().isNotEmpty();
-            return renderer.render(tpl, docxContext);
+            assertThat(docxTemplates.templateBytes(type)).isNotNull().isNotEmpty();
+            return docxTemplates.compiledTemplate(type).render(docxContext);
         }
         byte[] tpl = pdfTemplates.templateBytes(type);
         return pdfRenderer.render(tpl, PdfFormValuesBuilder.values(type, snapshot));

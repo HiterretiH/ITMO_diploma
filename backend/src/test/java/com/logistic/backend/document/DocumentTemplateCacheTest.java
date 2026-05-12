@@ -15,6 +15,7 @@ class DocumentTemplateCacheTest {
             assertThat(bytes.length).isGreaterThan(100);
             assertThat(bytes[0]).isEqualTo((byte) 'P');
             assertThat(bytes[1]).isEqualTo((byte) 'K');
+            assertThat(cache.compiledTemplate(type)).isNotNull();
         }
     }
 }
