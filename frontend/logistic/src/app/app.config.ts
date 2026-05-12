@@ -10,10 +10,16 @@ import Aura from '@primeng/themes/aura';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 
+import { environment } from '../environments/environment';
 import { routes } from './app.routes';
+import { apiMockInterceptor } from './core/api-mock.interceptor';
 import { authInterceptor } from './core/auth.interceptor';
 import { errorInterceptor } from './core/error.interceptor';
 import { ThemeService } from './core/theme.service';
+
+const httpInterceptors = environment.useHttpMocks
+  ? [apiMockInterceptor, authInterceptor, errorInterceptor]
+  : [authInterceptor, errorInterceptor];
 
 function themeInitializer(_theme: ThemeService) {
   return () => undefined;
@@ -24,9 +30,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideAnimations(),
-    provideHttpClient(
-      withInterceptors([authInterceptor, errorInterceptor]),
-    ),
+    provideHttpClient(withInterceptors(httpInterceptors)),
     providePrimeNG({
       ripple: true,
       theme: {

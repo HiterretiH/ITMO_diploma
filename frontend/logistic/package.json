@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.conf.js",
+    "start:mock": "ng serve --configuration development-mock",
     "start:docker-api": "cross-env LOGISTIC_API_PROXY_TARGET=http://localhost:7272 ng serve --proxy-config proxy.conf.js",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
