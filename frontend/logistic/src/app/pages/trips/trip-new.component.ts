@@ -27,7 +27,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { CatalogApiService } from '../../core/catalog-api.service';
 import {
   CustomerResponse,
-  CustomerRouteHintResponse,
+  CustomerPlaceResponse,
   DriverResponse,
   PerformerResponse,
   VehicleResponse,
@@ -82,11 +82,11 @@ export class TripNewComponent implements OnInit {
   drivers: DriverResponse[] = [];
   vehicles: VehicleResponse[] = [];
 
-  loadRouteHintRows: CustomerRouteHintResponse[] = [];
-  unloadRouteHintRows: CustomerRouteHintResponse[] = [];
-  loadPlaceSuggestions: CustomerRouteHintResponse[] = [];
-  unloadPlaceSuggestions: CustomerRouteHintResponse[] = [];
-  private routeHintsLoadGeneration = 0;
+  loadPlaceRows: CustomerPlaceResponse[] = [];
+  unloadPlaceRows: CustomerPlaceResponse[] = [];
+  loadPlaceSuggestions: CustomerPlaceResponse[] = [];
+  unloadPlaceSuggestions: CustomerPlaceResponse[] = [];
+  private customerPlacesLoadGeneration = 0;
 
   busy = false;
   errorMessage: string | null = null;
@@ -121,7 +121,7 @@ export class TripNewComponent implements OnInit {
     this.form.controls.customerId.valueChanges
       .pipe(distinctUntilChanged(), takeUntilDestroyed())
       .subscribe((customerId) => {
-        this.refreshRouteHints(customerId ?? null);
+        this.refreshCustomerPlaces(customerId ?? null);
         if (this.editOrderId != null) {
           return;
         }
@@ -136,93 +136,90 @@ export class TripNewComponent implements OnInit {
       });
   }
 
-  private refreshRouteHints(customerId: number | null): void {
-    const gen = ++this.routeHintsLoadGeneration;
+  private refreshCustomerPlaces(customerId: number | null): void {
+    const gen = ++this.customerPlacesLoadGeneration;
     if (customerId == null) {
-      this.loadRouteHintRows = [];
-      this.unloadRouteHintRows = [];
+      this.loadPlaceRows = [];
+      this.unloadPlaceRows = [];
       this.loadPlaceSuggestions = [];
       this.unloadPlaceSuggestions = [];
       return;
     }
     forkJoin({
-      load: this.catalog.getCustomerRouteHints(customerId, 'LOAD'),
-      unload: this.catalog.getCustomerRouteHints(customerId, 'UNLOAD'),
+      load: this.catalog.getCustomerPlaces(customerId, 'LOAD'),
+      unload: this.catalog.getCustomerPlaces(customerId, 'UNLOAD'),
     }).subscribe({
       next: ({ load, unload }) => {
-        if (gen !== this.routeHintsLoadGeneration) {
+        if (gen !== this.customerPlacesLoadGeneration) {
           return;
         }
-        this.loadRouteHintRows = load;
-        this.unloadRouteHintRows = unload;
+        this.loadPlaceRows = load;
+        this.unloadPlaceRows = unload;
       },
       error: () => {
-        if (gen !== this.routeHintsLoadGeneration) {
+        if (gen !== this.customerPlacesLoadGeneration) {
           return;
         }
-        this.loadRouteHintRows = [];
-        this.unloadRouteHintRows = [];
+        this.loadPlaceRows = [];
+        this.unloadPlaceRows = [];
       },
     });
   }
 
   completeLoadPlaces(event: AutoCompleteCompleteEvent): void {
     const q = (event.query ?? '').trim().toLowerCase();
-    this.loadPlaceSuggestions = this.filterHintRows(this.loadRouteHintRows, q);
+    this.loadPlaceSuggestions = this.filterPlaceRows(this.loadPlaceRows, q);
   }
 
   completeUnloadPlaces(event: AutoCompleteCompleteEvent): void {
     const q = (event.query ?? '').trim().toLowerCase();
-    this.unloadPlaceSuggestions = this.filterHintRows(
-      this.unloadRouteHintRows,
-      q,
-    );
+    this.unloadPlaceSuggestions = this.filterPlaceRows(this.unloadPlaceRows, q);
   }
 
-  private filterHintRows(
-    rows: CustomerRouteHintResponse[],
+  private filterPlaceRows(
+    rows: CustomerPlaceResponse[],
     q: string,
-  ): CustomerRouteHintResponse[] {
+  ): CustomerPlaceResponse[] {
     if (!q) {
       return [...rows];
     }
-    return rows.filter((r) => r.place.toLowerCase().includes(q));
+    return rows.filter((r) => r.address.toLowerCase().includes(q));
   }
 
   onLoadPlaceSelected(event: AutoCompleteSelectEvent): void {
-    const place = this.hintPlaceFromSelectValue(event.value);
-    if (!place) {
+    const address = this.selectedAddressFromEvent(event.value);
+    if (!address) {
       return;
     }
-    const row = this.loadRouteHintRows.find((r) => r.place === place);
+    const row = this.loadPlaceRows.find((r) => r.address === address);
     if (row) {
       this.form.patchValue({ loadingContact: row.contact ?? '' });
     }
   }
 
   onUnloadPlaceSelected(event: AutoCompleteSelectEvent): void {
-    const place = this.hintPlaceFromSelectValue(event.value);
-    if (!place) {
+    const address = this.selectedAddressFromEvent(event.value);
+    if (!address) {
       return;
     }
-    const row = this.unloadRouteHintRows.find((r) => r.place === place);
+    const row = this.unloadPlaceRows.find((r) => r.address === address);
     if (row) {
       this.form.patchValue({ unloadingContact: row.contact ?? '' });
     }
   }
 
-  private hintPlaceFromSelectValue(value: unknown): string | null {
+  private selectedAddressFromEvent(value: unknown): string | null {
     if (typeof value === 'string' && value.trim()) {
       return value;
     }
     if (
       value &&
       typeof value === 'object' &&
-      'place' in value &&
-      typeof (value as { place: unknown }).place === 'string'
+      'address' in value &&
+      typeof (value as { address: unknown }).address === 'string'
     ) {
-      const p = (value as { place: string }).place.trim();
-      return p || null;
+      const a = (value as { address: string }).address.trim();
+      return a || null;
     }
     return null;
   }
@@ -292,7 +289,7 @@ export class TripNewComponent implements OnInit {
       });
       this.applyTripDraft(payload.draft);
     }
-    this.refreshRouteHints(this.form.getRawValue().customerId ?? null);
+    this.refreshCustomerPlaces(this.form.getRawValue().customerId ?? null);
   }
 
   private patchOrderIntoForm(o: OrderResponse): void {
@@ -378,7 +375,7 @@ export class TripNewComponent implements OnInit {
         this.performers = performers;
         this.drivers = drivers;
         this.vehicles = vehicles;
-        this.refreshRouteHints(this.form.getRawValue().customerId ?? null);
+        this.refreshCustomerPlaces(this.form.getRawValue().customerId ?? null);
       },
       error: () => {
         this.errorMessage =

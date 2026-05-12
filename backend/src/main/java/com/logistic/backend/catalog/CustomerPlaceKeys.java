@@ -7,9 +7,9 @@ import java.text.Normalizer;
 import java.util.Locale;
 import java.util.Optional;
 
-public final class RoutePlaceKeys {
+public final class CustomerPlaceKeys {
 
-    private RoutePlaceKeys() {}
+    private CustomerPlaceKeys() {}
 
     /** Normalized text used only for stable key hashing (not for display). */
     public static String normalizeForKey(String raw) {
@@ -25,8 +25,8 @@ public final class RoutePlaceKeys {
         return lower.replaceAll("\\s+", " ").strip();
     }
 
-    public static Optional<String> placeKeySha256(String rawPlace) {
-        String n = normalizeForKey(rawPlace);
+    public static Optional<String> addressKeySha256(String rawAddress) {
+        String n = normalizeForKey(rawAddress);
         if (n.isEmpty()) {
             return Optional.empty();
         }

@@ -18,14 +18,14 @@ import lombok.Setter;
 
 @Entity
 @Table(
-        name = "customer_route_hints",
+        name = "customer_places",
         uniqueConstraints =
                 @UniqueConstraint(
-                        name = "uk_route_hint_customer_kind_place",
-                        columnNames = {"customer_id", "kind", "place_key"}))
+                        name = "uk_customer_place_customer_kind_address",
+                        columnNames = {"customer_id", "kind", "address_key"}))
 @Getter
 @Setter
-public class CustomerRouteHint {
+public class CustomerPlace {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,13 +37,13 @@ public class CustomerRouteHint {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
-    private RouteHintKind kind;
+    private CustomerPlaceKind kind;
 
-    @Column(name = "place_key", nullable = false, length = 64)
-    private String placeKey;
+    @Column(name = "address_key", nullable = false, length = 64)
+    private String addressKey;
 
-    @Column(name = "place_text", nullable = false, columnDefinition = "TEXT")
-    private String placeText;
+    @Column(name = "address_text", nullable = false, columnDefinition = "TEXT")
+    private String addressText;
 
     @Column(name = "contact_text", columnDefinition = "TEXT")
     private String contactText;

@@ -5,12 +5,12 @@ import { environment } from '../../environments/environment';
 import {
   CustomerRequest,
   CustomerResponse,
-  CustomerRouteHintResponse,
+  CustomerPlaceResponse,
   DriverRequest,
   DriverResponse,
   PerformerRequest,
   PerformerResponse,
-  RouteHintKind,
+  CustomerPlaceKind,
   VehicleRequest,
   VehicleResponse,
 } from './catalog.models';
@@ -41,17 +41,17 @@ export class CatalogApiService {
     return this.http.delete<void>(`${this.base}/customers/${id}`);
   }
 
-  getCustomerRouteHints(
+  getCustomerPlaces(
     customerId: number,
-    kind: RouteHintKind,
+    kind: CustomerPlaceKind,
     q?: string,
-  ): Observable<CustomerRouteHintResponse[]> {
+  ): Observable<CustomerPlaceResponse[]> {
     const parts = [`kind=${encodeURIComponent(kind)}`];
     if (q != null && q.trim() !== '') {
       parts.push(`q=${encodeURIComponent(q.trim())}`);
     }
-    return this.http.get<CustomerRouteHintResponse[]>(
-      `${this.base}/customers/${customerId}/route-hints?${parts.join('&')}`,
+    return this.http.get<CustomerPlaceResponse[]>(
+      `${this.base}/customers/${customerId}/places?${parts.join('&')}`,
     );
   }
 

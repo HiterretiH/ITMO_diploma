@@ -15,11 +15,11 @@ export interface CustomerResponse {
   requisites: string | null;
 }
 
-export type RouteHintKind = 'LOAD' | 'UNLOAD';
+export type CustomerPlaceKind = 'LOAD' | 'UNLOAD';
 
-export interface CustomerRouteHintResponse {
-  kind: RouteHintKind;
-  place: string;
+export interface CustomerPlaceResponse {
+  kind: CustomerPlaceKind;
+  address: string;
   contact: string | null;
 }
 

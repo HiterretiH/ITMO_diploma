@@ -29,7 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
 @ActiveProfiles("test")
-class CustomerRouteHintIntegrationTest extends AbstractPostgresIntegrationTest {
+class CustomerPlaceIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Autowired UserRepository userRepository;
     @Autowired PasswordEncoder passwordEncoder;
@@ -39,7 +39,7 @@ class CustomerRouteHintIntegrationTest extends AbstractPostgresIntegrationTest {
     @BeforeEach
     void seedUser() throws Exception {
         String id = UUID.randomUUID().toString().substring(0, 8);
-        String name = "hint_" + id;
+        String name = "place_" + id;
         User u = new User();
         u.setUsername(name);
         u.setPasswordHash(passwordEncoder.encode("pw"));
@@ -50,14 +50,14 @@ class CustomerRouteHintIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void orderCreateThenHints_listedAndContactUpdatedOnPut() throws Exception {
+    void orderCreateThenPlaces_listedAndContactUpdatedOnPut() throws Exception {
         Long customerId =
-                postCustomer(token, new CustomerRequest("HintCo", "Full", "+1", null));
+                postCustomer(token, new CustomerRequest("PlaceCo", "Full", "+1", null));
         Long performerId =
                 postPerformer(
                         token,
                         new PerformerRequest(
-                                "HintPerf",
+                                "PlacePerf",
                                 null,
                                 null,
                                 null,
@@ -91,14 +91,14 @@ class CustomerRouteHintIntegrationTest extends AbstractPostgresIntegrationTest {
         assertThat(createOrder.getStatusCode()).isEqualTo(HttpStatus.OK);
         long orderId = objectMapper.readTree(createOrder.getBody()).get("id").asLong();
 
-        JsonNode loadHints = getHints(customerId, "LOAD");
-        assertThat(loadHints).hasSize(1);
-        assertThat(loadHints.get(0).get("place").asText()).isEqualTo("Warehouse  North");
-        assertThat(loadHints.get(0).get("contact").asText()).isEqualTo("Call +1");
+        JsonNode loadPlaces = getPlaces(customerId, "LOAD");
+        assertThat(loadPlaces).hasSize(1);
+        assertThat(loadPlaces.get(0).get("address").asText()).isEqualTo("Warehouse  North");
+        assertThat(loadPlaces.get(0).get("contact").asText()).isEqualTo("Call +1");
 
-        JsonNode unloadHints = getHints(customerId, "UNLOAD");
-        assertThat(unloadHints).hasSize(1);
-        assertThat(unloadHints.get(0).get("place").asText()).isEqualTo("Shop  East");
+        JsonNode unloadPlaces = getPlaces(customerId, "UNLOAD");
+        assertThat(unloadPlaces).hasSize(1);
+        assertThat(unloadPlaces.get(0).get("address").asText()).isEqualTo("Shop  East");
 
         OrderUpdateRequest upd =
                 new OrderUpdateRequest(
@@ -123,15 +123,15 @@ class CustomerRouteHintIntegrationTest extends AbstractPostgresIntegrationTest {
                         String.class);
         assertThat(put.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        JsonNode loadHints2 = getHints(customerId, "LOAD");
-        assertThat(loadHints2).hasSize(1);
-        assertThat(loadHints2.get(0).get("contact").asText()).isEqualTo("Call +99");
+        JsonNode loadPlaces2 = getPlaces(customerId, "LOAD");
+        assertThat(loadPlaces2).hasSize(1);
+        assertThat(loadPlaces2.get(0).get("contact").asText()).isEqualTo("Call +99");
     }
 
-    private JsonNode getHints(long customerId, String kind) throws Exception {
+    private JsonNode getPlaces(long customerId, String kind) throws Exception {
         ResponseEntity<String> r =
                 restTemplate.exchange(
-                        "/api/v1/customers/" + customerId + "/route-hints?kind=" + kind,
+                        "/api/v1/customers/" + customerId + "/places?kind=" + kind,
                         HttpMethod.GET,
                         new HttpEntity<>(bearer(token)),
                         String.class);

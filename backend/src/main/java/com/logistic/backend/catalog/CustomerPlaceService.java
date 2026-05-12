@@ -1,6 +1,6 @@
 package com.logistic.backend.catalog;
 
-import com.logistic.backend.api.dto.CustomerRouteHintResponse;
+import com.logistic.backend.api.dto.CustomerPlaceResponse;
 import com.logistic.backend.user.User;
 import com.logistic.backend.user.UserAccess;
 import java.time.Instant;
@@ -15,56 +15,59 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class CustomerRouteHintService {
+public class CustomerPlaceService {
 
     private final CustomerRepository customerRepository;
-    private final CustomerRouteHintRepository hintRepository;
+    private final CustomerPlaceRepository placeRepository;
 
     @Transactional(readOnly = true)
-    public List<CustomerRouteHintResponse> list(User actor, long customerId, RouteHintKind kind, String q) {
+    public List<CustomerPlaceResponse> list(
+            User actor, long customerId, CustomerPlaceKind kind, String q) {
         Customer c = loadForRead(actor, customerId);
-        List<CustomerRouteHint> rows =
-                hintRepository.findByCustomer_IdAndKindOrderByUpdatedAtDesc(c.getId(), kind);
+        List<CustomerPlace> rows =
+                placeRepository.findByCustomer_IdAndKindOrderByUpdatedAtDesc(c.getId(), kind);
         if (q == null || q.isBlank()) {
             return rows.stream().map(this::toDto).toList();
         }
         String needle = q.strip().toLowerCase(Locale.ROOT);
         return rows.stream()
-                .filter(h -> h.getPlaceText().toLowerCase(Locale.ROOT).contains(needle))
+                .filter(p -> p.getAddressText().toLowerCase(Locale.ROOT).contains(needle))
                 .map(this::toDto)
                 .toList();
     }
 
     @Transactional
-    public void upsertFromOrder(Customer customer, RouteHintKind kind, String place, String contact) {
-        if (place == null || place.isBlank()) {
+    public void upsertFromOrder(
+            Customer customer, CustomerPlaceKind kind, String address, String contact) {
+        if (address == null || address.isBlank()) {
             return;
         }
-        Optional<String> keyOpt = RoutePlaceKeys.placeKeySha256(place);
+        Optional<String> keyOpt = CustomerPlaceKeys.addressKeySha256(address);
         if (keyOpt.isEmpty()) {
             return;
         }
         String key = keyOpt.get();
-        String displayPlace = place.strip();
+        String displayAddress = address.strip();
         String contactNorm = contact == null || contact.isBlank() ? null : contact.strip();
         Instant now = Instant.now();
-        Optional<CustomerRouteHint> existing =
-                hintRepository.findByCustomer_IdAndKindAndPlaceKey(customer.getId(), kind, key);
+        Optional<CustomerPlace> existing =
+                placeRepository.findByCustomer_IdAndKindAndAddressKey(
+                        customer.getId(), kind, key);
         if (existing.isPresent()) {
-            CustomerRouteHint h = existing.get();
-            h.setPlaceText(displayPlace);
-            h.setContactText(contactNorm);
-            h.setUpdatedAt(now);
-            hintRepository.save(h);
+            CustomerPlace p = existing.get();
+            p.setAddressText(displayAddress);
+            p.setContactText(contactNorm);
+            p.setUpdatedAt(now);
+            placeRepository.save(p);
         } else {
-            CustomerRouteHint h = new CustomerRouteHint();
-            h.setCustomer(customer);
-            h.setKind(kind);
-            h.setPlaceKey(key);
-            h.setPlaceText(displayPlace);
-            h.setContactText(contactNorm);
-            h.setUpdatedAt(now);
-            hintRepository.save(h);
+            CustomerPlace p = new CustomerPlace();
+            p.setCustomer(customer);
+            p.setKind(kind);
+            p.setAddressKey(key);
+            p.setAddressText(displayAddress);
+            p.setContactText(contactNorm);
+            p.setUpdatedAt(now);
+            placeRepository.save(p);
         }
     }
 
@@ -75,9 +78,9 @@ public class CustomerRouteHintService {
         return customerRepository.findByIdAndOwner_Id(id, current.getId()).orElseThrow(this::notFound);
     }
 
-    private CustomerRouteHintResponse toDto(CustomerRouteHint h) {
-        return new CustomerRouteHintResponse(
-                h.getKind().name(), h.getPlaceText(), h.getContactText());
+    private CustomerPlaceResponse toDto(CustomerPlace p) {
+        return new CustomerPlaceResponse(
+                p.getKind().name(), p.getAddressText(), p.getContactText());
     }
 
     private ResponseStatusException notFound() {

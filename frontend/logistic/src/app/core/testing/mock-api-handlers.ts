@@ -3,12 +3,12 @@ import type { JwtResponse, LoginRequest, RegisterRequest } from '../auth.models'
 import type {
   CustomerRequest,
   CustomerResponse,
-  CustomerRouteHintResponse,
+  CustomerPlaceResponse,
   DriverRequest,
   DriverResponse,
   PerformerRequest,
   PerformerResponse,
-  RouteHintKind,
+  CustomerPlaceKind,
   VehicleRequest,
   VehicleResponse,
 } from '../catalog.models';
@@ -373,51 +373,51 @@ let mockOrders: OrderResponse[] = [
 
 let nextOrderId = 9;
 
-const routeHintStore = new Map<string, CustomerRouteHintResponse[]>();
+const customerPlaceStore = new Map<string, CustomerPlaceResponse[]>();
 
-function routeHintStorageKey(customerId: number, kind: RouteHintKind): string {
+function customerPlaceStorageKey(customerId: number, kind: CustomerPlaceKind): string {
   return `${customerId}:${kind}`;
 }
 
-function normalizeRouteHintPlace(place: string): string {
-  return place.trim().replace(/\s+/g, ' ').toLowerCase();
+function normalizeCustomerPlaceAddress(address: string): string {
+  return address.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
-function upsertRouteHintRow(
+function upsertCustomerPlaceRow(
   customerId: number,
-  kind: RouteHintKind,
-  place: string,
+  kind: CustomerPlaceKind,
+  address: string,
   contact: string | null | undefined,
 ): void {
-  const t = place.trim();
+  const t = address.trim();
   if (!t) {
     return;
   }
-  const key = routeHintStorageKey(customerId, kind);
-  const rows = routeHintStore.get(key) ?? [];
-  const nk = normalizeRouteHintPlace(t);
-  const idx = rows.findIndex((r) => normalizeRouteHintPlace(r.place) === nk);
+  const key = customerPlaceStorageKey(customerId, kind);
+  const rows = customerPlaceStore.get(key) ?? [];
+  const nk = normalizeCustomerPlaceAddress(t);
+  const idx = rows.findIndex((r) => normalizeCustomerPlaceAddress(r.address) === nk);
   const c =
     contact != null && String(contact).trim() ? String(contact).trim() : null;
-  const row: CustomerRouteHintResponse = { kind, place: t, contact: c };
+  const row: CustomerPlaceResponse = { kind, address: t, contact: c };
   const next = [...rows];
   if (idx >= 0) {
     next[idx] = row;
   } else {
     next.push(row);
   }
-  routeHintStore.set(key, next);
+  customerPlaceStore.set(key, next);
 }
 
-function recordRouteHintsFromOrder(o: {
+function recordCustomerPlacesFromOrder(o: {
   customerId: number;
   loadingPlace: string;
   loadingContact: string | null;
   unloadingPlace: string;
   unloadingContact: string | null;
 }): void {
-  upsertRouteHintRow(o.customerId, 'LOAD', o.loadingPlace, o.loadingContact);
-  upsertRouteHintRow(
+  upsertCustomerPlaceRow(o.customerId, 'LOAD', o.loadingPlace, o.loadingContact);
+  upsertCustomerPlaceRow(
     o.customerId,
     'UNLOAD',
     o.unloadingPlace,
@@ -426,7 +426,7 @@ function recordRouteHintsFromOrder(o: {
 }
 
 for (const o of mockOrders) {
-  recordRouteHintsFromOrder(o);
+  recordCustomerPlacesFromOrder(o);
 }
 
 const ALL_DOC_TYPES = [
@@ -575,10 +575,9 @@ export function handleMockApiRequest(
     return json(new HttpResponse({ status: 200, body: draft }));
   }
 
-  const routeHintsMatch =
-    /^\/api\/v1\/customers\/(\d+)\/route-hints$/.exec(pathname);
-  if (routeHintsMatch && method === 'GET') {
-    const customerId = Number(routeHintsMatch[1]);
+  const placesMatch = /^\/api\/v1\/customers\/(\d+)\/places$/.exec(pathname);
+  if (placesMatch && method === 'GET') {
+    const customerId = Number(placesMatch[1]);
     const kind = searchParams.get('kind');
     const q = (searchParams.get('q') ?? '').trim();
     if (kind !== 'LOAD' && kind !== 'UNLOAD') {
@@ -590,11 +589,11 @@ export function handleMockApiRequest(
       );
     }
     const rows =
-      routeHintStore.get(routeHintStorageKey(customerId, kind)) ?? [];
+      customerPlaceStore.get(customerPlaceStorageKey(customerId, kind)) ?? [];
     const filtered =
       q === ''
         ? [...rows]
-        : rows.filter((r) => r.place.toLowerCase().includes(q.toLowerCase()));
+        : rows.filter((r) => r.address.toLowerCase().includes(q.toLowerCase()));
     return json(new HttpResponse({ status: 200, body: filtered }));
   }
 
@@ -629,7 +628,7 @@ export function handleMockApiRequest(
         performerShortName: existing.performerShortName,
       };
       mockOrders = mockOrders.map((o) => (o.id === id ? merged : o));
-      recordRouteHintsFromOrder(merged);
+      recordCustomerPlacesFromOrder(merged);
       return json(new HttpResponse({ status: 200, body: merged }));
     }
     if (method === 'DELETE') {
@@ -737,7 +736,7 @@ export function handleMockApiRequest(
       completed: false,
     });
     mockOrders = [...mockOrders, created];
-    recordRouteHintsFromOrder(created);
+    recordCustomerPlacesFromOrder(created);
     return json(new HttpResponse({ status: 200, body: created }));
   }
 

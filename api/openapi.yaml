@@ -314,10 +314,10 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/customers/{id}/route-hints:
+  /api/v1/customers/{id}/places:
     get:
       tags: [Customers]
-      summary: List route address/contact hints for a customer
+      summary: List saved customer places (load or unload) with optional contact
       security:
         - bearerAuth: []
       parameters:
@@ -333,16 +333,16 @@ paths:
           required: false
           schema:
             type: string
-          description: Optional substring filter on place text
+          description: Optional substring filter on address text
       responses:
         '200':
-          description: Hints for the given kind
+          description: Places for the given kind
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CustomerRouteHintResponse'
+                  $ref: '#/components/schemas/CustomerPlaceResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1202,13 +1202,13 @@ components:
           type: string
           nullable: true
 
-    CustomerRouteHintResponse:
+    CustomerPlaceResponse:
       type: object
       properties:
         kind:
           type: string
           enum: [LOAD, UNLOAD]
-        place:
+        address:
           type: string
         contact:
           type: string
