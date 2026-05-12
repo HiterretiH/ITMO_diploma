@@ -15,6 +15,60 @@
     </p-tabpanel>
     <p-tabpanel value="done">
       <p class="tab-desc">{{ tabSubtitle() }}</p>
+      <div class="done-toolbar">
+        <div class="done-filters">
+          <span class="filter-field">
+            <span class="filter-label">Заказчик</span>
+            <p-dropdown
+              [options]="completedCustomerOptions()"
+              [(ngModel)]="doneCustomer"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              styleClass="done-dropdown"
+            />
+          </span>
+          <span class="filter-field">
+            <span class="filter-label">С даты</span>
+            <p-datepicker
+              [(ngModel)]="doneDateFrom"
+              dateFormat="dd.mm.yy"
+              [showIcon]="true"
+              appendTo="body"
+              inputId="done-from"
+            />
+          </span>
+          <span class="filter-field">
+            <span class="filter-label">По дату</span>
+            <p-datepicker
+              [(ngModel)]="doneDateTo"
+              dateFormat="dd.mm.yy"
+              [showIcon]="true"
+              appendTo="body"
+              inputId="done-to"
+            />
+          </span>
+          <p-button
+            type="button"
+            label="Сбросить"
+            icon="pi pi-filter-slash"
+            [text]="true"
+            size="small"
+            (onClick)="clearDoneFilters()"
+          />
+        </div>
+        @if (doneStats().count > 0) {
+          <p class="done-stats">
+            Найдено: <strong>{{ doneStats().count }}</strong>
+            @if (doneStats().totalPriceSum != null) {
+              · Итого по суммам:
+              <strong>{{ doneStats().totalPriceSum | number: '1.2-2' }}</strong> ₽
+            } @else {
+              · Суммы по завершённым рейсам не указаны
+            }
+          </p>
+        }
+      </div>
       <ng-container *ngTemplateOutlet="ordersTable" />
     </p-tabpanel>
   </p-tabpanels>

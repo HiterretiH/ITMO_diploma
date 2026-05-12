@@ -9,6 +9,42 @@
   border-bottom: 1px solid var(--p-content-border-color, #e2e8f0);
 }
 
+.done-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.done-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.filter-label {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color, #64748b);
+}
+
+:host ::ng-deep .done-dropdown {
+  min-width: 12rem;
+}
+
+.done-stats {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--p-text-color);
+}
+
 .tab-desc {
   margin: 0 0 0.75rem;
   font-size: 0.95rem;
