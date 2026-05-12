@@ -73,4 +73,19 @@ describe('trip-list-filters', () => {
     const onlyNull = summarizeCompletedTrips([o({ id: 9, totalPrice: null })]);
     expect(onlyNull.totalPriceSum).toBeNull();
   });
+
+  it('summarizeCompletedTrips skips non-finite totalPrice', () => {
+    const row = { ...o({ id: 10, totalPrice: 0 }), totalPrice: Number.NaN } as OrderResponse;
+    const s = summarizeCompletedTrips([row]);
+    expect(s.count).toBe(1);
+    expect(s.totalPriceSum).toBeNull();
+  });
+
+  it('filterCompletedTrips keeps rows when orderDate is too short', () => {
+    const r = filterCompletedTrips([o({ id: 1, orderDate: '' })], '', {
+      dateFromInclusive: '2025-01-01',
+      dateToInclusive: '2025-12-31',
+    });
+    expect(r).toHaveLength(1);
+  });
 });

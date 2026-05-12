@@ -1,5 +1,16 @@
 import { OrderResponse } from '../../core/order.models';
 
+/** Local calendar date as yyyy-mm-dd (for comparing with API `orderDate` prefix). */
+export function toLocalIsoDate(d: Date | null | undefined): string | null {
+  if (!d) {
+    return null;
+  }
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export interface CompletedTripsDateFilter {
   dateFromInclusive: string | null;
   dateToInclusive: string | null;
@@ -47,9 +58,14 @@ export function summarizeCompletedTrips(
   let sum = 0;
   let had = false;
   for (const o of rows) {
-    if (o.totalPrice != null && Number.isFinite(Number(o.totalPrice))) {
+    const raw = o.totalPrice;
+    if (raw == null) {
+      continue;
+    }
+    const n = Number(raw);
+    if (Number.isFinite(n)) {
       had = true;
-      sum += Number(o.totalPrice);
+      sum += n;
     }
   }
   return { count: rows.length, totalPriceSum: had ? sum : null };

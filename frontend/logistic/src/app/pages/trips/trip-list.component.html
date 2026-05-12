@@ -3,7 +3,7 @@
   <p-button label="Создать" icon="pi pi-plus" routerLink="/orders/new" />
 </div>
 
-<p-tabs [value]="listTab" (valueChange)="onListTabChange($event)">
+<p-tabs [value]="listTab()" (valueChange)="onListTabChange($event)">
   <p-tablist>
     <p-tab value="active">В работе</p-tab>
     <p-tab value="done">Завершённые</p-tab>
@@ -16,12 +16,14 @@
     <p-tabpanel value="done">
       <p class="tab-desc">{{ tabSubtitle() }}</p>
       <div class="done-toolbar">
-        <div class="done-filters">
+        <div class="done-filters" role="group" aria-label="Фильтры завершённых рейсов">
           <span class="filter-field">
-            <span class="filter-label">Заказчик</span>
+            <label class="filter-label" for="trip-done-customer">Заказчик</label>
             <p-dropdown
+              inputId="trip-done-customer"
               [options]="completedCustomerOptions()"
-              [(ngModel)]="doneCustomer"
+              [ngModel]="doneCustomer()"
+              (ngModelChange)="doneCustomer.set($event)"
               optionLabel="label"
               optionValue="value"
               appendTo="body"
@@ -29,23 +31,25 @@
             />
           </span>
           <span class="filter-field">
-            <span class="filter-label">С даты</span>
+            <label class="filter-label" for="done-from">С даты</label>
             <p-datepicker
-              [(ngModel)]="doneDateFrom"
+              inputId="done-from"
+              [ngModel]="doneDateFrom()"
+              (ngModelChange)="doneDateFrom.set($event)"
               dateFormat="dd.mm.yy"
               [showIcon]="true"
               appendTo="body"
-              inputId="done-from"
             />
           </span>
           <span class="filter-field">
-            <span class="filter-label">По дату</span>
+            <label class="filter-label" for="done-to">По дату</label>
             <p-datepicker
-              [(ngModel)]="doneDateTo"
+              inputId="done-to"
+              [ngModel]="doneDateTo()"
+              (ngModelChange)="doneDateTo.set($event)"
               dateFormat="dd.mm.yy"
               [showIcon]="true"
               appendTo="body"
-              inputId="done-to"
             />
           </span>
           <p-button
@@ -54,15 +58,18 @@
             icon="pi pi-filter-slash"
             [text]="true"
             size="small"
+            aria-label="Сбросить фильтры завершённых рейсов"
+            title="Сбросить фильтры завершённых рейсов"
             (onClick)="clearDoneFilters()"
           />
         </div>
-        @if (doneStats().count > 0) {
+        @let dStats = doneStats();
+        @if (dStats.count > 0) {
           <p class="done-stats">
-            Найдено: <strong>{{ doneStats().count }}</strong>
-            @if (doneStats().totalPriceSum != null) {
+            Найдено: <strong>{{ dStats.count }}</strong>
+            @if (dStats.totalPriceSum != null) {
               · Итого по суммам:
-              <strong>{{ doneStats().totalPriceSum | number: '1.2-2' }}</strong> ₽
+              <strong>{{ dStats.totalPriceSum | number: '1.2-2' }}</strong> ₽
             } @else {
               · Суммы по завершённым рейсам не указаны
             }
@@ -76,9 +83,9 @@
 
 <ng-template #ordersTable>
   <p-table
-    [value]="tabOrders"
+    [value]="tabOrders()"
     [tableStyle]="{ 'min-width': '52rem' }"
-    styleClass="p-datatable-sm"
+    tableStyleClass="p-datatable-sm"
   >
     <ng-template pTemplate="header">
       <tr>
@@ -86,7 +93,7 @@
         <th>Дата</th>
         <th>Заказчик</th>
         <th>Маршрут</th>
-        @if (listTab === 'active') {
+        @if (listTab() === 'active') {
           <th class="col-actions"></th>
         }
       </tr>
@@ -97,7 +104,7 @@
         <td>{{ o.orderDate }}</td>
         <td>{{ o.customerShortName || '—' }}</td>
         <td class="route-cell">{{ routeSnippet(o) }}</td>
-        @if (listTab === 'active') {
+        @if (listTab() === 'active') {
           <td class="col-actions" (click)="$event.stopPropagation()">
             @if (canCompleteRow(o)) {
               <p-button
@@ -118,8 +125,14 @@
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td [attr.colspan]="listTab === 'active' ? 5 : 4">
-          Нет рейсов
+        <td
+          [attr.colspan]="listTab() === 'active' ? 5 : 4"
+          class="empty-state"
+        >
+          <div class="empty-state-inner">
+            <i class="pi pi-inbox empty-state-icon" aria-hidden="true"></i>
+            <p class="empty-state-text">Рейсы не найдены</p>
+          </div>
         </td>
       </tr>
     </ng-template>

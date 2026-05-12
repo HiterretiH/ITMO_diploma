@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
@@ -19,6 +25,7 @@ import {
   CompletedTripsStats,
   filterCompletedTrips,
   summarizeCompletedTrips,
+  toLocalIsoDate,
 } from './trip-list-filters';
 
 @Component({
@@ -42,34 +49,23 @@ export class TripListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly confirm = inject(ConfirmationService);
 
-  orders: OrderResponse[] = [];
-  listTab: 'active' | 'done' = 'active';
+  readonly orders = signal<OrderResponse[]>([]);
+  readonly listTab = signal<'active' | 'done'>('active');
+
   /** While completing a trip, button shows spinner; other rows stay clickable after reload. */
   completingOrderId: number | null = null;
 
-  /** Completed-tab filter: empty string = all customers (by short name). */
-  doneCustomer = '';
-  doneDateFrom: Date | null = null;
-  doneDateTo: Date | null = null;
+  readonly doneCustomer = signal('');
+  readonly doneDateFrom = signal<Date | null>(null);
+  readonly doneDateTo = signal<Date | null>(null);
 
-  onListTabChange(value: string | number): void {
-    this.listTab = value === 'done' ? 'done' : 'active';
-  }
+  readonly completedOrders = computed(() =>
+    this.orders().filter((o) => o.completed),
+  );
 
-  ngOnInit(): void {
-    this.reload();
-  }
-
-  reload(): void {
-    this.api.list().subscribe((rows) => (this.orders = rows));
-  }
-
-  completedCustomerOptions(): { label: string; value: string }[] {
+  readonly completedCustomerOptions = computed(() => {
     const names = new Set<string>();
-    for (const o of this.orders) {
-      if (!o.completed) {
-        continue;
-      }
+    for (const o of this.completedOrders()) {
       const n = (o.customerShortName ?? '').trim();
       if (n) {
         names.add(n);
@@ -81,54 +77,56 @@ export class TripListComponent implements OnInit {
         .sort((a, b) => a.localeCompare(b, 'ru'))
         .map((v) => ({ label: v, value: v })),
     ];
-  }
+  });
 
-  private toLocalIsoDate(d: Date | null | undefined): string | null {
-    if (!d) {
-      return null;
-    }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-
-  get tabOrders(): OrderResponse[] {
+  readonly tabOrders = computed(() => {
+    const tab = this.listTab();
+    const all = this.orders();
     const base =
-      this.listTab === 'active'
-        ? this.orders.filter((o) => !o.completed)
-        : this.orders.filter((o) => o.completed);
-    if (this.listTab !== 'done') {
+      tab === 'active'
+        ? all.filter((o) => !o.completed)
+        : all.filter((o) => o.completed);
+    if (tab !== 'done') {
       return base;
     }
-    return filterCompletedTrips(base, this.doneCustomer, {
-      dateFromInclusive: this.toLocalIsoDate(this.doneDateFrom),
-      dateToInclusive: this.toLocalIsoDate(this.doneDateTo),
+    return filterCompletedTrips(base, this.doneCustomer(), {
+      dateFromInclusive: toLocalIsoDate(this.doneDateFrom()),
+      dateToInclusive: toLocalIsoDate(this.doneDateTo()),
     });
-  }
+  });
 
-  doneStats(): CompletedTripsStats {
-    if (this.listTab !== 'done') {
+  readonly doneStats = computed((): CompletedTripsStats => {
+    if (this.listTab() !== 'done') {
       return { count: 0, totalPriceSum: null };
     }
-    return summarizeCompletedTrips(this.tabOrders);
+    return summarizeCompletedTrips(this.tabOrders());
+  });
+
+  readonly tabSubtitle = computed(() =>
+    this.listTab() === 'active' ? 'Рейсы в работе' : 'Завершённые рейсы',
+  );
+
+  onListTabChange(value: string | number): void {
+    this.listTab.set(value === 'done' ? 'done' : 'active');
+  }
+
+  ngOnInit(): void {
+    this.reload();
+  }
+
+  reload(): void {
+    this.api.list().subscribe((rows) => this.orders.set(rows));
   }
 
   clearDoneFilters(): void {
-    this.doneCustomer = '';
-    this.doneDateFrom = null;
-    this.doneDateTo = null;
-  }
-
-  tabSubtitle(): string {
-    return this.listTab === 'active'
-      ? 'Рейсы в работе'
-      : 'Завершённые рейсы';
+    this.doneCustomer.set('');
+    this.doneDateFrom.set(null);
+    this.doneDateTo.set(null);
   }
 
   canCompleteRow(o: OrderResponse): boolean {
     return (
-      this.listTab === 'active' &&
+      this.listTab() === 'active' &&
       !o.completed &&
       orderUiPhase(o, o.completed) === 'ready'
     );
