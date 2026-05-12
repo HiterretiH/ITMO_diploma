@@ -30,9 +30,9 @@
 
       <p-card header="Безопасность">
         <p class="card-lead">Смена пароля для этой учётной записи.</p>
-        <form [formGroup]="passwordForm" (ngSubmit)="submitPassword()" class="pwd-form">
-          <div class="field">
-            <label for="cur-pw">Текущий пароль</label>
+        <form [formGroup]="passwordForm" (ngSubmit)="submitPassword()" class="pwd-form form-stack">
+          <div class="form-field">
+            <label class="form-label" for="cur-pw">Текущий пароль</label>
             <p-password
               inputId="cur-pw"
               formControlName="currentPassword"
@@ -44,11 +44,11 @@
               autocomplete="current-password"
             />
             @if (currentPasswordError()) {
-              <small class="p-error">{{ currentPasswordError() }}</small>
+              <small class="p-error form-error">{{ currentPasswordError() }}</small>
             }
           </div>
-          <div class="field">
-            <label for="new-pw">Новый пароль</label>
+          <div class="form-field">
+            <label class="form-label" for="new-pw">Новый пароль</label>
             <p-password
               inputId="new-pw"
               formControlName="newPassword"
@@ -60,11 +60,11 @@
               autocomplete="new-password"
             />
             @if (newPasswordError()) {
-              <small class="p-error">{{ newPasswordError() }}</small>
+              <small class="p-error form-error">{{ newPasswordError() }}</small>
             }
           </div>
-          <div class="field">
-            <label for="new-pw2">Повтор нового пароля</label>
+          <div class="form-field">
+            <label class="form-label" for="new-pw2">Повтор нового пароля</label>
             <p-password
               inputId="new-pw2"
               formControlName="newPasswordConfirm"
@@ -76,13 +76,13 @@
               autocomplete="new-password"
             />
             @if (newPasswordConfirmRequired()) {
-              <small class="p-error">{{ newPasswordConfirmRequired() }}</small>
+              <small class="p-error form-error">{{ newPasswordConfirmRequired() }}</small>
             }
             @if (
               passwordForm.controls.newPasswordConfirm.touched &&
               passwordForm.errors?.['passwordMismatch']
             ) {
-              <small class="p-error">Пароли не совпадают</small>
+              <small class="p-error form-error">Пароли не совпадают</small>
             }
           </div>
           <p-button

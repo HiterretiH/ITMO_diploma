@@ -114,20 +114,7 @@
 .pwd-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-}
-
-.pwd-form .field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 0;
-}
-
-.pwd-form label {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text);
+  gap: var(--space-4);
 }
 
 :host ::ng-deep .pwd-form .p-password {

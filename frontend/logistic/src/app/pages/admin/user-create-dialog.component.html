@@ -6,16 +6,16 @@
   [style]="{ width: '24rem' }"
   [draggable]="false"
 >
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label for="nu-user">Логин *</label>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form-stack">
+    <div class="form-field">
+      <label class="form-label" for="nu-user">Логин *</label>
       <input pInputText id="nu-user" formControlName="username" class="w-full" autocomplete="off" />
       @if (usernameError()) {
-        <small class="p-error">{{ usernameError() }}</small>
+        <small class="p-error form-error">{{ usernameError() }}</small>
       }
     </div>
-    <div class="field">
-      <label for="nu-pass">Пароль *</label>
+    <div class="form-field">
+      <label class="form-label" for="nu-pass">Пароль *</label>
       <p-password
         inputId="nu-pass"
         formControlName="password"
@@ -27,11 +27,11 @@
         autocomplete="new-password"
       />
       @if (passwordError()) {
-        <small class="p-error">{{ passwordError() }}</small>
+        <small class="p-error form-error">{{ passwordError() }}</small>
       }
     </div>
-    <div class="field">
-      <label for="nu-roles">Роли *</label>
+    <div class="form-field">
+      <label class="form-label" for="nu-roles">Роли *</label>
       <p-multiSelect
         inputId="nu-roles"
         formControlName="roles"
@@ -44,7 +44,7 @@
         styleClass="w-full"
       />
       @if (form.controls.roles.touched && form.controls.roles.hasError('roles')) {
-        <small class="p-error">Нужна хотя бы одна роль</small>
+        <small class="p-error form-error">Нужна хотя бы одна роль</small>
       }
     </div>
   </form>
