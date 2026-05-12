@@ -11,6 +11,7 @@ import {
 import { MessageService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
+import { Message } from 'primeng/message';
 import { Password } from 'primeng/password';
 import { MeApiService } from '../../core/me-api.service';
 import { Role, UserResponse } from '../../core/user.models';
@@ -29,7 +30,7 @@ const passwordChangeMatchValidator: ValidatorFn = (
 @Component({
   selector: 'app-account-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, Card, Password, Button],
+  imports: [CommonModule, ReactiveFormsModule, Card, Password, Button, Message],
   templateUrl: './account-page.component.html',
   styleUrl: './account-page.component.css',
 })

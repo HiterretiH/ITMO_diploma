@@ -1,9 +1,28 @@
-.account-wrap {
-  max-width: 32rem;
+.account-page {
+  max-width: 52rem;
+}
+
+.page-title {
+  margin: 0 0 1rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.account-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .account-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
 }
 
 .profile-block {
-  margin-bottom: 1.25rem;
+  margin: 0;
 }
 
 .field-row {
@@ -12,6 +31,10 @@
   gap: 0.35rem 1rem;
   margin-bottom: 0.65rem;
   align-items: baseline;
+}
+
+.field-row:last-child {
+  margin-bottom: 0;
 }
 
 .field-row .label {
@@ -28,10 +51,11 @@
   font-weight: 500;
 }
 
-.section-title {
-  font-size: 1rem;
-  margin: 0 0 0.75rem;
-  font-weight: 600;
+.card-lead {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  line-height: 1.45;
 }
 
 .pwd-form .field {
@@ -43,7 +67,7 @@
   margin-bottom: 0.35rem;
 }
 
-.load-error {
-  color: var(--p-red-500, #dc2626);
-  margin: 0;
+.account-page ::ng-deep p-message {
+  display: block;
+  margin-bottom: 1rem;
 }
