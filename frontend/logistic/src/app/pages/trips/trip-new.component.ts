@@ -142,7 +142,10 @@ export class TripNewComponent implements OnInit {
     if (this.router.url.includes('/edit') && idParam) {
       this.editOrderId = Number(idParam);
     }
+    this.loadTripPageData();
+  }
 
+  private loadTripPageData(): void {
     forkJoin({
       customers: this.catalog.listCustomers(),
       performers: this.catalog.listPerformers(),
@@ -154,27 +157,36 @@ export class TripNewComponent implements OnInit {
           ? this.orders.get(this.editOrderId)
           : of(null as OrderResponse | null),
     }).subscribe({
-      next: ({ customers, performers, drivers, vehicles, draft, existing }) => {
-        this.customers = customers;
-        this.performers = performers;
-        this.drivers = drivers;
-        this.vehicles = vehicles;
-        if (existing) {
-          this.patchOrderIntoForm(existing);
-        } else {
-          const today = new Date();
-          today.setHours(12, 0, 0, 0);
-          this.form.patchValue({
-            orderDate: today,
-          });
-          this.applyTripDraft(draft);
-        }
-      },
+      next: (payload) => this.applyTripPageInitialData(payload),
       error: () => {
         this.errorMessage =
           'Не удалось загрузить справочники. Проверьте доступ к серверу и обновите страницу.';
       },
     });
+  }
+
+  private applyTripPageInitialData(payload: {
+    customers: CustomerResponse[];
+    performers: PerformerResponse[];
+    drivers: DriverResponse[];
+    vehicles: VehicleResponse[];
+    draft: TripFormDraftResponse;
+    existing: OrderResponse | null;
+  }): void {
+    this.customers = payload.customers;
+    this.performers = payload.performers;
+    this.drivers = payload.drivers;
+    this.vehicles = payload.vehicles;
+    if (payload.existing) {
+      this.patchOrderIntoForm(payload.existing);
+    } else {
+      const today = new Date();
+      today.setHours(12, 0, 0, 0);
+      this.form.patchValue({
+        orderDate: today,
+      });
+      this.applyTripDraft(payload.draft);
+    }
   }
 
   private patchOrderIntoForm(o: OrderResponse): void {
@@ -245,6 +257,10 @@ export class TripNewComponent implements OnInit {
   }
 
   onCatalogSaved(): void {
+    this.reloadCatalogLists();
+  }
+
+  private reloadCatalogLists(): void {
     forkJoin({
       customers: this.catalog.listCustomers(),
       performers: this.catalog.listPerformers(),
