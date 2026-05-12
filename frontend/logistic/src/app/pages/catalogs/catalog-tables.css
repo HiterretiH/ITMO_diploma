@@ -38,16 +38,11 @@
 
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
   background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-  transform: translateX(2px);
 }
 
 @media (prefers-reduced-motion: reduce) {
   :host ::ng-deep .p-datatable .p-datatable-tbody > tr {
     transition: none;
-  }
-
-  :host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
-    transform: none;
   }
 }
 

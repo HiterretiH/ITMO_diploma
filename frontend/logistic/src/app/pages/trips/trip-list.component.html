@@ -1,11 +1,27 @@
 <div class="head">
-  <h1 class="page-title">Рейсы</h1>
-  <p-button label="Создать" icon="pi pi-plus" routerLink="/orders/new" />
+  <div class="head-info">
+    <h1 class="page-title">Рейсы</h1>
+    <p class="page-subtitle">Управление заявками и перевозками</p>
+  </div>
+  <p-button
+    label="Новый рейс"
+    icon="pi pi-plus"
+    routerLink="/orders/new"
+    styleClass="primary-action"
+  />
 </div>
 
 <p-tabs [value]="listTab()" (valueChange)="onListTabChange($event)">
   <p-tablist>
-    <p-tab value="active">В работе</p-tab>
+    <p-tab value="active">
+      В работе
+      <span
+        class="tab-badge"
+        [class.active]="listTab() === 'active'"
+        aria-hidden="true"
+        >{{ activeCount() }}</span
+      >
+    </p-tab>
     <p-tab value="done">Завершённые</p-tab>
   </p-tablist>
   <p-tabpanels>
@@ -16,8 +32,8 @@
     <p-tabpanel value="done">
       <p class="tab-desc">{{ tabSubtitle() }}</p>
       <div class="done-toolbar">
-        <div class="done-filters" role="group" aria-label="Фильтры завершённых рейсов">
-          <span class="filter-field">
+        <div class="filters-panel" role="group" aria-label="Фильтры завершённых рейсов">
+          <div class="filter-field">
             <label class="filter-label" for="trip-done-customer">Заказчик</label>
             <p-dropdown
               inputId="trip-done-customer"
@@ -29,8 +45,8 @@
               appendTo="body"
               styleClass="done-dropdown"
             />
-          </span>
-          <span class="filter-field">
+          </div>
+          <div class="filter-field">
             <label class="filter-label" for="done-from">С даты</label>
             <p-datepicker
               inputId="done-from"
@@ -40,8 +56,8 @@
               [showIcon]="true"
               appendTo="body"
             />
-          </span>
-          <span class="filter-field">
+          </div>
+          <div class="filter-field">
             <label class="filter-label" for="done-to">По дату</label>
             <p-datepicker
               inputId="done-to"
@@ -51,13 +67,14 @@
               [showIcon]="true"
               appendTo="body"
             />
-          </span>
+          </div>
           <p-button
             type="button"
             label="Сбросить"
             icon="pi pi-filter-slash"
             [text]="true"
             size="small"
+            class="reset-btn"
             aria-label="Сбросить фильтры завершённых рейсов"
             title="Сбросить фильтры завершённых рейсов"
             (onClick)="clearDoneFilters()"
@@ -65,15 +82,25 @@
         </div>
         @let dStats = doneStats();
         @if (dStats.count > 0) {
-          <p class="done-stats">
-            Найдено: <strong>{{ dStats.count }}</strong>
+          <div class="stats-bar" role="status" aria-live="polite">
+            <span class="stats-item">
+              <i class="pi pi-list" aria-hidden="true"></i>
+              Найдено: <strong>{{ dStats.count }}</strong>
+            </span>
             @if (dStats.totalPriceSum != null) {
-              · Итого по суммам:
-              <strong>{{ dStats.totalPriceSum | number: '1.2-2' }}</strong> ₽
+              <span class="stats-divider" aria-hidden="true">·</span>
+              <span class="stats-item">
+                <i class="pi pi-money-bill" aria-hidden="true"></i>
+                Итого:
+                <strong>{{ dStats.totalPriceSum | number: '1.2-2' }} ₽</strong>
+              </span>
             } @else {
-              · Суммы по завершённым рейсам не указаны
+              <span class="stats-divider" aria-hidden="true">·</span>
+              <span class="stats-item stats-item-muted">
+                Суммы по завершённым рейсам не указаны
+              </span>
             }
-          </p>
+          </div>
         }
       </div>
       <ng-container *ngTemplateOutlet="ordersTable" />
@@ -84,7 +111,7 @@
 <ng-template #ordersTable>
   <p-table
     [value]="tabOrders()"
-    [tableStyle]="{ 'min-width': '52rem' }"
+    [tableStyle]="{ 'min-width': '44rem' }"
     tableStyleClass="p-datatable-sm"
   >
     <ng-template pTemplate="header">
@@ -92,23 +119,30 @@
         <th>№ заявки</th>
         <th>Дата</th>
         <th>Заказчик</th>
-        <th>Маршрут</th>
         @if (listTab() === 'active') {
           <th class="col-actions"></th>
         }
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-o>
-      <tr class="click-row" (click)="openOrder(o.id)">
-        <td class="order-num-cell">{{ o.orderNumber }}</td>
+      <tr
+        class="click-row"
+        tabindex="0"
+        (click)="openOrder(o.id)"
+        (keydown)="onOrderRowKeydown($event, o.id)"
+      >
+        <td class="col-num">
+          <span class="num-badge">{{ o.orderNumber }}</span>
+        </td>
         <td>{{ o.orderDate }}</td>
-        <td>{{ o.customerShortName || '—' }}</td>
-        <td class="route-cell">{{ routeSnippet(o) }}</td>
+        <td>
+          <span class="customer-cell">{{ o.customerShortName || '—' }}</span>
+        </td>
         @if (listTab() === 'active') {
           <td class="col-actions" (click)="$event.stopPropagation()">
             @if (canCompleteRow(o)) {
               <p-button
-                label="Завершить рейс"
+                label="Завершить"
                 icon="pi pi-check"
                 severity="success"
                 size="small"
@@ -118,6 +152,17 @@
                 "
                 (onClick)="completeOrder(o)"
               />
+            } @else {
+              <span
+                class="action-hint"
+                pTooltip="Заполните все обязательные поля рейса"
+                tooltipPosition="top"
+                tabindex="0"
+                (click)="$event.stopPropagation()"
+                (keydown)="$event.stopPropagation()"
+              >
+                <i class="pi pi-clock" aria-hidden="true"></i>
+              </span>
             }
           </td>
         }
@@ -126,12 +171,32 @@
     <ng-template pTemplate="emptymessage">
       <tr>
         <td
-          [attr.colspan]="listTab() === 'active' ? 5 : 4"
+          [attr.colspan]="listTab() === 'active' ? 4 : 3"
           class="empty-state"
         >
-          <div class="empty-state-inner">
-            <i class="pi pi-inbox empty-state-icon" aria-hidden="true"></i>
-            <p class="empty-state-text">Рейсы не найдены</p>
+          <div class="empty-state-content">
+            <i class="pi pi-inbox" aria-hidden="true"></i>
+            <h3 class="empty-title">
+              {{
+                listTab() === 'active'
+                  ? 'Нет активных рейсов'
+                  : 'Нет завершённых рейсов'
+              }}
+            </h3>
+            <p class="empty-desc">
+              {{
+                listTab() === 'active'
+                  ? 'Создайте первый рейс, чтобы начать работу с системой.'
+                  : 'Завершённые рейсы будут отображаться здесь после выполнения.'
+              }}
+            </p>
+            @if (listTab() === 'active') {
+              <p-button
+                label="Создать рейс"
+                icon="pi pi-plus"
+                routerLink="/orders/new"
+              />
+            }
           </div>
         </td>
       </tr>

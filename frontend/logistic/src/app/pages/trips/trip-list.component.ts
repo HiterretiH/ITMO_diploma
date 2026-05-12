@@ -14,6 +14,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
+import { Tooltip } from 'primeng/tooltip';
 import { finalize } from 'rxjs/operators';
 import { OrderApiService } from '../../core/order-api.service';
 import { OrderResponse } from '../../core/order.models';
@@ -40,6 +41,7 @@ import {
     Button,
     DropdownModule,
     DatePickerModule,
+    Tooltip,
   ],
   templateUrl: './trip-list.component.html',
   styleUrl: './trip-list.component.css',
@@ -61,6 +63,10 @@ export class TripListComponent implements OnInit {
 
   readonly completedOrders = computed(() =>
     this.orders().filter((o) => o.completed),
+  );
+
+  readonly activeCount = computed(
+    () => this.orders().filter((o) => !o.completed).length,
   );
 
   readonly completedCustomerOptions = computed(() => {
@@ -136,6 +142,13 @@ export class TripListComponent implements OnInit {
     void this.router.navigate(['/orders', id]);
   }
 
+  onOrderRowKeydown(ev: KeyboardEvent, id: number): void {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      this.openOrder(id);
+    }
+  }
+
   completeOrder(o: OrderResponse): void {
     if (!orderReadyForBackendComplete(o)) {
       return;
@@ -152,16 +165,5 @@ export class TripListComponent implements OnInit {
           .subscribe(() => this.reload());
       },
     });
-  }
-
-  routeSnippet(o: OrderResponse): string {
-    const a = (o.loadingPlace ?? '').trim();
-    const b = (o.unloadingPlace ?? '').trim();
-    const trunc = (s: string, n: number) =>
-      s.length > n ? `${s.slice(0, n)}…` : s;
-    if (!a && !b) {
-      return '—';
-    }
-    return `${trunc(a, 36)} → ${trunc(b, 36)}`;
   }
 }
