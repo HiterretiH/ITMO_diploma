@@ -1,10 +1,15 @@
-### Logistic API collection
-### Variables
+### Logistic API (see api/openapi.yaml)
+### Default seed user: admin / admin123 (ADMIN). Register creates USER.
+### IntelliJ / VS Code HTTP Client: run requests top-to-bottom; capture @name responses for variables.
+
 @baseUrl = http://localhost:8080
+### Docker Compose maps backend to host port 7272:
+# @baseUrl = http://localhost:7272
+
 @adminUser = admin
 @adminPass = admin123
 
-### 1) Login as admin (default seed user)
+### Auth: login (ADMIN)
 # @name loginAdmin
 POST {{baseUrl}}/api/v1/auth/login
 Content-Type: application/json
@@ -14,204 +19,230 @@ Content-Type: application/json
   "password": "{{adminPass}}"
 }
 
-### 1b) Public registration (role EMPLOYEE, returns 201 + JWT)
-POST {{baseUrl}}/api/v1/auth/register
-Content-Type: application/json
-
-{
-  "username": "self_reg_demo",
-  "password": "secret12"
-}
-
 ###
-@adminToken = {{loginAdmin.response.body.token}}
+@token = {{loginAdmin.response.body.token}}
 
-### 2) Create employee user
-# @name createEmployee
+### Session: current profile
+GET {{baseUrl}}/api/v1/me
+Authorization: Bearer {{token}}
+
+### Admin: create user (roles: USER | ADMIN)
 POST {{baseUrl}}/api/v1/admin/users
-Authorization: Bearer {{adminToken}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "username": "employee_demo",
-  "password": "employee_demo_pass",
-  "roles": ["EMPLOYEE"]
+  "username": "api_http_demo",
+  "password": "demo_pass_1",
+  "roles": ["USER"]
 }
 
-### 3) Login as employee
-# @name loginEmployee
-POST {{baseUrl}}/api/v1/auth/login
+### Customers: list
+GET {{baseUrl}}/api/v1/customers
+Authorization: Bearer {{token}}
+
+### Customers: create
+# @name createCustomer
+POST {{baseUrl}}/api/v1/customers
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "username": "employee_demo",
-  "password": "employee_demo_pass"
-}
-
-###
-@employeeToken = {{loginEmployee.response.body.token}}
-
-### 4) Create manager user
-# @name createManager
-POST {{baseUrl}}/api/v1/admin/users
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "username": "manager_demo",
-  "password": "manager_demo_pass",
-  "roles": ["MANAGER"]
-}
-
-### 5) Login as manager
-# @name loginManager
-POST {{baseUrl}}/api/v1/auth/login
-Content-Type: application/json
-
-{
-  "username": "manager_demo",
-  "password": "manager_demo_pass"
+  "shortName": "ООО Ромашка",
+  "fullName": "Общество с ограниченной ответственностью «Ромашка»",
+  "phone": "+7 (495) 100-01-01",
+  "requisites": "ИНН 7701001001, р/с 40702810900000001001"
 }
 
 ###
-@managerToken = {{loginManager.response.body.token}}
+@customerId = {{createCustomer.response.body.id}}
 
-### 6) Create shipper
-# @name createShipper
-POST {{baseUrl}}/api/v1/counterparties
-Authorization: Bearer {{employeeToken}}
+### Session: trip form draft (optional customerId for scoped next order number)
+GET {{baseUrl}}/api/v1/me/trip-form-draft?customerId={{customerId}}
+Authorization: Bearer {{token}}
+
+### Customers: get by id
+GET {{baseUrl}}/api/v1/customers/{{customerId}}
+Authorization: Bearer {{token}}
+
+### Customers: saved places (kind required: LOAD | UNLOAD)
+GET {{baseUrl}}/api/v1/customers/{{customerId}}/places?kind=LOAD
+Authorization: Bearer {{token}}
+
+### Customers: merged place suggestions (history + optional TypeData; q optional; external needs length >= 3 when TypeData on)
+GET {{baseUrl}}/api/v1/customers/{{customerId}}/place-suggestions?kind=LOAD&q=Мос
+Authorization: Bearer {{token}}
+
+### Customers: update
+PUT {{baseUrl}}/api/v1/customers/{{customerId}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "ООО Ромашка",
-  "inn": "7701234567",
-  "legalAddress": "г. Москва, ул. Ленина, 1",
-  "phone": "+7 495 111-11-11"
+  "shortName": "ООО Ромашка",
+  "fullName": "ООО «Ромашка» — обновлённое наименование",
+  "phone": "+7 (495) 100-01-02",
+  "requisites": "ИНН 7701001001, КПП 770101001"
 }
 
-###
-@shipperId = {{createShipper.response.body.id}}
+### Performers: list
+GET {{baseUrl}}/api/v1/performers
+Authorization: Bearer {{token}}
 
-### 7) Create consignee
-# @name createConsignee
-POST {{baseUrl}}/api/v1/counterparties
-Authorization: Bearer {{employeeToken}}
+### Performers: create
+# @name createPerformer
+POST {{baseUrl}}/api/v1/performers
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "ООО Василек",
-  "inn": "7810123456",
-  "legalAddress": "г. Санкт-Петербург, Невский пр., 10",
-  "phone": "+7 812 222-22-22"
+  "shortName": "АльфаТранс",
+  "fullName": "ООО «Альфа транспортные перевозки»",
+  "phone": "+7 (495) 700-70-01",
+  "bankName": "ПАО «Примербанк»",
+  "inn": "7707707707",
+  "bik": "044525555",
+  "kpp": "770701001",
+  "paymentAccount": "40702810900000007007",
+  "corrAccount": "30101810000000000555",
+  "requisites": "ОГРН 1027707707707, юр. адрес: 101000, г. Москва"
 }
 
 ###
-@consigneeId = {{createConsignee.response.body.id}}
+@performerId = {{createPerformer.response.body.id}}
 
-### 8) Create driver
+### Performers: get
+GET {{baseUrl}}/api/v1/performers/{{performerId}}
+Authorization: Bearer {{token}}
+
+### Drivers: list
+GET {{baseUrl}}/api/v1/drivers
+Authorization: Bearer {{token}}
+
+### Drivers: create (performerId required)
 # @name createDriver
 POST {{baseUrl}}/api/v1/drivers
-Authorization: Bearer {{employeeToken}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
+  "performerId": {{performerId}},
   "fullName": "Иванов Иван Иванович",
-  "licenseNumber": "77 01 123456",
-  "licenseCategory": "B, C"
+  "phone": "+7 (903) 111-11-11"
 }
 
 ###
 @driverId = {{createDriver.response.body.id}}
 
-### 9) Create vehicle
+### Vehicles: list
+GET {{baseUrl}}/api/v1/vehicles
+Authorization: Bearer {{token}}
+
+### Vehicles: create (performerId required)
 # @name createVehicle
 POST {{baseUrl}}/api/v1/vehicles
-Authorization: Bearer {{employeeToken}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "plateNumber": "А123ВС178",
-  "model": "Volvo FH",
-  "loadCapacityKg": 20000
+  "performerId": {{performerId}},
+  "brandModel": "Demo Truck",
+  "plateNumber": "A001BC77",
+  "type": "tractor"
 }
 
 ###
 @vehicleId = {{createVehicle.response.body.id}}
 
-### 9a) Create saved place (optional)
-# @name createPlace
-POST {{baseUrl}}/api/v1/places
-Authorization: Bearer {{employeeToken}}
+### Orders: list
+GET {{baseUrl}}/api/v1/orders
+Authorization: Bearer {{token}}
+
+### Orders: create (customerId, performerId required; rest optional in API)
+# @name createOrder
+POST {{baseUrl}}/api/v1/orders
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "address": "Склад, ул. Промышленная, 5",
-  "contact": "Петров +7 900 000-00-00",
-  "placeType": "BOTH"
-}
-
-###
-### 9b) List places for load dropdown
-GET {{baseUrl}}/api/v1/places?type=LOAD
-Authorization: Bearer {{employeeToken}}
-
-### 10) Create trip
-# @name createTrip
-POST {{baseUrl}}/api/v1/trips
-Authorization: Bearer {{employeeToken}}
-Content-Type: application/json
-
-{}
-
-###
-@tripId = {{createTrip.response.body.id}}
-
-### 11) Update draft trip
-PUT {{baseUrl}}/api/v1/trips/{{tripId}}
-Authorization: Bearer {{employeeToken}}
-Content-Type: application/json
-
-{
-  "shipperId": {{shipperId}},
-  "consigneeId": {{consigneeId}},
-  "driverId": {{driverId}},
+  "customerId": {{customerId}},
+  "performerId": {{performerId}},
   "vehicleId": {{vehicleId}},
-  "cargoDescription": "Строительные смеси, 24 паллеты",
-  "cargoWeightKg": 12000.500,
-  "routeFrom": "Москва",
-  "routeTo": "Санкт-Петербург",
-  "loadDate": "2026-05-15",
-  "unloadDate": "2026-05-16",
-  "priceAmount": 98500.00,
-  "currency": "RUB"
+  "driverId": {{driverId}},
+  "orderDate": "2026-05-15",
+  "orderNumber": 1,
+  "loadingPlace": "Москва, склад, ул. Складская, д. 1",
+  "loadingContact": "+7 (900) 123-45-67, диспетчер погрузки",
+  "unloadingPlace": "Санкт-Петербург, РЦ, пр. Обуховской Обороны, 120",
+  "unloadingContact": "+7 (900) 765-43-21, ответственный на выгрузке",
+  "tripCount": 1,
+  "pricePerTrip": 1000.00,
+  "totalPrice": 1000.00
 }
 
-### 12) Submit trip for approval
-POST {{baseUrl}}/api/v1/trips/{{tripId}}/submit
-Authorization: Bearer {{employeeToken}}
+###
+@orderId = {{createOrder.response.body.id}}
+
+### Orders: get
+GET {{baseUrl}}/api/v1/orders/{{orderId}}
+Authorization: Bearer {{token}}
+
+### Orders: update (partial mask)
+PUT {{baseUrl}}/api/v1/orders/{{orderId}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
-{}
+{
+  "loadingContact": "+7 (900) 123-45-68, сменный диспетчер",
+  "tripCount": 2,
+  "totalPrice": 2000.00
+}
 
-### 13) Approve trip (manager)
-POST {{baseUrl}}/api/v1/trips/{{tripId}}/approve
-Authorization: Bearer {{managerToken}}
-Content-Type: application/json
+### Orders: complete
+POST {{baseUrl}}/api/v1/orders/{{orderId}}/complete
+Authorization: Bearer {{token}}
 
-{}
+### Orders: reopen
+POST {{baseUrl}}/api/v1/orders/{{orderId}}/reopen
+Authorization: Bearer {{token}}
 
-### 14) List generated documents
-# @name listDocuments
-GET {{baseUrl}}/api/v1/trips/{{tripId}}/documents
-Authorization: Bearer {{employeeToken}}
+### Documents: list descriptors for order
+GET {{baseUrl}}/api/v1/orders/{{orderId}}/documents
+Authorization: Bearer {{token}}
 
-### 15) View audit log for trip
-GET {{baseUrl}}/api/v1/trips/{{tripId}}/audit-events
-Authorization: Bearer {{employeeToken}}
+### Documents: download (format query required: DOCX | PDF)
+GET {{baseUrl}}/api/v1/orders/{{orderId}}/documents/WAYBILL/file?format=PDF
+Authorization: Bearer {{token}}
 
-### 16) Archive trip (manager)
-POST {{baseUrl}}/api/v1/trips/{{tripId}}/archive
-Authorization: Bearer {{managerToken}}
-Content-Type: application/json
+### Audit: events for order
+GET {{baseUrl}}/api/v1/orders/{{orderId}}/audit-events
+Authorization: Bearer {{token}}
 
-{}
+### Orders: delete
+DELETE {{baseUrl}}/api/v1/orders/{{orderId}}
+Authorization: Bearer {{token}}
+
+### Vehicles: delete (before performer if FK blocks performer delete)
+DELETE {{baseUrl}}/api/v1/vehicles/{{vehicleId}}
+Authorization: Bearer {{token}}
+
+### Drivers: delete
+DELETE {{baseUrl}}/api/v1/drivers/{{driverId}}
+Authorization: Bearer {{token}}
+
+### Customers: delete
+DELETE {{baseUrl}}/api/v1/customers/{{customerId}}
+Authorization: Bearer {{token}}
+
+### Performers: delete
+DELETE {{baseUrl}}/api/v1/performers/{{performerId}}
+Authorization: Bearer {{token}}
+
+### --- Optional (standalone): public register (201); pick a fresh username
+# POST {{baseUrl}}/api/v1/auth/register
+# Content-Type: application/json
+#
+# {
+#   "username": "self_reg_001",
+#   "password": "secret12"
+# }
