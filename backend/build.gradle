@@ -76,7 +76,7 @@ tasks.register('generateDocumentFixtures', JavaExec) {
     description = 'Generate document fixtures for manual visual review'
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.logistic.backend.document.DocumentFixtureGenerator'
-    args "$projectDir/manual-review-docs"
+    args "$projectDir/build/manual-review-docs"
 }
 
 tasks.register('dumpPdfFieldBoundsLoSnapshot', JavaExec) {

@@ -25,10 +25,10 @@ Desktop.ini
 # Docker local overrides
 docker-compose.override.yml
 
-# Manual document review artifacts
+# Manual-review fixtures and timing reports live under backend/build/ (ignored by backend/.gitignore).
+# Old fixture output directory (ignore if still present locally):
 backend/manual-review-docs/
-
-# Local timing report from DocumentGenerationTimingReportTest (under backend/ when tests run from backend)
+# Legacy timing file path (ignore if recreated):
 backend/docs/document-generation-timing-baseline.txt
 
 # Python

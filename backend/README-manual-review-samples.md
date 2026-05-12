@@ -1,6 +1,6 @@
 # Manual-review document samples
 
-Generated PDF and DOCX files for visual checks live under `manual-review-docs/` in this module. That directory is **gitignored**; do not commit binaries from there.
+Generated PDF and DOCX files for visual checks are written under **`build/manual-review-docs/`** in this module (Gradle output tree). That path is under `build/`, which is **gitignored** by `backend/.gitignore`; do not commit binaries from there.
 
 ## Regenerate
 
@@ -10,7 +10,7 @@ From the `backend` directory (Java 17 toolchain as in `build.gradle`):
 ./gradlew generateDocumentFixtures
 ```
 
-This runs `DocumentFixtureGenerator` with output path `backend/manual-review-docs/`. It writes, per `DocumentType` and format:
+This runs `DocumentFixtureGenerator` with output path **`backend/build/manual-review-docs/`**. It writes, per `DocumentType` and format:
 
 - `act_of_work_sample.pdf`, `act_of_work_sample.docx`
 - `contract_application_sample.pdf`, `contract_application_sample.docx`
@@ -19,10 +19,10 @@ This runs `DocumentFixtureGenerator` with output path `backend/manual-review-doc
 
 Data source: `OrderPrintSnapshots.manualReviewDemo()` (same semantics as the Angular `order-print-demo.fixture.ts` trip-form demo).
 
-## Timing baseline (committed)
+## Timing report
 
 `./gradlew test --tests DocumentGenerationTimingReportTest` writes `build/reports/document-generation-timing.txt` with per-step nanoseconds (machine-dependent; not tracked in git). Templates are preloaded via `DocumentTemplateCache` and `PdfFormTemplateCache`; the timed window is render/overlay only (no per-step classpath read).
 
 ## Default when running `main` without Gradle
 
-If you run `DocumentFixtureGenerator` without arguments, output is relative to the process working directory (`manual-review-docs`); prefer the Gradle task so files always land under this module.
+If you run `DocumentFixtureGenerator` without arguments, output defaults to **`build/manual-review-docs`** relative to the process working directory. Prefer `./gradlew generateDocumentFixtures` from this module so files always land under `backend/build/manual-review-docs/`.

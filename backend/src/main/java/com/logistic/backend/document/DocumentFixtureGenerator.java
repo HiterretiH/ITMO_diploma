@@ -13,7 +13,7 @@ public final class DocumentFixtureGenerator {
         Path outDir =
                 args.length > 0
                         ? Path.of(args[0]).toAbsolutePath()
-                        : Path.of("manual-review-docs").toAbsolutePath();
+                        : Path.of("build", "manual-review-docs").toAbsolutePath();
         Files.createDirectories(outDir);
 
         OrderPrintSnapshot snapshot = OrderPrintSnapshots.manualReviewDemo();
