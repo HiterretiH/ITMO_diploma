@@ -3,9 +3,11 @@ package com.logistic.backend.api;
 import com.logistic.backend.api.dto.CustomerRequest;
 import com.logistic.backend.api.dto.CustomerResponse;
 import com.logistic.backend.api.dto.CustomerPlaceResponse;
-import com.logistic.backend.catalog.CustomerService;
+import com.logistic.backend.api.dto.CustomerPlaceSuggestionResponse;
 import com.logistic.backend.catalog.CustomerPlaceKind;
 import com.logistic.backend.catalog.CustomerPlaceService;
+import com.logistic.backend.catalog.CustomerPlaceSuggestionService;
+import com.logistic.backend.catalog.CustomerService;
 import com.logistic.backend.security.CurrentUserService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -31,6 +33,7 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final CustomerPlaceService customerPlaceService;
+    private final CustomerPlaceSuggestionService customerPlaceSuggestionService;
     private final CurrentUserService currentUserService;
 
     @GetMapping
@@ -52,6 +55,22 @@ public class CustomerController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "kind must be LOAD or UNLOAD");
         }
         return customerPlaceService.list(currentUserService.requireUser(), id, k, q);
+    }
+
+    @GetMapping("/{id}/place-suggestions")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    public List<CustomerPlaceSuggestionResponse> placeSuggestions(
+            @PathVariable Long id,
+            @RequestParam String kind,
+            @RequestParam(required = false) String q) {
+        CustomerPlaceKind k;
+        try {
+            k = CustomerPlaceKind.valueOf(kind.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "kind must be LOAD or UNLOAD");
+        }
+        return customerPlaceSuggestionService.suggest(
+                currentUserService.requireUser(), id, k, q);
     }
 
     @GetMapping("/{id}")

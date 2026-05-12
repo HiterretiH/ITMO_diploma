@@ -11,6 +11,8 @@ import com.logistic.backend.user.Role;
 import com.logistic.backend.user.User;
 import com.logistic.backend.user.UserRepository;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -126,6 +128,29 @@ class CustomerPlaceIntegrationTest extends AbstractPostgresIntegrationTest {
         JsonNode loadPlaces2 = getPlaces(customerId, "LOAD");
         assertThat(loadPlaces2).hasSize(1);
         assertThat(loadPlaces2.get(0).get("contact").asText()).isEqualTo("Call +99");
+
+        JsonNode suggestions = getPlaceSuggestions(customerId, "LOAD", "Ware");
+        assertThat(suggestions).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(suggestions.get(0).get("source").asText()).isEqualTo("HISTORY");
+        assertThat(suggestions.get(0).get("kind").asText()).isEqualTo("LOAD");
+        assertThat(suggestions.get(0).get("address").asText()).contains("Warehouse");
+        assertThat(suggestions.get(0).get("contact").asText()).isEqualTo("Call +99");
+    }
+
+    private JsonNode getPlaceSuggestions(long customerId, String kind, String q) throws Exception {
+        ResponseEntity<String> r =
+                restTemplate.exchange(
+                        "/api/v1/customers/"
+                                + customerId
+                                + "/place-suggestions?kind="
+                                + kind
+                                + "&q="
+                                + URLEncoder.encode(q, StandardCharsets.UTF_8),
+                        HttpMethod.GET,
+                        new HttpEntity<>(bearer(token)),
+                        String.class);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
+        return objectMapper.readTree(r.getBody());
     }
 
     private JsonNode getPlaces(long customerId, String kind) throws Exception {

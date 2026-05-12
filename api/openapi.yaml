@@ -354,6 +354,46 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /api/v1/customers/{id}/place-suggestions:
+    get:
+      tags: [Customers]
+      summary: Merged place suggestions (customer history first, then external)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: kind
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [LOAD, UNLOAD]
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional substring filter on history; external suggestions require a long enough query when TypeData is enabled
+      responses:
+        '200':
+          description: Suggestions ordered with history entries first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerPlaceSuggestionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/v1/performers:
     get:
       tags: [Performers]
@@ -1205,6 +1245,24 @@ components:
     CustomerPlaceResponse:
       type: object
       properties:
+        kind:
+          type: string
+          enum: [LOAD, UNLOAD]
+        address:
+          type: string
+        contact:
+          type: string
+          nullable: true
+
+    PlaceSuggestionSource:
+      type: string
+      enum: [HISTORY, EXTERNAL]
+
+    CustomerPlaceSuggestionResponse:
+      type: object
+      properties:
+        source:
+          $ref: '#/components/schemas/PlaceSuggestionSource'
         kind:
           type: string
           enum: [LOAD, UNLOAD]

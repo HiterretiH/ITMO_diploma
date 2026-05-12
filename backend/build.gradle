@@ -25,6 +25,8 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
@@ -75,4 +77,22 @@ tasks.register('generateDocumentFixtures', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.logistic.backend.document.DocumentFixtureGenerator'
     args "$projectDir/manual-review-docs"
+}
+
+tasks.register('dumpPdfFieldBoundsLoSnapshot', JavaExec) {
+    group = 'verification'
+    description = 'Dump AcroForm bounds from waybill-after-libreoffice.pdf (run from convert-form-docx-to-pdf.ps1 before bootstrap)'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.logistic.backend.document.PdfFieldBoundsDump'
+    def rep = layout.buildDirectory.dir('reports').get().asFile
+    args new File(rep, 'waybill-after-libreoffice.pdf').absolutePath,
+         new File(rep, 'pdf-waybill-field-bounds-after-lo-only.txt').absolutePath
+}
+
+tasks.register('bootstrapPdfAcroForms', JavaExec) {
+    group = 'verification'
+    description = 'After LO PDF export: add AcroForm text fields at PdfFormLayout rects when LO omits /AcroForm'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.logistic.backend.document.PdfAcroFormBootstrap'
+    args "$projectDir/src/main/resources/templates/documents"
 }
