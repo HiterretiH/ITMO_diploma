@@ -178,16 +178,16 @@
           [attr.colspan]="listTab() === 'active' ? 4 : 3"
           class="empty-state"
         >
-          <div class="empty-state-content">
-            <i class="pi pi-inbox" aria-hidden="true"></i>
-            <h3 class="empty-title">
+          <div class="catalog-empty" role="status">
+            <i class="pi pi-inbox catalog-empty__icon" aria-hidden="true"></i>
+            <h3 class="catalog-empty__title">
               {{
                 listTab() === 'active'
                   ? 'Нет активных рейсов'
                   : 'Нет завершённых рейсов'
               }}
             </h3>
-            <p class="empty-desc">
+            <p class="catalog-empty__desc">
               {{
                 listTab() === 'active'
                   ? 'Создайте первый рейс, чтобы начать работу с системой.'

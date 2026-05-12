@@ -37,7 +37,12 @@
 }
 
 :host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
-  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -66,22 +71,42 @@
   vertical-align: middle;
 }
 
+.catalog-empty,
 .catalog-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
   color: var(--color-text-muted);
 }
 
-.catalog-empty-state .pi {
-  font-size: 3rem;
+.catalog-empty__icon,
+.catalog-empty-state > .pi {
+  font-size: 2.5rem;
   opacity: 0.3;
+  line-height: 1;
 }
 
-.catalog-empty-state p {
+.catalog-empty__title {
   margin: 0;
   font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.catalog-empty__desc {
+  margin: 0 0 var(--space-3);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.catalog-empty-state > p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
 .field {
