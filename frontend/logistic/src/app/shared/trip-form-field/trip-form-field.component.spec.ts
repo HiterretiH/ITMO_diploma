@@ -29,7 +29,7 @@ describe('TripFormFieldComponent', () => {
     const err = host.querySelector('#tf-test-err');
     expect(err).not.toBeNull();
     expect(err?.textContent?.trim()).toBe('Required');
-    expect(err?.getAttribute('role')).toBe('alert');
+    expect(err?.getAttribute('role')).toBe('status');
   });
 });
 

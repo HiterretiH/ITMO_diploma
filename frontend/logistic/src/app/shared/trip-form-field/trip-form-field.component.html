@@ -7,7 +7,8 @@
     <small
       class="p-error"
       [id]="errorDomId()"
-      role="alert"
+      role="status"
+      aria-live="polite"
       >{{ errorText() }}</small
     >
   }
