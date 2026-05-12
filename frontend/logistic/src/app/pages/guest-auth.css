@@ -136,3 +136,9 @@
 .w-full {
   width: 100%;
 }
+
+@media (max-width: 768px) {
+  .guest-page .login-wrap {
+    padding: 1rem;
+  }
+}

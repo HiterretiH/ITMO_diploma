@@ -152,3 +152,24 @@
   display: block;
   margin-bottom: 1rem;
 }
+
+@media (max-width: 768px) {
+  .field-row {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .field-row .label {
+    font-weight: 600;
+  }
+
+  .account-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 1.35rem;
+  }
+}

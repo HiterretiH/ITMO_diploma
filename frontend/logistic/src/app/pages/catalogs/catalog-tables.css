@@ -99,3 +99,13 @@
 .w-full {
   width: 100%;
 }
+
+@media (max-width: 480px) {
+  :host ::ng-deep .p-datatable-wrapper {
+    overflow-x: auto;
+  }
+
+  :host ::ng-deep .p-datatable table {
+    min-width: 600px;
+  }
+}

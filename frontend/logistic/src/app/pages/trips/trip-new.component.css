@@ -159,13 +159,6 @@
   align-items: start;
 }
 
-@media (max-width: 640px) {
-  .grid-2,
-  .grid-money {
-    grid-template-columns: 1fr;
-  }
-}
-
 .total-field {
   grid-column: 1 / -1;
 }
@@ -258,4 +251,27 @@
 :host ::ng-deep .trip-new-form p-inputnumber.ng-invalid.ng-touched .p-inputnumber-input {
   border-color: var(--p-input-border-color);
   box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .trip-new-wrap .page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .trip-new-wrap .page-head .p-button {
+    width: 100%;
+  }
+
+  .grid-2,
+  .grid-money {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .trip-new-wrap .page-title {
+    font-size: 1.35rem;
+  }
 }

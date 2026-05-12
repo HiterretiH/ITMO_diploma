@@ -98,3 +98,10 @@
   font-size: 0.95rem;
   color: var(--p-text-muted-color);
 }
+
+@media (max-width: 768px) {
+  .head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

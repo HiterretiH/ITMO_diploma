@@ -105,6 +105,16 @@
   background: var(--color-bg);
 }
 
+@media (max-width: 768px) {
+  :host ::ng-deep .shell-toolbar.p-toolbar {
+    row-gap: 0.5rem;
+  }
+
+  .shell-main {
+    padding: 1rem;
+  }
+}
+
 @media (max-width: 480px) {
   .shell-home {
     border-right: none;
