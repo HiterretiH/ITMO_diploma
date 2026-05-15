@@ -1,5 +1,13 @@
 import { HttpHeaders, HttpRequest, HttpResponse } from '@angular/common/http';
-import type { JwtResponse, LoginRequest, RegisterRequest } from '../auth.models';
+import type {
+  JwtResponse,
+  LoginRequest,
+  RegisterRequest,
+  RegisterResponse,
+  RegistrationRequestResponse,
+  RegistrationStatus,
+  RegistrationStatusResponse,
+} from '../auth.models';
 import type {
   CustomerRequest,
   CustomerResponse,
@@ -37,6 +45,35 @@ export function mockJwt(sub: string, roles: string[]): string {
   const header = base64UrlEncodeJson({ alg: 'HS256', typ: 'JWT' });
   const payload = base64UrlEncodeJson({ sub, roles });
   return `${header}.${payload}.mock-signature`;
+}
+
+interface MockRegistrationRecord {
+  id: number;
+  username: string;
+  password: string;
+  registrationStatus: RegistrationStatus;
+}
+
+let mockRegistrationNextId = 1000;
+const mockRegistrations = new Map<string, MockRegistrationRecord>();
+
+function mockRegistrationStatusResponse(
+  record: MockRegistrationRecord,
+): RegistrationStatusResponse {
+  return {
+    username: record.username,
+    registrationStatus: record.registrationStatus,
+  };
+}
+
+function mockRegistrationRequestResponse(
+  record: MockRegistrationRecord,
+): RegistrationRequestResponse {
+  return {
+    id: record.id,
+    username: record.username,
+    registrationStatus: record.registrationStatus,
+  };
 }
 
 function performerRow(
@@ -554,6 +591,29 @@ export function handleMockApiRequest(
 
   if (method === 'POST' && pathname === '/api/v1/auth/login') {
     const body = req.body as LoginRequest;
+    const pending = mockRegistrations.get(body.username);
+    if (pending?.registrationStatus === 'PENDING') {
+      return json(
+        new HttpResponse({
+          status: 403,
+          body: {
+            title: 'Forbidden',
+            detail: 'Регистрация ожидает подтверждения администратором',
+          },
+        }),
+      );
+    }
+    if (pending?.registrationStatus === 'REJECTED') {
+      return json(
+        new HttpResponse({
+          status: 403,
+          body: {
+            title: 'Forbidden',
+            detail: 'Регистрация отклонена',
+          },
+        }),
+      );
+    }
     return json(
       new HttpResponse({
         status: 200,
@@ -564,10 +624,101 @@ export function handleMockApiRequest(
 
   if (method === 'POST' && pathname === '/api/v1/auth/register') {
     const body = req.body as RegisterRequest;
+    const username = body.username.trim();
+    if (mockRegistrations.has(username)) {
+      return json(
+        new HttpResponse({
+          status: 409,
+          body: { title: 'Conflict', detail: 'Такой логин уже занят' },
+        }),
+      );
+    }
+    const record: MockRegistrationRecord = {
+      id: mockRegistrationNextId++,
+      username,
+      password: body.password,
+      registrationStatus: 'PENDING',
+    };
+    mockRegistrations.set(username, record);
+    return json(
+      new HttpResponse({
+        status: 201,
+        body: {
+          username,
+          registrationStatus: 'PENDING',
+        } satisfies RegisterResponse,
+      }),
+    );
+  }
+
+  if (method === 'GET' && pathname === '/api/v1/auth/registration-status') {
+    const username = (searchParams.get('username') ?? '').trim();
+    const record = mockRegistrations.get(username);
+    if (!record) {
+      return json(
+        new HttpResponse({
+          status: 404,
+          body: { title: 'Not Found', detail: 'Пользователь не найден' },
+        }),
+      );
+    }
     return json(
       new HttpResponse({
         status: 200,
-        body: { token: mockJwt(body.username, ['ADMIN', 'USER']) } satisfies JwtResponse,
+        body: mockRegistrationStatusResponse(record),
+      }),
+    );
+  }
+
+  if (method === 'GET' && pathname === '/api/v1/admin/registration-requests') {
+    const items = [...mockRegistrations.values()]
+      .filter((r) => r.registrationStatus !== 'APPROVED')
+      .map((r) => mockRegistrationRequestResponse(r));
+    return json(new HttpResponse({ status: 200, body: items }));
+  }
+
+  const registrationApproveMatch =
+    /^\/api\/v1\/admin\/registration-requests\/(\d+)\/approve$/.exec(pathname);
+  if (registrationApproveMatch && method === 'POST') {
+    const id = Number(registrationApproveMatch[1]);
+    const record = [...mockRegistrations.values()].find((r) => r.id === id);
+    if (!record) {
+      return json(
+        new HttpResponse({
+          status: 404,
+          body: { title: 'Not Found', detail: 'Заявка не найдена' },
+        }),
+      );
+    }
+    record.registrationStatus = 'APPROVED';
+    mockRegistrations.set(record.username, record);
+    return json(
+      new HttpResponse({
+        status: 200,
+        body: mockRegistrationRequestResponse(record),
+      }),
+    );
+  }
+
+  const registrationRejectMatch =
+    /^\/api\/v1\/admin\/registration-requests\/(\d+)\/reject$/.exec(pathname);
+  if (registrationRejectMatch && method === 'POST') {
+    const id = Number(registrationRejectMatch[1]);
+    const record = [...mockRegistrations.values()].find((r) => r.id === id);
+    if (!record) {
+      return json(
+        new HttpResponse({
+          status: 404,
+          body: { title: 'Not Found', detail: 'Заявка не найдена' },
+        }),
+      );
+    }
+    record.registrationStatus = 'REJECTED';
+    mockRegistrations.set(record.username, record);
+    return json(
+      new HttpResponse({
+        status: 200,
+        body: mockRegistrationRequestResponse(record),
       }),
     );
   }

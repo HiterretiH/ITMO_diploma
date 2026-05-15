@@ -2,6 +2,13 @@
   <app-guest-header [showLoginLink]="false" [showRegisterLink]="true" />
   <div class="login-wrap">
     <p-card header="Вход">
+      @if (approvedMessage) {
+        <p-message
+          severity="success"
+          [text]="approvedMessage"
+          styleClass="w-full mb-3"
+        />
+      }
       <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="field">
           <label for="login-user">

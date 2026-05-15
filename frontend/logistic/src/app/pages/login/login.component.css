@@ -1,1 +1,5 @@
 @import '../guest-auth.css';
+
+.mb-3 {
+  margin-bottom: 1rem;
+}

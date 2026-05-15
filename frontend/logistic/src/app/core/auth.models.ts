@@ -13,3 +13,21 @@ export interface RegisterRequest {
 export interface JwtResponse {
   token: string;
 }
+
+export type RegistrationStatus = 'PENDING' | 'REJECTED' | 'APPROVED';
+
+export interface RegisterResponse {
+  username: string;
+  registrationStatus: RegistrationStatus;
+}
+
+export interface RegistrationStatusResponse {
+  username: string;
+  registrationStatus: RegistrationStatus;
+}
+
+export interface RegistrationRequestResponse {
+  id: number;
+  username: string;
+  registrationStatus: RegistrationStatus;
+}

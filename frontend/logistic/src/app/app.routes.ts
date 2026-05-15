@@ -19,6 +19,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'registration-status',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./pages/registration-status/registration-status.component').then(
+        (m) => m.RegistrationStatusComponent,
+      ),
+  },
+  {
     path: 'forbidden',
     loadComponent: () =>
       import('./pages/forbidden/forbidden.component').then(
@@ -107,6 +115,14 @@ export const routes: Routes = [
           import('./pages/admin/users/users-page.component').then(
             (m) => m.UsersPageComponent,
           ),
+      },
+      {
+        path: 'admin/registration-requests',
+        canActivate: [roleGuard('ADMIN')],
+        loadComponent: () =>
+          import(
+            './pages/admin/registration-requests/registration-requests-page.component'
+          ).then((m) => m.RegistrationRequestsPageComponent),
       },
     ],
   },

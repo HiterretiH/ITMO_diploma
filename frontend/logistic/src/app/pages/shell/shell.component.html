@@ -37,6 +37,14 @@
     <p-menu #catalogMenu [popup]="true" [model]="catalogItems" appendTo="body" />
     @if (auth.hasRole('ADMIN')) {
       <a
+        routerLink="/admin/registration-requests"
+        routerLinkActive="active-link"
+        pButton
+        class="nav-link"
+        [text]="true"
+        label="Заявки на регистрацию"
+      ></a>
+      <a
         routerLink="/admin/users"
         routerLinkActive="active-link"
         pButton

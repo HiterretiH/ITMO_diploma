@@ -1,0 +1,36 @@
+@import '../guest-auth.css';
+
+.username-line {
+  margin: 0 0 1rem;
+}
+
+.body-text {
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.status-badge {
+  display: inline-block;
+  margin: 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.status-badge.pending {
+  background: color-mix(in srgb, var(--p-blue-500) 15%, transparent);
+  color: var(--p-blue-700, #1d4ed8);
+}
+
+.status-badge.rejected {
+  background: color-mix(in srgb, var(--p-orange-500) 15%, transparent);
+  color: var(--p-orange-700, #c2410c);
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}

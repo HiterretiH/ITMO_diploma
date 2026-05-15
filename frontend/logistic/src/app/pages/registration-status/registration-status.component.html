@@ -1,0 +1,46 @@
+<div class="guest-page">
+  <app-guest-header [showLoginLink]="true" [showRegisterLink]="false" />
+  <div class="login-wrap">
+    <p-card header="Статус регистрации">
+      @if (username) {
+        <p class="username-line">Логин: <strong>{{ username }}</strong></p>
+      }
+
+      @if (loadError) {
+        <p-message severity="error" [text]="loadError" styleClass="w-full mb-3" />
+      } @else if (status === 'PENDING') {
+        <p-message
+          severity="info"
+          text="Ваш запрос на регистрацию отправлен и ожидает подтверждения администратором."
+          styleClass="w-full mb-3"
+        />
+        <p class="body-text">
+          После проверки вы сможете войти в систему. При необходимости свяжитесь с
+          администрацией:
+          <a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a>
+        </p>
+        <p class="status-badge pending">{{ statusLabel() }}</p>
+      } @else if (status === 'REJECTED') {
+        <p-message
+          severity="warn"
+          text="Регистрация отклонена администратором."
+          styleClass="w-full mb-3"
+        />
+        <p class="body-text">
+          Если считаете, что это ошибка, напишите администратору:
+          <a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a>
+        </p>
+        <p class="status-badge rejected">{{ statusLabel() }}</p>
+      } @else {
+        <p class="body-text">Проверяем статус…</p>
+      }
+
+      <p-button
+        type="button"
+        label="На страницу входа"
+        styleClass="w-full mt-3"
+        [routerLink]="['/login']"
+      />
+    </p-card>
+  </div>
+</div>

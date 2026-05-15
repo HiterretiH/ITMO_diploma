@@ -82,6 +82,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       if (err.status === 403) {
+        if (req.url.includes('/api/v1/auth/login')) {
+          return throwError(() => err);
+        }
         void router.navigateByUrl('/forbidden');
         if (isProblem && err.error && typeof err.error === 'object') {
           const { summary, detail } = parseProblem(err);

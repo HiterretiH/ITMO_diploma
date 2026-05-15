@@ -93,7 +93,10 @@ export class RegisterComponent {
     const { username, password } = this.form.getRawValue();
     this.busy = true;
     this.auth.register(username.trim(), password).subscribe({
-      next: () => void this.router.navigateByUrl('/orders'),
+      next: (response) => {
+        this.auth.setPendingRegistrationUsername(response.username);
+        void this.router.navigateByUrl('/registration-status');
+      },
       error: () => {
         this.busy = false;
       },

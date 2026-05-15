@@ -1,11 +1,18 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { JwtResponse, LoginRequest, RegisterRequest } from './auth.models';
+import {
+  JwtResponse,
+  LoginRequest,
+  RegisterRequest,
+  RegisterResponse,
+  RegistrationStatusResponse,
+} from './auth.models';
 
 const STORAGE_KEY = 'access_token';
+const PENDING_REGISTRATION_KEY = 'pending_registration_username';
 
 /** @deprecated use JwtResponse from auth.models */
 export type JwtLoginResponse = JwtResponse;
@@ -22,11 +29,32 @@ export class AuthService {
       .pipe(tap((r) => sessionStorage.setItem(STORAGE_KEY, r.token)));
   }
 
-  register(username: string, password: string): Observable<JwtResponse> {
+  register(username: string, password: string): Observable<RegisterResponse> {
     const body: RegisterRequest = { username, password };
-    return this.http
-      .post<JwtResponse>(`${environment.apiBase}/api/v1/auth/register`, body)
-      .pipe(tap((r) => sessionStorage.setItem(STORAGE_KEY, r.token)));
+    return this.http.post<RegisterResponse>(
+      `${environment.apiBase}/api/v1/auth/register`,
+      body,
+    );
+  }
+
+  getRegistrationStatus(username: string): Observable<RegistrationStatusResponse> {
+    const params = new HttpParams().set('username', username);
+    return this.http.get<RegistrationStatusResponse>(
+      `${environment.apiBase}/api/v1/auth/registration-status`,
+      { params },
+    );
+  }
+
+  setPendingRegistrationUsername(username: string): void {
+    sessionStorage.setItem(PENDING_REGISTRATION_KEY, username);
+  }
+
+  getPendingRegistrationUsername(): string | null {
+    return sessionStorage.getItem(PENDING_REGISTRATION_KEY);
+  }
+
+  clearPendingRegistrationUsername(): void {
+    sessionStorage.removeItem(PENDING_REGISTRATION_KEY);
   }
 
   logout(): void {
