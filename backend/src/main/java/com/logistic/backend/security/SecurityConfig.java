@@ -1,5 +1,7 @@
 package com.logistic.backend.security;
 
+import com.logistic.backend.config.CorsProperties;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +31,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final SecurityProblemResponseSupport problemResponseSupport;
+    private final CorsProperties corsProperties;
 
     @Bean
     AuthenticationEntryPoint problemAuthenticationEntryPoint() {
@@ -86,8 +89,13 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.addAllowedOriginPattern("http://localhost:*");
-        cfg.addAllowedOriginPattern("http://127.0.0.1:*");
+        List<String> patterns = corsProperties.getAllowedOriginPatterns();
+        if (patterns.isEmpty()) {
+            cfg.addAllowedOriginPattern("http://localhost:*");
+            cfg.addAllowedOriginPattern("http://127.0.0.1:*");
+        } else {
+            patterns.forEach(cfg::addAllowedOriginPattern);
+        }
         cfg.addAllowedHeader(CorsConfiguration.ALL);
         cfg.addAllowedMethod(CorsConfiguration.ALL);
         cfg.setAllowCredentials(true);

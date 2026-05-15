@@ -7,7 +7,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({JwtProperties.class, StorageProperties.class})
+@EnableConfigurationProperties({
+    JwtProperties.class,
+    StorageProperties.class,
+    CorsProperties.class,
+    BootstrapAdminProperties.class
+})
 public class AppConfig {
 
     @Bean
