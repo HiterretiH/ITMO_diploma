@@ -89,18 +89,20 @@ npm start
 
 Откройте URL из вывода CLI (часто `http://localhost:4200`). Если API в Docker на порту **7272**, выполните `npm run start:docker-api` или задайте `LOGISTIC_API_PROXY_TARGET`.
 
-### Вариант B: полный стек в Docker Compose
+### Вариант B: полный стек в Docker Compose (локальная разработка)
 
 Из корня репозитория:
 
 ```powershell
-docker compose build
-docker compose up
+docker compose -f docker-compose.dev.yml build
+docker compose -f docker-compose.dev.yml up
 ```
 
-- UI: `http://localhost:4200` (nginx + статика Angular)
+- UI: `http://localhost:4200`
 - API с хоста: `http://localhost:7272`
-- PostgreSQL с хоста: `localhost:7727` (внутри сети Compose сервис `db` на порту 5432)
+- PostgreSQL с хоста: `localhost:7727`
+
+Production на сервере: `docker compose up -d` (см. **[DEPLOY.md](DEPLOY.md)**).
 
 Backend стартует после `healthcheck` базы. Сборка backend в Docker использует образ Gradle; нужны доступы к Docker Hub и Maven Central.
 
@@ -143,13 +145,17 @@ npm run build
 
 ## Docker Compose (подробно)
 
-| Сервис | Назначение | Порт на хосте |
-|--------|------------|----------------|
-| `db` | PostgreSQL 16 | 7727 -> 5432 |
-| `backend` | Spring Boot | 7272 -> 8080 |
-| `frontend` | nginx + Angular, прокси на `backend` | 4200 -> 80 |
+Production на VPS: **[DEPLOY.md](DEPLOY.md)** — `docker compose up -d`, frontend на `127.0.0.1:8080`.
 
-Переменные backend в Compose: `SPRING_DATASOURCE_*`, `LOGISTIC_STORAGE_ROOT` (том `docs`), `JWT_SECRET` (замените вне учебного стенда), `TYPEDATA_TOKEN`, `TYPEDATA_ENABLED`.
+Локальная разработка в Docker: `docker-compose.dev.yml`
+
+| Сервис | Dev (порт на хосте) | Production |
+|--------|---------------------|------------|
+| `db` | 7727 → 5432 | только внутри Docker |
+| `backend` | 7272 → 8080 | только внутри Docker |
+| `frontend` | 4200 → 80 | 127.0.0.1:8080 → 80 |
+
+Переменные backend в Compose: `SPRING_DATASOURCE_*`, `POSTGRES_*`, `JWT_SECRET`, `CORS_ALLOWED_ORIGIN_PATTERNS`, `BOOTSTRAP_ADMIN_*`, `LOGISTIC_STORAGE_ROOT` (том `docs`), `TYPEDATA_TOKEN`, `TYPEDATA_ENABLED`. Шаблон: [`.env.example`](.env.example).
 
 Тома: `pgdata` (данные БД), `docs` (файлы документов).
 

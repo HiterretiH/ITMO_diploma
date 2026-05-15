@@ -1,10 +1,15 @@
+# Local development: exposes db/backend/frontend ports on the host.
+# Usage: docker compose -f docker-compose.dev.yml up
+
 services:
   db:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-logistic}
       POSTGRES_USER: ${POSTGRES_USER:-logistic}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-logistic}
+    ports:
+      - "7727:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -19,21 +24,22 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-logistic}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-logistic}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-logistic}
       LOGISTIC_STORAGE_ROOT: /data/docs
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:?CORS_ALLOWED_ORIGIN_PATTERNS is required}
-      BOOTSTRAP_ADMIN_ENABLED: ${BOOTSTRAP_ADMIN_ENABLED:-false}
-      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
-      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET:-docker-dev-change-this-secret-min-32-chars-long!!!}
+      CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:*,http://127.0.0.1:*}
+      BOOTSTRAP_ADMIN_ENABLED: ${BOOTSTRAP_ADMIN_ENABLED:-true}
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-admin}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-admin123}
       TYPEDATA_TOKEN: ${TYPEDATA_TOKEN:-}
       TYPEDATA_ENABLED: ${TYPEDATA_ENABLED:-false}
     depends_on:
       db:
         condition: service_healthy
+    ports:
+      - "7272:8080"
     volumes:
       - docs:/data/docs
 
@@ -44,7 +50,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "127.0.0.1:8080:80"
+      - "4200:80"
 
 volumes:
   pgdata:
