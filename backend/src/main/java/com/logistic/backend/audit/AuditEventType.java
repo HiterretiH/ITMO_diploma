@@ -2,6 +2,8 @@ package com.logistic.backend.audit;
 
 public enum AuditEventType {
     REGISTER,
+    REGISTRATION_APPROVED,
+    REGISTRATION_REJECTED,
     ORDER_CREATED,
     ORDER_UPDATED,
     ORDER_COMPLETED,

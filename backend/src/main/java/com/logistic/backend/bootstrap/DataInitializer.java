@@ -1,6 +1,7 @@
 package com.logistic.backend.bootstrap;
 
 import com.logistic.backend.config.BootstrapAdminProperties;
+import com.logistic.backend.user.RegistrationStatus;
 import com.logistic.backend.user.Role;
 import com.logistic.backend.user.User;
 import com.logistic.backend.user.UserRepository;
@@ -44,6 +45,7 @@ public class DataInitializer implements ApplicationRunner {
         admin.setUsername(bootstrapAdminProperties.getUsername().trim());
         admin.setPasswordHash(passwordEncoder.encode(bootstrapAdminProperties.getPassword()));
         admin.setEnabled(true);
+        admin.setRegistrationStatus(RegistrationStatus.APPROVED);
         admin.setRoles(EnumSet.of(Role.ADMIN));
         userRepository.save(admin);
     }

@@ -59,6 +59,7 @@ class OrderSecurityIntegrationTest extends AbstractPostgresIntegrationTest {
         u.setPasswordHash(passwordEncoder.encode(password));
         u.setEnabled(true);
         u.setRoles(EnumSet.copyOf(roles));
+        u.setRegistrationStatus(com.logistic.backend.user.RegistrationStatus.APPROVED);
         userRepository.save(u);
         ResponseEntity<String> r =
                 restTemplate.postForEntity(

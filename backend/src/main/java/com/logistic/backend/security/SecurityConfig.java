@@ -71,6 +71,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth ->
                                 auth.requestMatchers(
+                                                HttpMethod.GET, "/api/v1/auth/registration-status")
+                                        .permitAll()
+                                        .requestMatchers(
                                                 HttpMethod.POST,
                                                 "/api/v1/auth/login",
                                                 "/api/v1/auth/register")
