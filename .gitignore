@@ -1,3 +1,7 @@
+# Thesis and internal documentation (not part of the application repo)
+diploma/
+docs/
+
 # Local IDE / workspace (not shared)
 .ide/
 
