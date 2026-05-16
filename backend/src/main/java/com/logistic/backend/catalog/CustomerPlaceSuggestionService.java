@@ -28,9 +28,36 @@ public class CustomerPlaceSuggestionService {
     private final TypedataProperties typedataProperties;
     private final PlaceSuggestionProperties placeSuggestionProperties;
 
-    @Transactional(readOnly = true)
     public List<CustomerPlaceSuggestionResponse> suggest(
             User actor, long customerId, CustomerPlaceKind kind, String q) {
+        HistorySnapshot history = loadHistory(actor, customerId, kind, q);
+        List<CustomerPlaceSuggestionResponse> out = new ArrayList<>(history.responses());
+        if (!shouldFetchExternal(history.needle(), q)) {
+            return out;
+        }
+        String kindName = kind.name();
+        Set<String> seenNorm = new LinkedHashSet<>(history.seenNorm());
+        List<String> external = typeDataCachedSuggestService.suggest(q.strip());
+        int added = 0;
+        for (String addr : external) {
+            if (added >= placeSuggestionProperties.getMaxExternal()) {
+                break;
+            }
+            String norm = CustomerPlaceKeys.normalizeForKey(addr);
+            if (norm.isEmpty() || seenNorm.contains(norm)) {
+                continue;
+            }
+            seenNorm.add(norm);
+            out.add(
+                    new CustomerPlaceSuggestionResponse(
+                            PlaceSuggestionSource.EXTERNAL, kindName, addr, null));
+            added++;
+        }
+        return out;
+    }
+
+    @Transactional(readOnly = true)
+    HistorySnapshot loadHistory(User actor, long customerId, CustomerPlaceKind kind, String q) {
         Customer c = loadForRead(actor, customerId);
         List<CustomerPlace> ordered =
                 placeRepository.findByCustomer_IdAndKindOrderByUpdatedAtDesc(c.getId(), kind);
@@ -50,43 +77,30 @@ public class CustomerPlaceSuggestionService {
             historySlice.add(p);
         }
         Set<String> seenNorm = new LinkedHashSet<>();
-        List<CustomerPlaceSuggestionResponse> out = new ArrayList<>();
+        List<CustomerPlaceSuggestionResponse> responses = new ArrayList<>();
         String kindName = kind.name();
         for (CustomerPlace p : historySlice) {
             String norm = CustomerPlaceKeys.normalizeForKey(p.getAddressText());
             if (!norm.isEmpty()) {
                 seenNorm.add(norm);
             }
-            out.add(
+            responses.add(
                     new CustomerPlaceSuggestionResponse(
                             PlaceSuggestionSource.HISTORY,
                             kindName,
                             p.getAddressText(),
                             p.getContactText()));
         }
-        if (typedataProperties.isEnabled()
+        return new HistorySnapshot(responses, seenNorm, needle);
+    }
+
+    private boolean shouldFetchExternal(String needle, String q) {
+        return typedataProperties.isEnabled()
                 && typedataProperties.hasToken()
                 && needle != null
-                && needle.length() >= placeSuggestionProperties.getExternalMinQueryLength()) {
-            List<String> external =
-                    typeDataCachedSuggestService.suggest(q.strip());
-            int added = 0;
-            for (String addr : external) {
-                if (added >= placeSuggestionProperties.getMaxExternal()) {
-                    break;
-                }
-                String norm = CustomerPlaceKeys.normalizeForKey(addr);
-                if (norm.isEmpty() || seenNorm.contains(norm)) {
-                    continue;
-                }
-                seenNorm.add(norm);
-                out.add(
-                        new CustomerPlaceSuggestionResponse(
-                                PlaceSuggestionSource.EXTERNAL, kindName, addr, null));
-                added++;
-            }
-        }
-        return out;
+                && needle.length() >= placeSuggestionProperties.getExternalMinQueryLength()
+                && q != null
+                && !q.isBlank();
     }
 
     private Customer loadForRead(User current, Long id) {
@@ -99,4 +113,9 @@ public class CustomerPlaceSuggestionService {
     private ResponseStatusException notFound() {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "Заказчик не найден.");
     }
+
+    record HistorySnapshot(
+            List<CustomerPlaceSuggestionResponse> responses,
+            Set<String> seenNorm,
+            String needle) {}
 }

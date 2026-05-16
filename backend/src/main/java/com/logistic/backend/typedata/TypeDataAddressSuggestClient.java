@@ -6,22 +6,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class TypeDataAddressSuggestClient {
 
     private final TypedataProperties typedataProperties;
     private final ObjectMapper objectMapper;
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
+
+    public TypeDataAddressSuggestClient(
+            TypedataProperties typedataProperties, ObjectMapper objectMapper) {
+        this.typedataProperties = typedataProperties;
+        this.objectMapper = objectMapper;
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(typedataProperties.getConnectTimeout());
+        factory.setReadTimeout(typedataProperties.getReadTimeout());
+        this.restClient = RestClient.builder().requestFactory(factory).build();
+    }
 
     public List<String> fetchSuggestions(String query) {
         if (!typedataProperties.isEnabled() || !typedataProperties.hasToken()) {
