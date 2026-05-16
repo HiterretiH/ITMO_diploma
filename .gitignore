@@ -29,6 +29,10 @@ Desktop.ini
 # Docker local overrides
 docker-compose.override.yml
 
+# Deployment archives (generated locally)
+deploy-archive.tar.gz
+truck-docs-deploy.tar.gz
+
 # Manual-review fixtures and timing reports live under backend/build/ (ignored by backend/.gitignore).
 # Old fixture output directory (ignore if still present locally):
 backend/manual-review-docs/
