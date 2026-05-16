@@ -75,7 +75,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
               life: 6000,
             });
           }
-        } else {
+        } else if (auth.isLoggedIn()) {
           auth.logout();
         }
         return throwError(() => err);

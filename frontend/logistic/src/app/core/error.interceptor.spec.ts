@@ -86,6 +86,26 @@ describe('errorInterceptor', () => {
     expect(authLogoutSpy).toHaveBeenCalled();
   });
 
+  it('does not log out on 503 for protected resource', () => {
+    sessionStorage.setItem('access_token', 't');
+    http.get('/api/v1/orders').subscribe({
+      error: () => {
+        /* expected */
+      },
+    });
+    const req = httpMock.expectOne('/api/v1/orders');
+    req.flush(
+      { title: 'Service Unavailable', detail: 'Сервис временно недоступен', status: 503 },
+      {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'application/problem+json' },
+      },
+    );
+    expect(authLogoutSpy).not.toHaveBeenCalled();
+    expect(messages.add).toHaveBeenCalled();
+  });
+
   it('does not toast on 409 for order PUT', () => {
     sessionStorage.setItem('access_token', 't');
     http.put('/api/v1/orders/1', {}).subscribe({
