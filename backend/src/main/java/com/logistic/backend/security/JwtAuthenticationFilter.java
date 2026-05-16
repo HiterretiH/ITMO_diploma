@@ -6,10 +6,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -20,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final DatabaseUserDetailsService userDetailsService;
+    private final SecurityProblemResponseSupport problemResponseSupport;
 
     @Override
     protected void doFilterInternal(
@@ -41,6 +45,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
+        } catch (DataAccessException ex) {
+            problemResponseSupport.write(
+                    response,
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Сервис временно недоступен. Повторите попытку позже.");
+            return;
+        } catch (UsernameNotFoundException ignored) {
+            SecurityContextHolder.clearContext();
         } catch (Exception ignored) {
             SecurityContextHolder.clearContext();
         }
