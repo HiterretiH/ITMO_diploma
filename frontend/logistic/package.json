@@ -12,6 +12,7 @@
     "test:coverage": "ng test --coverage"
   },
   "private": true,
+  "license": "MIT",
   "dependencies": {
     "@angular/animations": "^19.1.0",
     "@angular/cdk": "^19.2.19",

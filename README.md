@@ -168,3 +168,7 @@ Production на VPS: **[DEPLOY.md](DEPLOY.md)** — `docker compose up -d`, fron
 - Swagger UI: тот же хост и порт, путь из `springdoc.swagger-ui.path`.
 
 Группы: аутентификация и регистрация; справочники (`customers`, `performers`, `drivers`, `vehicles`); заказы `orders`; аудит `GET /api/v1/orders/{orderId}/audit-events`; администрирование `/api/v1/admin/users` (роль `ADMIN`). Коллекция ориентирована на `admin` / `admin123`.
+
+## Лицензия
+
+Исходный код проекта распространяется по лицензии [MIT](LICENSE).
